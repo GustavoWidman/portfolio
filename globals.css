@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+    body {
+        @apply overflow-x-hidden transition-colors duration-300;
+        scrollbar-gutter: stable;
+    }
+
+    .font-mono {
+        font-family: "JetBrains Mono", "Fira Code", monospace;
+    }
+}
+
+/* Custom scrollbar with optimized rendering */
+::-webkit-scrollbar {
+    width: 6px;
+    scrollbar-gutter: stable;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #52525b;
+    border-radius: 3px;
+}
+
+.mesh-bg-dark {
+    background-image:
+        radial-gradient(at 80% 0%, rgba(50, 50, 50, 0.15) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, rgba(30, 30, 30, 0.1) 0px, transparent 50%);
+}
+
+.mesh-bg-light {
+    background-image:
+        radial-gradient(at 80% 0%, rgba(200, 200, 200, 0.25) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, rgba(220, 220, 220, 0.2) 0px, transparent 50%);
+}
+
+.bg-grid-dark {
+    background-size: 40px 40px;
+    background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    contain: layout style;
+}
+
+.bg-grid-light {
+    background-size: 40px 40px;
+    background-image:
+        linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    contain: layout style;
+}
+
+/* Component-level paint containment and optimization */
+section {
+    contain: layout style paint;
+}
+
+nav {
+    contain: layout style paint;
+}
+
+/* Off-screen content visibility optimization */
+section:not(#home) {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 600px;
+}
+
+/* Enable GPU acceleration for scrolling elements */
+[style*="transform"] {
+    transform: translateZ(0);
+}
+
+/* Replace GPU-intensive animations with efficient alternatives */
+.animate-ping {
+    animation: none;
+    opacity: 0.75;
+}
+
+.animate-bounce {
+    animation: bounceSubtle 1.5s ease-in-out infinite;
+}
+
+.animate-pulse {
+    animation: pulseSubtle 2s ease-in-out infinite;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #52525b;
+    border-radius: 3px;
+}
