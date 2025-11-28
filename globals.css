@@ -58,11 +58,11 @@
 
 /* Component-level paint containment and optimization */
 section {
-    contain: layout style paint;
+    contain: layout style;
 }
 
 nav {
-    contain: layout style paint;
+    contain: layout style;
 }
 
 /* Off-screen content visibility optimization */

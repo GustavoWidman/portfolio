@@ -1,8 +1,9 @@
-import { Mail } from "lucide-react";
+import { FileText, Mail } from "lucide-react";
 import React from "react";
 import { LuLinkedin } from "react-icons/lu";
 import { DATA } from "../data/content";
 import type { Language } from "../types";
+import ResumeButton from "./ResumeButton";
 
 interface FooterProps {
   lang: Language;
@@ -39,6 +40,12 @@ const Footer: React.FC<FooterProps> = ({ lang }) => {
           >
             <LuLinkedin size={20} /> {t.footer.linkedin}
           </a>
+
+          <ResumeButton align="center" position="top">
+            <div className="px-8 py-4 bg-transparent border border-zinc-300 dark:border-zinc-800 text-black dark:text-white font-bold rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors flex items-center justify-center gap-2">
+              <FileText size={20} /> {t.footer.resume}
+            </div>
+          </ResumeButton>
         </div>
 
         <footer className="text-zinc-500 dark:text-zinc-700 text-xs font-mono uppercase tracking-widest">

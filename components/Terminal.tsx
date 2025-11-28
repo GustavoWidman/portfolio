@@ -100,6 +100,27 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
         return newLines;
       }
 
+      // CV Command Parser
+      if (lowerCmd.startsWith("cv")) {
+        const args = lowerCmd.split(" ");
+        if (args.length === 1) {
+          newLines.push("Usage: cv [en|pt]");
+          newLines.push("Example: cv en");
+        } else {
+          const lang = args[1];
+          if (["en", "english", "us"].includes(lang)) {
+            newLines.push("Downloading CV (English)...");
+            window.open("/resume-en.pdf", "_blank");
+          } else if (["pt", "pt", "br", "portuguese"].includes(lang)) {
+            newLines.push("Downloading CV (Portuguese)...");
+            window.open("/resume-pt.pdf", "_blank");
+          } else {
+            newLines.push(`Error: Language '${lang}' not found. Available: en, pt`);
+          }
+        }
+        return newLines;
+      }
+
       switch (lowerCmd) {
         case "help":
           newLines.push(
@@ -110,6 +131,7 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
             "  linkedin  - Open LinkedIn Profile",
             "  exp       - Professional Experience",
             "  ls        - List projects",
+            "  cv [lang] - Download Resume (en/pt)",
             "  clear     - Clear terminal",
           );
           break;

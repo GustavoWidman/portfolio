@@ -13,7 +13,15 @@ export const IS_OPEN_TO_WORK = false;
 
 interface TranslationData {
   nav: Record<string, string>;
-  hero: { subtitle: string; title1: string; title2: string; desc: string; cta: string; github: string };
+  hero: {
+    subtitle: string;
+    title1: string;
+    title2: string;
+    desc: string;
+    cta: string;
+    github: string;
+    resume: string;
+  };
   about: {
     title: string;
     openToWork: string;
@@ -29,7 +37,7 @@ interface TranslationData {
     viewSource: string;
     list: { id: string; title: string; description: string }[];
   };
-  footer: { title: string; subtitle: string; email: string; linkedin: string };
+  footer: { title: string; subtitle: string; email: string; linkedin: string; resume: string };
 }
 
 export const DATA: Record<string, TranslationData> = {
@@ -48,6 +56,7 @@ export const DATA: Record<string, TranslationData> = {
       desc: "Building the kernel, hardening the infrastructure, and scaling the backend.",
       cta: "View Projects",
       github: "GitHub",
+      resume: "Download CV",
     },
     about: {
       title: "01 / About Me",
@@ -209,6 +218,7 @@ export const DATA: Record<string, TranslationData> = {
         "From low-level kernel development to high-availability distributed systems, I'm ready to build.",
       email: "Email Me",
       linkedin: "LinkedIn",
+      resume: "Download Resume",
     },
   },
   pt: {
@@ -226,6 +236,7 @@ export const DATA: Record<string, TranslationData> = {
       desc: "Desenvolvendo o kernel, protegendo a infraestrutura e escalando o backend.",
       cta: "Ver Projetos",
       github: "GitHub",
+      resume: "Baixar CV",
     },
     about: {
       title: "01 / Sobre Mim",
@@ -387,6 +398,7 @@ export const DATA: Record<string, TranslationData> = {
         "De desenvolvimento de kernel baixo nível a sistemas distribuídos de alta disponibilidade, estou pronto para construir.",
       email: "Me envie um email",
       linkedin: "LinkedIn",
+      resume: "Baixar CV",
     },
   },
 };

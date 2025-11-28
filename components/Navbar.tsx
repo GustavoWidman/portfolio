@@ -1,7 +1,8 @@
-import { Menu, Moon, Sun, X } from "lucide-react";
+import { FileText, Menu, Moon, Sun, X } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { DATA } from "../data/content";
 import type { Language, Theme } from "../types";
+import ResumeButton from "./ResumeButton";
 
 interface NavbarProps {
   scrollY: number;
@@ -15,6 +16,7 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme, scrollTo }) => {
   const t = DATA[lang];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const resumeUrl = lang === "pt" ? "/resume-pt.pdf" : "/resume-en.pdf";
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -85,6 +87,19 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
               </div>
 
               <div className="flex items-center gap-4 pl-4 border-l border-zinc-200 dark:border-zinc-800">
+                {/* Resume Button Dropdown */}
+                <ResumeButton align="right" position="bottom">
+                  <div
+                    className="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400 group relative"
+                    aria-label="Download CV"
+                  >
+                    <FileText size={18} />
+                    <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 text-[10px] bg-black text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      {t.hero.resume}
+                    </span>
+                  </div>
+                </ResumeButton>
+
                 {/* Lang Toggle */}
                 <button
                   type="button"
@@ -138,6 +153,14 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
               {label}
             </button>
           ))}
+          {/* Mobile Resume Link (Direct to current Lang PDF for simplicity on mobile) */}
+          <a
+            href={resumeUrl}
+            target="_blank"
+            className="text-xl font-bold text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest flex items-center gap-2"
+          >
+            <FileText size={20} /> {t.hero.resume}
+          </a>
         </div>
 
         <div className="flex items-center gap-8 mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-8 w-64 justify-center">
