@@ -85,8 +85,8 @@ const Hero: React.FC<HeroProps> = ({ scrollY, lang, theme, scrollTo, startTermin
                 {t.hero.github}
               </button>
 
-                <div className="px-8 py-3 h-full border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-full font-medium hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-colors flex items-center gap-2">
               <ResumeButton align="center" position="bottom">
+                <div className="px-8 py-3 h-full border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-full font-medium hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-colors flex items-center gap-2 justify-center">
                   <Download size={18} /> CV
                 </div>
               </ResumeButton>
