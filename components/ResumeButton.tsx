@@ -1,5 +1,6 @@
-import { Check, Download, FileText } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { Download } from "lucide-react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface ResumeButtonProps {
   children: React.ReactNode;
@@ -46,9 +47,19 @@ const ResumeButton: React.FC<ResumeButtonProps> = ({
 
   return (
     <div className={`relative inline-block ${className}`} ref={menuRef}>
-      <div onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setIsOpen(!isOpen);
+          }
+        }}
+        className="cursor-pointer w-full h-full block text-left"
+      >
         {children}
-      </div>
+      </button>
 
       {isOpen && (
         <div
@@ -60,6 +71,7 @@ const ResumeButton: React.FC<ResumeButtonProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={() => handleDownload("en")}
             className="w-full text-left px-4 py-2.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-between group transition-colors"
           >
@@ -70,6 +82,7 @@ const ResumeButton: React.FC<ResumeButtonProps> = ({
           </button>
 
           <button
+            type="button"
             onClick={() => handleDownload("pt")}
             className="w-full text-left px-4 py-2.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-between group transition-colors"
           >
