@@ -87,7 +87,7 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
 
               <div className="flex items-center gap-4 pl-4 border-l border-zinc-200 dark:border-zinc-800">
                 {/* Resume Button Dropdown */}
-                <ResumeButton align="center" position="bottom">
+                <ResumeButton align="center" position="bottom" className="pt-2">
                   <div className="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400 group relative">
                     <FileText size={18} />
                     <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 text-[10px] bg-black text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
@@ -100,10 +100,10 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
                 <button
                   type="button"
                   onClick={() => setLang(lang === "en" ? "pt" : "en")}
-                  className="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400 pb-2"
+                  className="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400 w-[34px] h-[34px] flex items-center justify-center"
                   aria-label="Toggle Language"
                 >
-                  <span className="font-mono text-xs font-bold">{lang.toUpperCase()}</span>
+                  <span className="font-mono text-xs font-bold leading-none">{lang.toUpperCase()}</span>
                 </button>
 
                 {/* Theme Toggle */}
