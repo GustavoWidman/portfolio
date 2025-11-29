@@ -48,7 +48,7 @@ const Hero: React.FC<HeroProps> = ({ scrollY, lang, theme, scrollTo, startTermin
         className={`absolute inset-0 z-0 ${theme === "dark" ? "bg-grid-dark" : "bg-grid-light"} mask-[linear-gradient(to_bottom,black_60%,transparent)]`}
       ></div>
 
-      <div className="relative lg:sticky lg:top-0 w-full flex flex-col items-center justify-start md:justify-center pt-32 md:pt-28 sm:pt-28 pb-20 min-h-screen lg:h-screen overflow-hidden">
+      <div className="relative md:sticky md:top-0 w-full flex flex-col items-center justify-center pt-20 md:pt-28 pb-20 min-h-screen md:h-screen overflow-hidden">
         <div className="relative z-10 max-w-7xl w-full px-6 grid lg:grid-cols-2 gap-12 lg:gap-12 items-center">
           {/* Typography */}
           <div
@@ -95,7 +95,7 @@ const Hero: React.FC<HeroProps> = ({ scrollY, lang, theme, scrollTo, startTermin
 
           {/* Terminal Overlay */}
           <div
-            className="min-h-[350px] md:min-h-0 h-[350px] lg:h-[400px] w-full max-w-2xl mx-auto lg:max-w-none shadow-2xl rounded-xl"
+            className="hidden md:block min-h-[350px] md:min-h-0 h-[350px] lg:h-[400px] w-full max-w-2xl mx-auto lg:max-w-none shadow-2xl rounded-xl animate-fade-in"
             style={terminalStyle}
           >
             <Terminal startBoot={startTerminal} />
@@ -103,7 +103,7 @@ const Hero: React.FC<HeroProps> = ({ scrollY, lang, theme, scrollTo, startTermin
         </div>
 
         <div
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-zinc-400 dark:text-zinc-700 animate-bounce hidden md:block will-change-auto"
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 text-zinc-400 dark:text-zinc-700 animate-bounce"
           style={chevronStyle}
         >
           <ChevronDown size={24} />
