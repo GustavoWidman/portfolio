@@ -16,7 +16,6 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme, scrollTo }) => {
   const t = DATA[lang];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const resumeUrl = lang === "pt" ? "/resume-pt.pdf" : "/resume-en.pdf";
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -153,14 +152,13 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
               {label}
             </button>
           ))}
-          {/* Mobile Resume Link (Direct to current Lang PDF for simplicity on mobile) */}
-          <a
-            href={resumeUrl}
-            target="_blank"
-            className="text-xl font-bold text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest flex items-center gap-2"
-          >
-            <FileText size={20} /> {t.hero.resume}
-          </a>
+
+          {/* Mobile Resume Button with Language Selection */}
+          <ResumeButton align="center" position="bottom">
+            <span className="text-xl font-bold text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest flex items-center gap-2 cursor-pointer">
+              <FileText size={20} /> {t.hero.resume}
+            </span>
+          </ResumeButton>
         </div>
 
         <div className="flex items-center gap-8 mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-8 w-64 justify-center">
