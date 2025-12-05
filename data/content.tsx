@@ -9,7 +9,7 @@ import echosec_logo from "@/icons/echosec_logo.jpg";
 import mwapp_logo from "@/icons/mwapp_logo.jpg";
 import type { Experience, LocalizedJob, Project, SkillCategory } from "../types";
 
-export const IS_OPEN_TO_WORK = false;
+export const IS_OPEN_TO_WORK = true;
 
 interface TranslationData {
   nav: Record<string, string>;
