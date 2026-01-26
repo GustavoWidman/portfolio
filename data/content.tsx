@@ -458,7 +458,7 @@ export const STATIC_EXPERIENCE: Experience[] = [
       {
         role: "Chief Technology Officer (CTO)",
         startDate: "2025-04-01",
-        endDate: undefined,
+        endDate: "2025-12-31",
         description: [],
         techStack: [
           "NixOS",
