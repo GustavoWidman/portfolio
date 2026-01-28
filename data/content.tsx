@@ -70,8 +70,8 @@ export const DATA: Record<string, TranslationData> = {
       p1: (
         <>
           I am a Computer Engineering student at{" "}
-          <span className="text-black dark:text-white font-semibold">INTELI</span> and the{" "}
-          <span className="text-black dark:text-white font-semibold">CTO at CamelSec</span>.
+          <span className="text-black dark:text-white font-semibold">INTELI</span> and a{" "}
+          <span className="text-black dark:text-white font-semibold">Software Developer</span>
         </>
       ),
       p2: (
