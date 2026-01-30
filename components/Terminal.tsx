@@ -138,7 +138,7 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
         case "whoami":
           newLines.push(
             "Gustavo Widman.",
-            "CTO @ CamelSec | Backend Engineer.",
+            "Backend Engineer.",
             "Specialist in Systems Programming, NixOS Infrastructure,",
             "and Cybersecurity (Red Teaming).",
           );
@@ -146,7 +146,7 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
         case "exp":
           newLines.push(
             "--- Professional Experience ---",
-            "CTO @ CamelSec (Current)",
+            "CTO @ CamelSec (August 2025 - December 2025)",
             " > Orchestrating NixOS-based infrastructure",
             " > Leading Pentesting & Red Team operations",
             "",
