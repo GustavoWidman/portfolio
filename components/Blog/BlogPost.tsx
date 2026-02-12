@@ -6,11 +6,12 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ArrowLeft, Calendar, Tag as TagIcon, Clock, X } from "lucide-react";
+import { ArrowLeft, Calendar, Tag as TagIcon, Clock, X, ChevronRight } from "lucide-react";
 import { getPost, Post, Language } from "../../utils/markdown";
 import clsx from "clsx";
 import GithubSlugger from "github-slugger";
 import { Helmet } from "react-helmet-async";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 interface BlogPostProps {
   lang: Language;
@@ -24,19 +25,30 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang: initialLang, isSubdomain }) =
   const [loading, setLoading] = useState(true);
   const [activeId, setActiveId] = useState<string>("");
   const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
+  const [isMobileTocOpen, setIsMobileTocOpen] = useState(false);
 
   // Determine current language from URL query parameter or props
   const [lang, setLang] = useState<Language>(initialLang);
 
+  const { lang: paramLang } = useParams<{ lang?: string }>();
+
   useEffect(() => {
+    // 1. Check Route Parameter first (/slug/pt)
+    if (paramLang === "pt" || paramLang === "en") {
+      setLang(paramLang as Language);
+      return;
+    }
+
+    // 2. Fallback to URL Query Parameter (?lang=pt)
     const params = new URLSearchParams(window.location.search);
     const langParam = params.get("lang");
     if (langParam === "pt" || langParam === "en") {
       setLang(langParam);
     } else {
+      // 3. Fallback to Props (which defaults to localStorage or system)
       setLang(initialLang);
     }
-  }, [initialLang, window.location.search]);
+  }, [initialLang, paramLang, window.location.search]);
 
   useEffect(() => {
     const loadPost = async () => {
@@ -149,28 +161,44 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang: initialLang, isSubdomain }) =
 
       {lightboxImage && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-fade-in cursor-zoom-out p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md animate-fade-in cursor-zoom-out p-0 md:p-4 touch-none"
           onClick={() => setLightboxImage(null)}
         >
-          <div className="relative max-w-[90vw] max-h-[90vh]">
-            <img 
-              src={lightboxImage.src} 
-              alt={lightboxImage.alt || "Lightbox image"} 
-              className="w-full h-full object-contain rounded-lg shadow-2xl border border-white/10"
-              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself? Spec says "allow closing by clicking anywhere outside of the image but also on the x"
-              // Re-reading spec: "allow closing by clicking anywhere outside of the image but also on the x"
-              // Usually clicking the image doesn't close it, but if it's convenient... 
-              // Standard behavior: clicking image does nothing or zooms more. 
-              // Clicking background closes.
-              // I will keep stopPropagation on image to prevent accidental close.
-            />
-            <button
-              onClick={() => setLightboxImage(null)}
-              className="absolute -bottom-12 left-1/2 -translate-x-1/2 p-2 rounded-full bg-zinc-800 text-white hover:bg-zinc-700 transition-colors border border-zinc-700"
-              aria-label="Close lightbox"
+          <div 
+            className="w-full h-full flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()} 
+          >
+            <TransformWrapper
+              initialScale={1}
+              minScale={0.5}
+              maxScale={4}
+              centerOnInit={true}
+              wheel={{ step: 0.2 }}
             >
-              <X size={20} />
-            </button>
+              {({ zoomIn, zoomOut, resetTransform }) => (
+                <>
+                  <div className="absolute top-4 right-4 z-50 flex gap-2">
+                    <button
+                      onClick={() => setLightboxImage(null)}
+                      className="p-3 rounded-full bg-zinc-800/80 text-white hover:bg-zinc-700 transition-colors border border-white/10 backdrop-blur-sm"
+                      aria-label="Close"
+                    >
+                      <X size={24} />
+                    </button>
+                  </div>
+                  <TransformComponent
+                    wrapperClass="!w-full !h-full flex items-center justify-center"
+                    contentClass="!w-full !h-full flex items-center justify-center"
+                  >
+                    <img 
+                      src={lightboxImage.src} 
+                      alt={lightboxImage.alt || "Lightbox image"} 
+                      className="max-w-[95vw] max-h-[95vh] object-contain rounded-lg shadow-2xl"
+                    />
+                  </TransformComponent>
+                </>
+              )}
+            </TransformWrapper>
           </div>
         </div>
       )}
@@ -183,6 +211,57 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang: initialLang, isSubdomain }) =
         <ArrowLeft size={16} className="mr-2" />
         {lang === "en" ? "Back to blog" : "Voltar ao blog"}
       </Link>
+
+      {/* Mobile TOC Accordion */}
+      <div className="lg:hidden mb-8 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-900/50 overflow-hidden">
+        <button
+          onClick={() => setIsMobileTocOpen(!isMobileTocOpen)}
+          className="w-full flex items-center justify-between p-4 text-left font-medium text-zinc-900 dark:text-white"
+        >
+          <span className="uppercase tracking-wider text-sm font-bold">
+            {lang === "en" ? "Table of Contents" : "Índice"}
+          </span>
+          <ChevronRight 
+            size={16} 
+            className={clsx("transition-transform duration-200 text-zinc-500", isMobileTocOpen && "rotate-90")} 
+          />
+        </button>
+        <div 
+          className={clsx(
+            "border-t border-zinc-200 dark:border-zinc-800 transition-all duration-300 ease-in-out overflow-hidden",
+            isMobileTocOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          )}
+        >
+          <nav className="flex flex-col p-4 space-y-3 bg-zinc-50 dark:bg-zinc-900/30 overflow-y-auto max-h-96">
+            {toc.map((heading) => (
+              <a
+                key={heading.id}
+                href={`#${heading.id}`}
+                className={clsx(
+                  "block text-sm transition-colors border-l-2 pl-3 -ml-[1px]",
+                  activeId === heading.id
+                    ? "border-emerald-500 text-emerald-500 font-medium"
+                    : "border-transparent text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+                )}
+                style={{
+                  marginLeft: heading.level === 3 ? "1rem" : "0",
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById(heading.id)?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                  setActiveId(heading.id);
+                  setIsMobileTocOpen(false);
+                }}
+              >
+                {heading.text}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
         {/* Sidebar TOC */}
@@ -371,6 +450,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang: initialLang, isSubdomain }) =
                         "rounded px-1.5 py-0.5", // sizing
                         "text-sm font-mono font-medium", // typography
                         "text-emerald-600 dark:text-emerald-400", // color
+                        "break-all whitespace-pre-wrap", // Fix mobile scrolling for long inline code
                         className
                       )} 
                       {...props}

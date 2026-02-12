@@ -163,6 +163,13 @@ code[data-line-numbers-max-digits="3"] > [data-line]::before {
     content: none !important;
 }
 
+/* Ensure inline code breaks properly on mobile */
+.prose :where(code):not(:where([class~="not-prose"] *)) {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
 /* Remove underlines from links inside headings (autolink-headings) */
 .prose :where(h1, h2, h3, h4, h5, h6) a {
     text-decoration: none !important;

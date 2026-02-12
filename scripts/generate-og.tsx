@@ -388,17 +388,32 @@ async function generateStaticHTML() {
     
     const htmlWithMeta = html.replace("</head>", `${metaTags}</head>`);
     
-    // 1. Main Domain Structure: dist/blog/slug/index.html
-    const folderPathMain = path.join(distDir, "blog", slug);
-    await fs.mkdir(folderPathMain, { recursive: true });
-    await fs.writeFile(path.join(folderPathMain, "index.html"), htmlWithMeta);
-    console.log(`Generated HTML: dist/blog/${slug}/index.html`);
+    if (lang === "en") {
+        // 1. Main Domain Structure: dist/blog/slug/index.html (English Default)
+        const folderPathMain = path.join(distDir, "blog", slug);
+        await fs.mkdir(folderPathMain, { recursive: true });
+        await fs.writeFile(path.join(folderPathMain, "index.html"), htmlWithMeta);
+        console.log(`Generated HTML: dist/blog/${slug}/index.html`);
 
-    // 2. Subdomain Structure: dist/slug/index.html
-    const folderPathSub = path.join(distDir, slug);
-    await fs.mkdir(folderPathSub, { recursive: true });
-    await fs.writeFile(path.join(folderPathSub, "index.html"), htmlWithMeta);
-    console.log(`Generated HTML: dist/${slug}/index.html`);
+        // 2. Subdomain Structure: dist/slug/index.html (English Default)
+        const folderPathSub = path.join(distDir, slug);
+        await fs.mkdir(folderPathSub, { recursive: true });
+        await fs.writeFile(path.join(folderPathSub, "index.html"), htmlWithMeta);
+        console.log(`Generated HTML: dist/${slug}/index.html`);
+    } else {
+        // Generate language specific versions
+        // dist/blog/slug/lang.html
+        const folderPathMain = path.join(distDir, "blog", slug);
+        await fs.mkdir(folderPathMain, { recursive: true });
+        await fs.writeFile(path.join(folderPathMain, `${lang}.html`), htmlWithMeta);
+        console.log(`Generated HTML: dist/blog/${slug}/${lang}.html`);
+
+        // dist/slug/lang.html
+        const folderPathSub = path.join(distDir, slug);
+        await fs.mkdir(folderPathSub, { recursive: true });
+        await fs.writeFile(path.join(folderPathSub, `${lang}.html`), htmlWithMeta);
+        console.log(`Generated HTML: dist/${slug}/${lang}.html`);
+    }
   }
 
   // 3. Blog Index Static HTML
