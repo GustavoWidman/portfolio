@@ -273,8 +273,11 @@ async function generateStaticHTML() {
     
     if (lang !== "en") continue; // Only generate static HTML for the primary route (English default)
 
-    const folderPath = path.join(distDir, "blog", slug);
-    await fs.mkdir(folderPath, { recursive: true });
+    // Generate static HTML for BOTH main domain structure (/blog/slug) AND subdomain structure (/slug)
+    
+    // 1. Main Domain Structure: dist/blog/slug/index.html
+    const folderPathMain = path.join(distDir, "blog", slug);
+    await fs.mkdir(folderPathMain, { recursive: true });
     
     let html = template;
     
@@ -310,10 +313,18 @@ async function generateStaticHTML() {
       <meta name="twitter:image" content="${imagePath}" />
     `;
     
-    html = html.replace("</head>", `${metaTags}</head>`);
+    const htmlWithMeta = html.replace("</head>", `${metaTags}</head>`);
     
-    await fs.writeFile(path.join(folderPath, "index.html"), html);
+    await fs.writeFile(path.join(folderPathMain, "index.html"), htmlWithMeta);
     console.log(`Generated HTML: dist/blog/${slug}/index.html`);
+
+    // 2. Subdomain Structure: dist/slug/index.html
+    // This allows blog.domain.com/slug to serve a static HTML file if the reverse proxy looks here
+    const folderPathSub = path.join(distDir, slug);
+    // We need to be careful not to overwrite top-level assets if a slug matches a file name, but slugs are usually safe
+    await fs.mkdir(folderPathSub, { recursive: true });
+    await fs.writeFile(path.join(folderPathSub, "index.html"), htmlWithMeta);
+    console.log(`Generated HTML: dist/${slug}/index.html`);
   }
 }
 
