@@ -14,9 +14,10 @@ import { Helmet } from "react-helmet-async";
 
 interface BlogPostProps {
   lang: Language;
+  isSubdomain?: boolean;
 }
 
-const BlogPost: React.FC<BlogPostProps> = ({ lang: initialLang }) => {
+const BlogPost: React.FC<BlogPostProps> = ({ lang: initialLang, isSubdomain }) => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [post, setPost] = useState<Post | null>(null);
@@ -176,7 +177,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang: initialLang }) => {
 
       <div className="min-h-screen pt-24 pb-12 px-6 max-w-6xl mx-auto">
       <Link
-        to="/blog"
+        to={isSubdomain ? "/" : "/blog"}
         className="inline-flex items-center text-sm text-zinc-500 hover:text-emerald-500 mb-8 transition-colors"
       >
         <ArrowLeft size={16} className="mr-2" />

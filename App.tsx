@@ -28,10 +28,16 @@ function ScrollToTop() {
   return null;
 }
 
+import { Navigate } from "react-router-dom";
+
 function App() {
   const [scrollY, setScrollY] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const isBlogSubdomain = useMemo(() => {
+    return window.location.hostname.startsWith("blog.");
+  }, []);
 
   // Initialize lang from URL param if present
   const [lang, setLang] = useState<Language>(() => {
@@ -44,6 +50,7 @@ function App() {
   const [theme, setTheme] = useState<Theme>("dark");
   
   const [showIntro, setShowIntro] = useState(() => {
+    if (window.location.hostname.startsWith("blog.")) return false;
     // Only show intro on home page, skip for blog routes or if explicitly disabled via param
     if (location.pathname !== "/") return false;
     
@@ -53,17 +60,7 @@ function App() {
     return true;
   });
 
-  useEffect(() => {
-    const hostname = window.location.hostname;
-    // Check if hostname starts with 'blog.'
-    if (hostname.startsWith("blog.")) {
-      // If we are at root /, navigate to /blog
-      if (location.pathname === "/") {
-        navigate("/blog", { replace: true });
-        setShowIntro(false);
-      }
-    }
-  }, [location.pathname, navigate]);
+  // Removed useEffect for redirect since we now handle it via routing structure
 
   const handleScroll = useCallback(() => {
     setScrollY(window.scrollY);
@@ -84,6 +81,16 @@ function App() {
 
   // Memoized callbacks to prevent unnecessary re-renders of child components
   const scrollTo = useCallback((id: string) => {
+    if (isBlogSubdomain) {
+      // If on blog subdomain, redirect to main domain for portfolio sections
+      // Assuming main domain is just removing "blog." prefix
+      const mainDomain = window.location.hostname.replace(/^blog\./, "");
+      const protocol = window.location.protocol;
+      const port = window.location.port ? `:${window.location.port}` : "";
+      window.location.href = `${protocol}//${mainDomain}${port}/#${id}`;
+      return;
+    }
+
     if (location.pathname !== "/") {
       navigate(`/#${id}`);
     } else {
@@ -92,7 +99,7 @@ function App() {
         element.scrollIntoView({ behavior: "smooth" });
       }
     }
-  }, [location.pathname, navigate]);
+  }, [location.pathname, navigate, isBlogSubdomain]);
 
   const setLangMemo = useCallback((lang: Language) => {
     setLang(lang);
@@ -122,24 +129,36 @@ function App() {
           theme={theme}
           setTheme={setThemeMemo}
           scrollTo={scrollTo}
+          isSubdomain={isBlogSubdomain}
         />
 
         <Routes>
-          <Route
-            path="/"
-            element={
-              <Portfolio
-                lang={lang}
-                theme={theme}
-                scrollY={scrollY}
-                scrollTo={scrollTo}
-                showIntro={showIntro}
-                setShowIntro={setShowIntro}
+          {isBlogSubdomain ? (
+            <>
+              <Route path="/" element={<BlogListing lang={lang} isSubdomain={true} />} />
+              <Route path="/:slug" element={<BlogPost lang={lang} isSubdomain={true} />} />
+              <Route path="/blog" element={<Navigate to="/" replace />} />
+              <Route path="/blog/:slug" element={<Navigate to={`/${location.pathname.split('/').pop()}`} replace />} />
+            </>
+          ) : (
+            <>
+              <Route
+                path="/"
+                element={
+                  <Portfolio
+                    lang={lang}
+                    theme={theme}
+                    scrollY={scrollY}
+                    scrollTo={scrollTo}
+                    showIntro={showIntro}
+                    setShowIntro={setShowIntro}
+                  />
+                }
               />
-            }
-          />
-          <Route path="/blog" element={<BlogListing lang={lang} />} />
-          <Route path="/blog/:slug" element={<BlogPost lang={lang} />} />
+              <Route path="/blog" element={<BlogListing lang={lang} />} />
+              <Route path="/blog/:slug" element={<BlogPost lang={lang} />} />
+            </>
+          )}
         </Routes>
       </div>
     </>

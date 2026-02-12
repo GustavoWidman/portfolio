@@ -6,9 +6,10 @@ import { getAllPosts, Language } from "../../utils/markdown";
 
 interface BlogListingProps {
   lang: Language;
+  isSubdomain?: boolean;
 }
 
-const BlogListing: React.FC<BlogListingProps> = ({ lang }) => {
+const BlogListing: React.FC<BlogListingProps> = ({ lang, isSubdomain }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const allPosts = getAllPosts().filter((post) => post.lang === lang);
 
@@ -47,7 +48,7 @@ const BlogListing: React.FC<BlogListingProps> = ({ lang }) => {
         {posts.map((post) => (
           <Link
             key={post.slug}
-            to={`/blog/${post.slug}`}
+            to={isSubdomain ? `/${post.slug}` : `/blog/${post.slug}`}
             className="group flex flex-col p-6 bg-white dark:bg-zinc-900/50 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all hover:shadow-lg dark:hover:shadow-emerald-900/10"
           >
             <div className="flex justify-between items-start mb-4">

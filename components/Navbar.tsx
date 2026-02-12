@@ -12,9 +12,10 @@ interface NavbarProps {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   scrollTo: (id: string) => void;
+  isSubdomain?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme, scrollTo }) => {
+const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme, scrollTo, isSubdomain }) => {
   const t = DATA[lang];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
@@ -53,6 +54,14 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
     [scrollTo],
   );
 
+  const getMainDomainUrl = (hash: string) => {
+    if (typeof window === 'undefined') return `/#${hash}`;
+    const protocol = window.location.protocol;
+    const host = window.location.hostname.replace(/^blog\./, "");
+    const port = window.location.port ? `:${window.location.port}` : "";
+    return `${protocol}//${host}${port}/#${hash}`;
+  };
+
   return (
     <>
       <nav className={navbarClass} style={{ transform: "translateZ(0)" }}>
@@ -83,20 +92,30 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
                   key === 'blog' ? (
                     <Link
                       key={key}
-                      to="/blog"
+                      to={isSubdomain ? "/" : "/blog"}
                       className="hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest text-xs"
                     >
                       {label}
                     </Link>
                   ) : (
-                    <button
-                      type="button"
-                      key={key}
-                      onClick={() => scrollTo(key)}
-                      className="hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest text-xs"
-                    >
-                      {label}
-                    </button>
+                    isSubdomain ? (
+                      <a
+                        key={key}
+                        href={getMainDomainUrl(key)}
+                        className="hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest text-xs"
+                      >
+                        {label}
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        key={key}
+                        onClick={() => scrollTo(key)}
+                        className="hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest text-xs"
+                      >
+                        {label}
+                      </button>
+                    )
                   )
                 ))}
               </div>
@@ -159,21 +178,31 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
              key === 'blog' ? (
               <Link
                 key={key}
-                to="/blog"
+                to={isSubdomain ? "/" : "/blog"}
                 onClick={() => setIsMenuOpen(false)}
                 className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
               >
                 {label}
               </Link>
              ) : (
-              <button
-                type="button"
-                key={key}
-                onClick={() => handleMobileNavClick(key)}
-                className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
-              >
-                {label}
-              </button>
+              isSubdomain ? (
+                <a
+                  key={key}
+                  href={getMainDomainUrl(key)}
+                  className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
+                >
+                  {label}
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  key={key}
+                  onClick={() => handleMobileNavClick(key)}
+                  className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
+                >
+                  {label}
+                </button>
+              )
              )
           ))}
 

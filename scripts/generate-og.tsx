@@ -279,9 +279,24 @@ async function generateStaticHTML() {
     let html = template;
     
     // Inject Meta Tags
-    // We look for <!-- og:meta --> placeholder or just append to <head>
-    // Since we don't have a placeholder, we replace <title>... and inject others before </head>
+    // We need to replace existing default meta tags from index.html to avoid duplicates/conflicts
+    // Removing: description, og:*, twitter:*
     
+    // Simple regex removal of existing tags we intend to replace
+    // Note: This assumes standard formatting in index.html. 
+    html = html
+      .replace(/<title>.*?<\/title>/s, "")
+      .replace(/<meta\s+name="description".*?>/s, "")
+      .replace(/<meta\s+property="og:title".*?>/s, "")
+      .replace(/<meta\s+property="og:description".*?>/s, "")
+      .replace(/<meta\s+property="og:image".*?>/s, "")
+      .replace(/<meta\s+property="og:type".*?>/s, "")
+      .replace(/<meta\s+name="twitter:card".*?>/s, "")
+      .replace(/<meta\s+name="twitter:title".*?>/s, "")
+      .replace(/<meta\s+name="twitter:description".*?>/s, "")
+      .replace(/<meta\s+property="twitter:image".*?>/s, "") // Note: property="twitter:image" in index.html, sometimes name="twitter:image"
+      .replace(/<meta\s+name="twitter:image".*?>/s, "");
+
     const metaTags = `
       <title>${title} | Gustavo Widman</title>
       <meta name="description" content="${excerpt}" />
@@ -294,11 +309,6 @@ async function generateStaticHTML() {
       <meta name="twitter:description" content="${excerpt}" />
       <meta name="twitter:image" content="${imagePath}" />
     `;
-
-    // Replace existing title if possible, or just insert
-    if (html.includes("<title>")) {
-        html = html.replace(/<title>.*<\/title>/, "");
-    }
     
     html = html.replace("</head>", `${metaTags}</head>`);
     
