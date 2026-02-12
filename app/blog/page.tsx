@@ -3,7 +3,7 @@ import { getBlogPostSummaries } from "@/lib/source";
 import BlogListingClient from "@/components/blog/BlogListingClient";
 
 export const metadata = {
-	title: "Blog | Gustavo Widman",
+	title: "Blog",
 	description:
 		"A collection of articles on systems programming, NixOS infrastructure, and cybersecurity research.",
 	openGraph: {
