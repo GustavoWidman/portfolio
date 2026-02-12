@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { DATA } from "../data/content";
 import type { Language, Theme } from "../types";
 import ResumeButton from "./ResumeButton";
+import { SearchDialog } from "./Blog/SearchDialog";
 
 interface NavbarProps {
   scrollY: number;
@@ -18,6 +19,7 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme, scrollTo, isSubdomain }) => {
   const t = DATA[lang];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const location = useLocation();
 
   // Lock body scroll when menu is open
@@ -28,6 +30,22 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
       document.body.style.overflow = "unset";
     }
   }, [isMenuOpen]);
+
+  // Handle Cmd+K globally for Search Dialog (only on blog routes)
+  useEffect(() => {
+    // Only enable on blog pages
+    const isBlog = isSubdomain || location.pathname.startsWith("/blog");
+    if (!isBlog) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isSubdomain, location.pathname]);
 
   // Memoize the navbar className to prevent unnecessary recalculations
   const navbarClass = useMemo(
@@ -253,6 +271,13 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
           </button>
         </div>
       </nav>
+      
+      {/* Global Search Dialog */}
+      <SearchDialog 
+        open={isSearchOpen} 
+        setOpen={setIsSearchOpen} 
+        lang={lang} 
+      />
     </>
   );
 };

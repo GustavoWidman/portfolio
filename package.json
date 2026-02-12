@@ -20,6 +20,7 @@
 		"biome": "^0.3.3",
 		"buffer": "^6.0.3",
 		"clsx": "^2.1.1",
+		"cmdk": "^1.1.1",
 		"fuse.js": "^7.1.0",
 		"github-slugger": "^2.0.0",
 		"gray-matter": "^4.0.3",
@@ -47,6 +48,7 @@
 		"autoprefixer": "^10.4.24",
 		"bun2nix": "^2.0.6",
 		"tailwindcss": "^4.1.18",
+		"tailwindcss-animate": "^1.0.7",
 		"tsx": "^4.21.0",
 		"typescript": "~5.8.3",
 		"vite": "^6.4.1"

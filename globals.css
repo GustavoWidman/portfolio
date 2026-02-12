@@ -190,6 +190,39 @@ code[data-line-numbers-max-digits="3"] > [data-line]::before {
     border: 1px solid #3f3f46; /* zinc-700 */
 }
 
-.dark .prose pre {
-    border-color: #27272a; /* zinc-800 */
+/* Search Dialog Animations */
+@keyframes cmdk-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes cmdk-fade-out {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes cmdk-zoom-in {
+  0% { opacity: 0; transform: scale(0.96); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes cmdk-zoom-out {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.96); }
+}
+
+[data-state="open"] .search-overlay {
+  animation: cmdk-fade-in 200ms ease-out forwards;
+}
+
+[data-state="closed"] .search-overlay {
+  animation: cmdk-fade-out 200ms ease-in forwards;
+}
+
+[data-state="open"] .search-content {
+  animation: cmdk-zoom-in 200ms ease-out forwards;
+}
+
+[data-state="closed"] .search-content {
+  animation: cmdk-zoom-out 200ms ease-in forwards;
 }

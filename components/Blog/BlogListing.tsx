@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAllPosts, Language } from "../../utils/markdown";
+import { SearchDialog } from "./SearchDialog";
 
 interface BlogListingProps {
   lang: Language;
@@ -10,38 +11,48 @@ interface BlogListingProps {
 }
 
 const BlogListing: React.FC<BlogListingProps> = ({ lang, isSubdomain }) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const allPosts = getAllPosts().filter((post) => post.lang === lang);
 
-  const fuse = useMemo(() => {
-    return new Fuse(allPosts, {
-      keys: ["title", "excerpt", "tags"],
-      threshold: 0.3,
-    });
-  }, [allPosts]);
-
-  const posts = useMemo(() => {
-    if (!searchQuery) return allPosts;
-    return fuse.search(searchQuery).map((result) => result.item);
-  }, [searchQuery, allPosts, fuse]);
+  // We only display posts here, actual search logic is delegated to SearchDialog
+  // or filtered via query if needed, but since we are moving to a modal UI,
+  // the listing page just shows all posts (or filtered by category if we add that later).
+  // For now, listing shows all posts.
+  const posts = allPosts;
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-6 max-w-4xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
-        <h1 className="text-4xl font-bold dark:text-white text-zinc-900">
-          {lang === "en" ? "Blog" : "Blog"}
+      <div className="mb-16">
+        <h1 className="text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-500 mb-6 tracking-tight pb-4 leading-tight">
+          {lang === "en" ? "Engineering & Thoughts" : "Engenharia & Pensamentos"}
         </h1>
+        <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed mb-10">
+          {lang === "en" 
+            ? "A collection of articles on systems programming, NixOS infrastructure, and cybersecurity research."
+            : "Uma coleção de artigos sobre programação de sistemas, infraestrutura NixOS e pesquisa em segurança cibernética."
+          }
+        </p>
         
-        <div className="relative w-full md:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-          <input 
-            type="text" 
-            placeholder={lang === "en" ? "Search posts..." : "Buscar posts..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
-          />
-        </div>
+        {/* Search Trigger Button */}
+        <button
+          onClick={() => setIsSearchOpen(true)}
+          className="relative w-full max-w-md group flex items-center"
+        >
+          <div className="absolute left-3 text-zinc-400 group-hover:text-emerald-500 transition-colors z-10">
+            <Search size={18} />
+          </div>
+          <div className="w-full pl-10 pr-20 py-2.5 bg-zinc-100/50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-lg text-left text-sm text-zinc-500 dark:text-zinc-500 shadow-sm backdrop-blur-sm group-hover:border-emerald-500/50 group-hover:ring-2 group-hover:ring-emerald-500/10 transition-all">
+            {lang === "en" ? "Search articles..." : "Buscar artigos..."}
+          </div>
+          <div className="absolute right-2 flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+            <kbd className="flex h-5 w-5 items-center justify-center rounded-[4px] border border-zinc-300 dark:border-zinc-700 bg-zinc-200 dark:bg-zinc-800 text-[10px] font-medium text-zinc-600 dark:text-zinc-400 font-sans shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
+              ⌘
+            </kbd>
+            <kbd className="flex h-5 w-5 items-center justify-center rounded-[4px] border border-zinc-300 dark:border-zinc-700 bg-zinc-200 dark:bg-zinc-800 text-[10px] font-medium text-zinc-600 dark:text-zinc-400 font-sans shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
+              K
+            </kbd>
+          </div>
+        </button>
       </div>
 
       <div className="grid gap-8 md:grid-cols-2">
@@ -80,21 +91,11 @@ const BlogListing: React.FC<BlogListingProps> = ({ lang, isSubdomain }) => {
         ))}
       </div>
       
-      {posts.length === 0 && (
-        <div className="text-center py-24">
-          <p className="text-zinc-500 dark:text-zinc-400 text-lg">
-            {lang === "en" ? "No posts found matching your criteria." : "Nenhum post encontrado com seus critérios."}
-          </p>
-          {searchQuery && (
-             <button 
-               onClick={() => setSearchQuery("")}
-               className="mt-4 text-emerald-500 hover:underline text-sm"
-             >
-               {lang === "en" ? "Clear search" : "Limpar busca"}
-             </button>
-          )}
-        </div>
-      )}
+      <SearchDialog 
+        open={isSearchOpen} 
+        setOpen={setIsSearchOpen} 
+        lang={lang} 
+      />
     </div>
   );
 };

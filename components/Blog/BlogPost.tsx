@@ -282,7 +282,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang: initialLang, isSubdomain }) =
                     setTimeout(() => {
                       const element = document.getElementById(heading.id);
                       if (element) {
-                        const offset = 380; // Increased offset for safety
+                        const offset = 380; // Mobile offset (matches original sweet spot)
                         const bodyRect = document.body.getBoundingClientRect().top;
                         const elementRect = element.getBoundingClientRect().top;
                         const elementPosition = elementRect - bodyRect;
