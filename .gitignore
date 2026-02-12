@@ -25,3 +25,6 @@ dist-ssr
 
 # Folder for playing around with resumes
 /latex
+
+# Generated OG Images
+public/og/

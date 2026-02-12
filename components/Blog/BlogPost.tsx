@@ -10,6 +10,7 @@ import { ArrowLeft, Calendar, Tag as TagIcon, Clock, X } from "lucide-react";
 import { getPost, Post, Language } from "../../utils/markdown";
 import clsx from "clsx";
 import GithubSlugger from "github-slugger";
+import { Helmet } from "react-helmet-async";
 
 interface BlogPostProps {
   lang: Language;
@@ -132,6 +133,19 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang: initialLang }) => {
 
   return (
     <>
+      <Helmet>
+        <title>{post.title} | Gustavo Widman</title>
+        <meta name="description" content={post.excerpt} />
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.excerpt} />
+        <meta property="og:image" content={`/og/${post.slug}-${post.lang}.png`} />
+        <meta property="og:type" content="article" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={post.excerpt} />
+        <meta name="twitter:image" content={`/og/${post.slug}-${post.lang}.png`} />
+      </Helmet>
+
       {lightboxImage && (
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-fade-in cursor-zoom-out p-4"

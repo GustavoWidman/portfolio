@@ -1,15 +1,7 @@
 import { Buffer } from "buffer";
 globalThis.Buffer = globalThis.Buffer || Buffer;
 
-import "@fontsource/inter/300.css";
-import "@fontsource/inter/400.css";
-import "@fontsource/inter/500.css";
-import "@fontsource/inter/600.css";
-import "@fontsource/inter/700.css";
-import "@fontsource/jetbrains-mono/300.css";
-import "@fontsource/jetbrains-mono/400.css";
-import "@fontsource/jetbrains-mono/500.css";
-import "@fontsource/jetbrains-mono/600.css";
+import { HelmetProvider } from "react-helmet-async";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
@@ -24,8 +16,10 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </HelmetProvider>
   </React.StrictMode>,
 );
