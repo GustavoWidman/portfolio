@@ -124,4 +124,4 @@ funciona. é exagero (overkill). bazuka para matar uma formiga (como sempre). é
 
 além disso, nunca mais preciso pescar caixotes (crates) manualmente ;)
 
-confira o código no github: [terraria-autofish](https://github.com/r3dlust/terraria-autofish)
+confira o código no github: [terraria-autofish](https://github.com/GustavoWidman/terraria-autofish)

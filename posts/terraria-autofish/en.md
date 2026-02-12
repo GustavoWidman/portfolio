@@ -124,4 +124,4 @@ it works. it's overkill. it's slightly unethical. but it's the clearest example 
 
 plus, i never have to fish for crates manually again ;)
 
-check out the code on github: [terraria-autofish](https://github.com/r3dlust/terraria-autofish)
+check out the code on github: [terraria-autofish](https://github.com/GustavoWidman/terraria-autofish)
