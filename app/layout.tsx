@@ -1,11 +1,33 @@
 import { RootProvider } from "fumadocs-ui/provider/next";
-import { JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import "./globals.css";
 
-const jetbrainsMono = JetBrains_Mono({
-	subsets: ["latin"],
+const jetbrainsMono = localFont({
+	src: [
+		{
+			path: "../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2",
+			weight: "400",
+			style: "normal",
+		},
+		{
+			path: "../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff2",
+			weight: "500",
+			style: "normal",
+		},
+		{
+			path: "../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-600-normal.woff2",
+			weight: "600",
+			style: "normal",
+		},
+		{
+			path: "../node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-700-normal.woff2",
+			weight: "700",
+			style: "normal",
+		},
+	],
 	variable: "--font-jetbrains-mono",
+	display: "swap",
 });
 
 export const metadata = {
