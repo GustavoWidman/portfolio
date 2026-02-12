@@ -6,7 +6,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ArrowLeft, Calendar, Tag as TagIcon, Clock } from "lucide-react";
+import { ArrowLeft, Calendar, Tag as TagIcon, Clock, X } from "lucide-react";
 import { getPost, Post, Language } from "../../utils/markdown";
 import clsx from "clsx";
 import GithubSlugger from "github-slugger";
@@ -15,12 +15,26 @@ interface BlogPostProps {
   lang: Language;
 }
 
-const BlogPost: React.FC<BlogPostProps> = ({ lang }) => {
+const BlogPost: React.FC<BlogPostProps> = ({ lang: initialLang }) => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeId, setActiveId] = useState<string>("");
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt?: string } | null>(null);
+
+  // Determine current language from URL query parameter or props
+  const [lang, setLang] = useState<Language>(initialLang);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const langParam = params.get("lang");
+    if (langParam === "pt" || langParam === "en") {
+      setLang(langParam);
+    } else {
+      setLang(initialLang);
+    }
+  }, [initialLang, window.location.search]);
 
   useEffect(() => {
     const loadPost = async () => {
@@ -79,6 +93,19 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang }) => {
     return () => observer.disconnect();
   }, [loading, post]);
 
+  useEffect(() => {
+    if (!lightboxImage) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setLightboxImage(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxImage]);
+
   if (loading) {
     return (
       <div className="min-h-screen pt-24 flex items-center justify-center">
@@ -104,7 +131,36 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang }) => {
   const readingTime = Math.ceil(wordCount / wordsPerMinute);
 
   return (
-    <div className="min-h-screen pt-24 pb-12 px-6 max-w-6xl mx-auto">
+    <>
+      {lightboxImage && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-fade-in cursor-zoom-out p-4"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div className="relative max-w-[90vw] max-h-[90vh]">
+            <img 
+              src={lightboxImage.src} 
+              alt={lightboxImage.alt || "Lightbox image"} 
+              className="w-full h-full object-contain rounded-lg shadow-2xl border border-white/10"
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself? Spec says "allow closing by clicking anywhere outside of the image but also on the x"
+              // Re-reading spec: "allow closing by clicking anywhere outside of the image but also on the x"
+              // Usually clicking the image doesn't close it, but if it's convenient... 
+              // Standard behavior: clicking image does nothing or zooms more. 
+              // Clicking background closes.
+              // I will keep stopPropagation on image to prevent accidental close.
+            />
+            <button
+              onClick={() => setLightboxImage(null)}
+              className="absolute -bottom-12 left-1/2 -translate-x-1/2 p-2 rounded-full bg-zinc-800 text-white hover:bg-zinc-700 transition-colors border border-zinc-700"
+              aria-label="Close lightbox"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="min-h-screen pt-24 pb-12 px-6 max-w-6xl mx-auto">
       <Link
         to="/blog"
         className="inline-flex items-center text-sm text-zinc-500 hover:text-emerald-500 mb-8 transition-colors"
@@ -239,7 +295,8 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang }) => {
                       <img 
                         src={finalSrc} 
                         alt={alt} 
-                        className="rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-800 mx-auto w-full"
+                        className="rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-800 mx-auto w-full cursor-zoom-in hover:brightness-110 transition-all"
+                        onClick={() => setLightboxImage({ src: finalSrc, alt })}
                         {...props} 
                       />
                       {alt && <figcaption className="text-center text-sm text-zinc-500 mt-2">{alt}</figcaption>}
@@ -316,7 +373,8 @@ const BlogPost: React.FC<BlogPostProps> = ({ lang }) => {
 
         {/* Sidebar TOC was here, but moved above */}
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -30,14 +30,40 @@ function ScrollToTop() {
 
 function App() {
   const [scrollY, setScrollY] = useState(0);
-  const [lang, setLang] = useState<Language>("en");
-  const [theme, setTheme] = useState<Theme>("dark");
   const location = useLocation();
-  const [showIntro, setShowIntro] = useState(() => {
-    // Only show intro on home page, skip for blog routes
-    return location.pathname === "/";
-  });
   const navigate = useNavigate();
+
+  // Initialize lang from URL param if present
+  const [lang, setLang] = useState<Language>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const langParam = params.get("lang");
+    if (langParam === "pt" || langParam === "en") return langParam;
+    return "en";
+  });
+
+  const [theme, setTheme] = useState<Theme>("dark");
+  
+  const [showIntro, setShowIntro] = useState(() => {
+    // Only show intro on home page, skip for blog routes or if explicitly disabled via param
+    if (location.pathname !== "/") return false;
+    
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("intro") === "false") return false;
+    
+    return true;
+  });
+
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    // Check if hostname starts with 'blog.'
+    if (hostname.startsWith("blog.")) {
+      // If we are at root /, navigate to /blog
+      if (location.pathname === "/") {
+        navigate("/blog", { replace: true });
+        setShowIntro(false);
+      }
+    }
+  }, [location.pathname, navigate]);
 
   const handleScroll = useCallback(() => {
     setScrollY(window.scrollY);
