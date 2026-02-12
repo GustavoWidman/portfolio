@@ -76,14 +76,24 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
         {/* Content layer above blur */}
         <div className="relative z-10">
           <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <Link
-              to="/"
-              className="font-mono text-xl font-bold tracking-tighter hover:opacity-70 transition-opacity cursor-pointer flex items-center gap-1 text-black dark:text-white z-50 relative"
-              onClick={() => window.scrollTo(0, 0)}
-              aria-label="Gustavo Widman - Go to home"
-            >
-              WW
-            </Link>
+            {isSubdomain ? (
+              <a
+                href={getMainDomainUrl("")}
+                className="font-mono text-xl font-bold tracking-tighter hover:opacity-70 transition-opacity cursor-pointer flex items-center gap-1 text-black dark:text-white z-50 relative"
+                aria-label="Gustavo Widman - Go to home"
+              >
+                WW
+              </a>
+            ) : (
+              <Link
+                to="/"
+                className="font-mono text-xl font-bold tracking-tighter hover:opacity-70 transition-opacity cursor-pointer flex items-center gap-1 text-black dark:text-white z-50 relative"
+                onClick={() => window.scrollTo(0, 0)}
+                aria-label="Gustavo Widman - Go to home"
+              >
+                WW
+              </Link>
+            )}
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-6">
@@ -172,8 +182,9 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
           isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
         }`}
         aria-hidden={!isMenuOpen}
+        style={{ paddingTop: "80px" }} // Add padding to avoid clipping under the fixed navbar header
       >
-        <div className="flex flex-col items-center gap-8 mb-12">
+        <div className="flex flex-col items-center gap-8 mb-12 overflow-y-auto max-h-[calc(100vh-200px)] w-full px-4">
           {Object.entries(t.nav).map(([key, label]) => (
              key === 'blog' ? (
               <Link
