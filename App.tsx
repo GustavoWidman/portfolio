@@ -39,15 +39,25 @@ function App() {
     return window.location.hostname.startsWith("blog.");
   }, []);
 
-  // Initialize lang from URL param if present
+  // Initialize lang from URL param or LocalStorage
   const [lang, setLang] = useState<Language>(() => {
     const params = new URLSearchParams(window.location.search);
     const langParam = params.get("lang");
     if (langParam === "pt" || langParam === "en") return langParam;
+    
+    // Check LocalStorage
+    const storedLang = localStorage.getItem("lang");
+    if (storedLang === "pt" || storedLang === "en") return storedLang;
+    
     return "en";
   });
 
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>(() => {
+    const storedTheme = localStorage.getItem("theme");
+    if (storedTheme === "light" || storedTheme === "dark") return storedTheme;
+    
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
   
   const [showIntro, setShowIntro] = useState(() => {
     if (window.location.hostname.startsWith("blog.")) return false;
@@ -101,12 +111,14 @@ function App() {
     }
   }, [location.pathname, navigate, isBlogSubdomain]);
 
-  const setLangMemo = useCallback((lang: Language) => {
-    setLang(lang);
+  const setLangMemo = useCallback((newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem("lang", newLang);
   }, []);
 
-  const setThemeMemo = useCallback((theme: Theme) => {
-    setTheme(theme);
+  const setThemeMemo = useCallback((newTheme: Theme) => {
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
   }, []);
 
   // Memoize the main container className to avoid recalculation
