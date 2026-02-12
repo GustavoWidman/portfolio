@@ -1,19 +1,43 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import About from "./components/About";
-import ExperienceSection from "./components/Experience";
-import Footer from "./components/Footer";
-import Hero from "./components/Hero";
-import Intro from "./components/Intro";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import BlogListing from "./components/Blog/BlogListing";
+import BlogPost from "./components/Blog/BlogPost";
 import Navbar from "./components/Navbar";
-import Projects from "./components/Projects";
-import Stack from "./components/Stack";
+import Portfolio from "./components/Portfolio";
+import Intro from "./components/Intro";
 import type { Language, Theme } from "./types";
+
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    if (hash) {
+      // Small timeout to ensure elements are mounted
+      setTimeout(() => {
+        const id = hash.replace('#', '');
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, hash]);
+
+  return null;
+}
 
 function App() {
   const [scrollY, setScrollY] = useState(0);
   const [lang, setLang] = useState<Language>("en");
   const [theme, setTheme] = useState<Theme>("dark");
-  const [showIntro, setShowIntro] = useState(true);
+  const location = useLocation();
+  const [showIntro, setShowIntro] = useState(() => {
+    // Only show intro on home page, skip for blog routes
+    return location.pathname === "/";
+  });
+  const navigate = useNavigate();
 
   const handleScroll = useCallback(() => {
     setScrollY(window.scrollY);
@@ -34,11 +58,15 @@ function App() {
 
   // Memoized callbacks to prevent unnecessary re-renders of child components
   const scrollTo = useCallback((id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+    if (location.pathname !== "/") {
+      navigate(`/#${id}`);
+    } else {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
     }
-  }, []);
+  }, [location.pathname, navigate]);
 
   const setLangMemo = useCallback((lang: Language) => {
     setLang(lang);
@@ -57,6 +85,7 @@ function App() {
 
   return (
     <>
+      <ScrollToTop />
       {showIntro && <Intro onComplete={() => setShowIntro(false)} />}
 
       <div className={containerClassName}>
@@ -69,22 +98,23 @@ function App() {
           scrollTo={scrollTo}
         />
 
-        <Hero
-          scrollY={scrollY}
-          lang={lang}
-          theme={theme}
-          scrollTo={scrollTo}
-          startTerminal={!showIntro}
-        />
-
-        {/* Content Container */}
-        <div className="relative bg-zinc-50 dark:bg-black z-20 transition-colors duration-300">
-          <About lang={lang} />
-          <Stack lang={lang} />
-          <ExperienceSection lang={lang} />
-          <Projects lang={lang} />
-          <Footer lang={lang} />
-        </div>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Portfolio
+                lang={lang}
+                theme={theme}
+                scrollY={scrollY}
+                scrollTo={scrollTo}
+                showIntro={showIntro}
+                setShowIntro={setShowIntro}
+              />
+            }
+          />
+          <Route path="/blog" element={<BlogListing lang={lang} />} />
+          <Route path="/blog/:slug" element={<BlogPost lang={lang} />} />
+        </Routes>
       </div>
     </>
   );

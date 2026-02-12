@@ -48,6 +48,7 @@ export const DATA: Record<string, TranslationData> = {
       exp: "Experience",
       work: "Work",
       contact: "Contact",
+      blog: "Blog",
     },
     hero: {
       subtitle: "Gustavo Widman // Engineering Portfolio",
@@ -228,6 +229,7 @@ export const DATA: Record<string, TranslationData> = {
       exp: "Experiência",
       work: "Projetos",
       contact: "Contato",
+      blog: "Blog",
     },
     hero: {
       subtitle: "Gustavo Widman // Portfólio de Engenharia",

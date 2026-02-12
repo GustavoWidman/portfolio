@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin '@tailwindcss/typography';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -101,4 +102,87 @@ section:not(#home) {
 .custom-scrollbar::-webkit-scrollbar-thumb {
     background: #52525b;
     border-radius: 3px;
+}
+
+/* Rehype Pretty Code & Prose Styling */
+figure[data-rehype-pretty-code-figure] {
+  margin: 0;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: transparent;
+}
+
+pre {
+  overflow-x: auto;
+  padding: 1rem 0;
+  border-radius: 0.5rem;
+  background-color: #1e1e1e !important; /* Force a consistent dark background for code blocks */
+}
+
+code {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.875rem;
+  counter-reset: line;
+}
+
+code[data-line-numbers] > [data-line]::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 1rem;
+  margin-right: 1rem;
+  text-align: right;
+  color: #6b7280; /* zinc-500 */
+}
+
+code[data-line-numbers-max-digits="2"] > [data-line]::before {
+  width: 2rem;
+}
+
+code[data-line-numbers-max-digits="3"] > [data-line]::before {
+  width: 3rem;
+}
+
+[data-line] {
+  padding: 0 1rem;
+  display: block;
+  border-left: 2px solid transparent;
+}
+
+/* Highlighted lines */
+[data-highlighted-line] {
+  background-color: rgba(16, 185, 129, 0.1); /* emerald-500/10 */
+  border-left-color: #10b981; /* emerald-500 */
+}
+
+/* Inline code - Remove default backticks added by Tailwind Typography */
+.prose :where(code):not(:where([class~="not-prose"] *))::before {
+    content: none !important;
+}
+.prose :where(code):not(:where([class~="not-prose"] *))::after {
+    content: none !important;
+}
+
+/* Remove underlines from links inside headings (autolink-headings) */
+.prose :where(h1, h2, h3, h4, h5, h6) a {
+    text-decoration: none !important;
+    font-weight: inherit !important;
+    border-bottom: none !important;
+}
+
+/* Prose customizations for dark mode consistency */
+.prose :where(code):not(:where([class~="not-prose"] *)) {
+    background-color: transparent !important; /* Let specific styles handle bg */
+    font-weight: 500;
+}
+
+.prose pre {
+    background-color: #1e1e1e !important;
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+    border: 1px solid #3f3f46; /* zinc-700 */
+}
+
+.dark .prose pre {
+    border-color: #27272a; /* zinc-800 */
 }

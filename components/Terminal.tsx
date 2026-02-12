@@ -1,5 +1,6 @@
 import { AlertTriangle, Maximize2, Terminal as TerminalIcon } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const BOOT_SEQUENCE = [
   "Initializing boot sequence...",
@@ -40,6 +41,7 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
   const [isBooting, setIsBooting] = useState(true);
   const contentRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   // Progressive Boot Animation
   useEffect(() => {
@@ -132,8 +134,13 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
             "  exp       - Professional Experience",
             "  ls        - List projects",
             "  cv [lang] - Download Resume (en/pt)",
+            "  blog      - Read my blog",
             "  clear     - Clear terminal",
           );
+          break;
+        case "blog":
+          newLines.push("Opening blog...");
+          navigate("/blog");
           break;
         case "whoami":
           newLines.push(
@@ -205,7 +212,7 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
       return newLines;
     });
     setInput("");
-  }, []);
+  }, [navigate]);
 
   // Memoize key down handler
   const handleKeyDown = useCallback(

@@ -1,5 +1,6 @@
 import { FileText, Menu, Moon, Sun, X } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { DATA } from "../data/content";
 import type { Language, Theme } from "../types";
 import ResumeButton from "./ResumeButton";
@@ -16,6 +17,7 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme, scrollTo }) => {
   const t = DATA[lang];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const location = useLocation();
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -30,11 +32,11 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
   const navbarClass = useMemo(
     () =>
       `fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrollY > 20
+        scrollY > 20 || location.pathname !== "/"
           ? "bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-zinc-200 dark:border-white/5"
           : "bg-white/0 dark:bg-black/0 border-b border-transparent"
       }`,
-    [scrollY],
+    [scrollY, location.pathname],
   );
 
   // Memoize mobile nav click handler to prevent unnecessary re-renders
@@ -42,7 +44,11 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
     (id: string) => {
       setIsMenuOpen(false);
       // Small delay to allow menu to close before scrolling
-      setTimeout(() => scrollTo(id), 300);
+      if (id === 'blog') {
+        // Navigation handled by Link
+      } else {
+        setTimeout(() => scrollTo(id), 300);
+      }
     },
     [scrollTo],
   );
@@ -54,34 +60,44 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
         <div
           className="absolute inset-0 backdrop-blur-md opacity-0 transition-opacity pointer-events-none"
           style={{
-            opacity: scrollY > 20 ? 1 : 0,
+            opacity: scrollY > 20 || location.pathname !== "/" ? 1 : 0,
             contain: "layout style paint",
           }}
         />
         {/* Content layer above blur */}
         <div className="relative z-10">
           <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <button
-              type="button"
+            <Link
+              to="/"
               className="font-mono text-xl font-bold tracking-tighter hover:opacity-70 transition-opacity cursor-pointer flex items-center gap-1 text-black dark:text-white z-50 relative"
               onClick={() => window.scrollTo(0, 0)}
               aria-label="Gustavo Widman - Go to home"
             >
               WW
-            </button>
+            </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-6">
               <div className="flex gap-8 text-sm font-medium text-zinc-600 dark:text-zinc-400">
                 {Object.entries(t.nav).map(([key, label]) => (
-                  <button
-                    type="button"
-                    key={key}
-                    onClick={() => scrollTo(key)}
-                    className="hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest text-xs"
-                  >
-                    {label}
-                  </button>
+                  key === 'blog' ? (
+                    <Link
+                      key={key}
+                      to="/blog"
+                      className="hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest text-xs"
+                    >
+                      {label}
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      key={key}
+                      onClick={() => scrollTo(key)}
+                      className="hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest text-xs"
+                    >
+                      {label}
+                    </button>
+                  )
                 ))}
               </div>
 
@@ -140,14 +156,25 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
       >
         <div className="flex flex-col items-center gap-8 mb-12">
           {Object.entries(t.nav).map(([key, label]) => (
-            <button
-              type="button"
-              key={key}
-              onClick={() => handleMobileNavClick(key)}
-              className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
-            >
-              {label}
-            </button>
+             key === 'blog' ? (
+              <Link
+                key={key}
+                to="/blog"
+                onClick={() => setIsMenuOpen(false)}
+                className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
+              >
+                {label}
+              </Link>
+             ) : (
+              <button
+                type="button"
+                key={key}
+                onClick={() => handleMobileNavClick(key)}
+                className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
+              >
+                {label}
+              </button>
+             )
           ))}
 
           {/* Mobile Resume Button with Language Selection */}
@@ -191,9 +218,14 @@ const Navbar: React.FC<NavbarProps> = ({ scrollY, lang, setLang, theme, setTheme
 };
 
 // Optimize with React.memo and custom comparison
-// Only re-render when scrollY crosses the 20px threshold or lang/theme changes
+// Only re-render when scrollY crosses the 20px threshold, lang/theme changes, or path changes
 export default React.memo(Navbar, (prev, next) => {
   const prevScrolled = prev.scrollY > 20;
   const nextScrolled = next.scrollY > 20;
+  // Note: We can't easily check path change here without passing location as prop, 
+  // but since we use useLocation hook inside, the component will re-render anyway regardless of props.
+  // Actually React.memo only prevents re-renders from PARENT.
+  // So internal state/hooks will still trigger re-render.
+  // But we should ensure we don't block it if props change.
   return prevScrolled === nextScrolled && prev.lang === next.lang && prev.theme === next.theme;
 });
