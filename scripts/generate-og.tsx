@@ -85,7 +85,7 @@ async function generateOG() {
             backgroundSize: "40px 40px",
             opacity: 0.2,
             zIndex: 0,
-            display: "flex", // Add display flex here as well just in case, though it's absolutely positioned
+            display: "flex",
           }}
         />
         
@@ -187,10 +187,128 @@ async function generateOG() {
     // This makes it easy to reference
     const outName = `${slug}-${lang}.png`;
     await fs.writeFile(path.join(publicOgDir, outName), pngBuffer);
-    // Write to dist/og as well so it's included in the build artifact immediately
     await fs.writeFile(path.join(distOgDir, outName), pngBuffer);
     console.log(`Generated: ${outName}`);
   }
+
+  // Generate generic Blog Index OG (English default)
+  console.log("Generating Blog Index OG...");
+  const blogSvg = await satori(
+      <div
+        style={{
+          display: "flex",
+          height: "100%",
+          width: "100%",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          backgroundColor: "#09090b",
+          padding: "80px",
+          color: "white",
+          fontFamily: "Inter",
+          position: "relative",
+        }}
+      >
+        {/* Background Grid Pattern */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: "linear-gradient(to right, #27272a 1px, transparent 1px), linear-gradient(to bottom, #27272a 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+            opacity: 0.2,
+            zIndex: 0,
+            display: "flex",
+          }}
+        />
+        
+        {/* Glow Effect */}
+        <div 
+          style={{
+            position: "absolute",
+            top: "-20%",
+            right: "-10%",
+            width: "600px",
+            height: "600px",
+            background: "radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(0,0,0,0) 70%)",
+            filter: "blur(40px)",
+            zIndex: 0,
+            display: "flex",
+          }}
+        />
+
+        <div style={{ display: "flex", flexDirection: "column", zIndex: 1, gap: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+            <div style={{ display: "flex", width: "12px", height: "12px", borderRadius: "50%", backgroundColor: "#10b981" }} />
+            <span style={{ display: "flex", fontSize: "24px", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "2px" }}>
+              Gustavo Widman
+            </span>
+          </div>
+
+          <h1
+            style={{
+              display: "flex",
+              fontSize: "72px",
+              fontWeight: 700,
+              margin: 0,
+              lineHeight: 1.1,
+              background: "linear-gradient(to bottom right, #ffffff, #d4d4d8)",
+              backgroundClip: "text",
+              color: "transparent",
+            }}
+          >
+            Blog
+          </h1>
+          <p style={{ fontSize: "32px", color: "#a1a1aa", margin: 0, maxWidth: "800px", display: "flex" }}>
+            Thoughts on Systems Engineering, NixOS, and Cybersecurity.
+          </p>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", width: "100%", zIndex: 1 }}>
+          <div style={{ display: "flex", gap: "16px" }}>
+             {["Engineering", "Systems", "NixOS"].map((tag) => (
+              <div
+                key={tag}
+                style={{
+                  display: "flex",
+                  padding: "8px 16px",
+                  backgroundColor: "#18181b",
+                  border: "1px solid #27272a",
+                  borderRadius: "8px",
+                  fontSize: "20px",
+                  color: "#e4e4e7",
+                  fontFamily: "JetBrains Mono",
+                }}
+              >
+                #{tag}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "8px" }}>
+            <span style={{ display: "flex", fontSize: "20px", color: "#52525b" }}>
+              INDEX
+            </span>
+          </div>
+        </div>
+      </div>,
+      {
+        width: 1200,
+        height: 630,
+        fonts: [
+          { name: "Inter", data: fontData, weight: 700, style: "normal" },
+          { name: "JetBrains Mono", data: fontMonoData, weight: 500, style: "normal" },
+        ],
+      }
+  );
+
+  const blogPng = new Resvg(blogSvg).render().asPng();
+  await fs.writeFile(path.join(publicOgDir, "blog-index.png"), blogPng);
+  await fs.writeFile(path.join(distOgDir, "blog-index.png"), blogPng);
+  console.log("Generated: blog-index.png");
 }
 
 // Post-process HTML generation to inject meta tags into static files
@@ -240,54 +358,9 @@ async function generateStaticHTML() {
 
     const title = data.title || "Blog Post";
     const excerpt = data.excerpt || content.slice(0, 150).replace(/\n/g, " ") + "...";
-    const imagePath = `/og/${slug}-${lang}.png`; // Absolute path from domain root
-    
-    // Construct the metadata to inject
-    // Note: We need absolute URLs for OG images usually, assume domain or relative if browser handles it.
-    // Ideally user configures domain. For now we use a placeholder or relative (which works for some)
-    // Actually relative OG images are often rejected by Twitter/Discord. 
-    // We'll use a placeholder domain "https://gustavowidman.com" (example) or let user configure.
-    // I'll assume the user will configure the domain in the head or use relative and hope for best (or better, use a placeholder that user can replace).
-    // Let's use the deployed URL from package.json if available, or just relative.
-    // Better: I'll use a placeholder REPLACEME_DOMAIN and ask user to set it or just use relative path and hope hosting provider handles domain expansion.
-    // Actually, best practice for standard hosting is full URL. 
-    // I will use `https://widman.dev` (guessing based on previous context or just generic).
-    // Wait, the terminal said "widman@nixos". 
-    // Let's just use "/" and rely on the browser/crawler resolving it if it visits the page, 
-    // OR just set standard meta tags.
-    //
-    // HTML Structure:
-    // mkdir dist/blog/slug/
-    // cp dist/index.html dist/blog/slug/index.html
-    // replace <head> content
-    
-    // NOTE: This creates a directory for the slug, but what about language?
-    // The router uses /blog/:slug. It detects language from ?lang= or state.
-    // So the URL /blog/my-post serves ONE html.
-    // Which language metadata should we serve? 
-    // Usually the default one (English). 
-    // If the user shares /blog/my-post, they get the default OG.
-    // If we want localized previews, we'd need /blog/my-post/en and /blog/my-post/pt URLs?
-    // Or just default to English for the main slug.
-    // Let's default to 'en' for /blog/:slug.
-    
-    if (lang !== "en") continue; // Only generate static HTML for the primary route (English default)
+    const imagePath = `/og/${slug}-${lang}.png`;
 
-    // Generate static HTML for BOTH main domain structure (/blog/slug) AND subdomain structure (/slug)
-    
-    // 1. Main Domain Structure: dist/blog/slug/index.html
-    const folderPathMain = path.join(distDir, "blog", slug);
-    await fs.mkdir(folderPathMain, { recursive: true });
-    
-    let html = template;
-    
-    // Inject Meta Tags
-    // We need to replace existing default meta tags from index.html to avoid duplicates/conflicts
-    // Removing: description, og:*, twitter:*
-    
-    // Simple regex removal of existing tags we intend to replace
-    // Note: This assumes standard formatting in index.html. 
-    html = html
+    let html = template
       .replace(/<title>.*?<\/title>/s, "")
       .replace(/<meta\s+name="description".*?>/s, "")
       .replace(/<meta\s+property="og:title".*?>/s, "")
@@ -297,7 +370,7 @@ async function generateStaticHTML() {
       .replace(/<meta\s+name="twitter:card".*?>/s, "")
       .replace(/<meta\s+name="twitter:title".*?>/s, "")
       .replace(/<meta\s+name="twitter:description".*?>/s, "")
-      .replace(/<meta\s+property="twitter:image".*?>/s, "") // Note: property="twitter:image" in index.html, sometimes name="twitter:image"
+      .replace(/<meta\s+property="twitter:image".*?>/s, "")
       .replace(/<meta\s+name="twitter:image".*?>/s, "");
 
     const metaTags = `
@@ -315,17 +388,56 @@ async function generateStaticHTML() {
     
     const htmlWithMeta = html.replace("</head>", `${metaTags}</head>`);
     
+    // 1. Main Domain Structure: dist/blog/slug/index.html
+    const folderPathMain = path.join(distDir, "blog", slug);
+    await fs.mkdir(folderPathMain, { recursive: true });
     await fs.writeFile(path.join(folderPathMain, "index.html"), htmlWithMeta);
     console.log(`Generated HTML: dist/blog/${slug}/index.html`);
 
     // 2. Subdomain Structure: dist/slug/index.html
-    // This allows blog.domain.com/slug to serve a static HTML file if the reverse proxy looks here
     const folderPathSub = path.join(distDir, slug);
-    // We need to be careful not to overwrite top-level assets if a slug matches a file name, but slugs are usually safe
     await fs.mkdir(folderPathSub, { recursive: true });
     await fs.writeFile(path.join(folderPathSub, "index.html"), htmlWithMeta);
     console.log(`Generated HTML: dist/${slug}/index.html`);
   }
+
+  // 3. Blog Index Static HTML
+  const blogTitle = "Blog | Gustavo Widman";
+  const blogExcerpt = "Thoughts on Systems Engineering, NixOS, and Cybersecurity.";
+  const blogImagePath = "/og/blog-index.png";
+
+  let blogHtml = template
+    .replace(/<title>.*?<\/title>/s, "")
+    .replace(/<meta\s+name="description".*?>/s, "")
+    .replace(/<meta\s+property="og:title".*?>/s, "")
+    .replace(/<meta\s+property="og:description".*?>/s, "")
+    .replace(/<meta\s+property="og:image".*?>/s, "")
+    .replace(/<meta\s+property="og:type".*?>/s, "")
+    .replace(/<meta\s+name="twitter:card".*?>/s, "")
+    .replace(/<meta\s+name="twitter:title".*?>/s, "")
+    .replace(/<meta\s+name="twitter:description".*?>/s, "")
+    .replace(/<meta\s+property="twitter:image".*?>/s, "")
+    .replace(/<meta\s+name="twitter:image".*?>/s, "");
+
+  const blogMetaTags = `
+    <title>${blogTitle}</title>
+    <meta name="description" content="${blogExcerpt}" />
+    <meta property="og:title" content="${blogTitle}" />
+    <meta property="og:description" content="${blogExcerpt}" />
+    <meta property="og:image" content="${blogImagePath}" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${blogTitle}" />
+    <meta name="twitter:description" content="${blogExcerpt}" />
+    <meta name="twitter:image" content="${blogImagePath}" />
+  `;
+
+  const blogHtmlWithMeta = blogHtml.replace("</head>", `${blogMetaTags}</head>`);
+  
+  const blogIndexPath = path.join(distDir, "blog");
+  await fs.mkdir(blogIndexPath, { recursive: true });
+  await fs.writeFile(path.join(blogIndexPath, "index.html"), blogHtmlWithMeta);
+  console.log("Generated HTML: dist/blog/index.html");
 }
 
 // Run
