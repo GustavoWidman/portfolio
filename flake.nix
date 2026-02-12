@@ -17,7 +17,7 @@
     }:
     let
       pname = "portfolio";
-      version = "1.2.0";
+      version = "2.0.0";
     in
     flake-utils.lib.eachDefaultSystem (
       system:
@@ -43,7 +43,7 @@
             runHook preInstall
 
             mkdir -p $out
-            cp -r dist/* $out
+            cp -r out/* $out
 
             runHook postInstall
           '';
