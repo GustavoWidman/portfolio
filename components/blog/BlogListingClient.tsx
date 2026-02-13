@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { BlogPostSummary } from "../../lib/source";
 import { useLanguage } from "../../lib/useLanguage";
@@ -14,7 +15,16 @@ interface BlogListingClientProps {
 
 export default function BlogListingClient({ posts, initialLang = "en" }: BlogListingClientProps) {
 	const { lang } = useLanguage(initialLang);
+	const [isSubdomain, setIsSubdomain] = useState(false);
 	const filtered = posts.filter((post) => post.lang === lang);
+
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			setIsSubdomain(window.location.hostname.startsWith("blog."));
+		}
+	}, []);
+
+	const getPostHref = (slug: string) => isSubdomain ? `/${slug}` : `/blog/${slug}`;
 
 	return (
 		<div className="min-h-screen pt-24 pb-12 px-6 max-w-4xl mx-auto">
@@ -43,7 +53,7 @@ export default function BlogListingClient({ posts, initialLang = "en" }: BlogLis
 				{filtered.map((post) => (
 					<Link
 						key={`${post.slug}-${post.lang}`}
-						href={`/blog/${post.slug}`}
+						href={getPostHref(post.slug)}
 						className="group flex flex-col p-6 bg-white dark:bg-black/70 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all hover:shadow-lg dark:hover:shadow-emerald-900/10"
 					>
 						<div className="flex justify-between items-start mb-4">

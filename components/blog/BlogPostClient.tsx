@@ -28,11 +28,15 @@ export default function BlogPostClient({
 }: BlogPostClientProps) {
 	const { lang } = useLanguage(initialLang);
 	const [showScrollTop, setShowScrollTop] = useState(false);
+	const [isSubdomain, setIsSubdomain] = useState(false);
 
 	const post = lang === "en" ? enPost || ptPost : ptPost || enPost;
 	const content = lang === "en" ? enContent || ptContent : ptContent || enContent;
 
 	useEffect(() => {
+		if (typeof window !== "undefined") {
+			setIsSubdomain(window.location.hostname.startsWith("blog."));
+		}
 		const handleScroll = () => {
 			setShowScrollTop(window.scrollY > 400);
 		};
@@ -45,11 +49,12 @@ export default function BlogPostClient({
 	}
 
 	const readingTime = 5;
+	const blogHref = isSubdomain ? "/" : "/blog";
 
 	return (
 		<div className="min-h-screen pt-24 pb-12 px-6 max-w-6xl mx-auto">
 			<Link
-				href="/blog"
+				href={blogHref}
 				className="group inline-flex items-center text-sm text-zinc-500 hover:text-emerald-500 mb-8 transition-colors"
 			>
 				<ArrowLeft size={16} className="mr-2 transition-all group-hover:drop-shadow-[0_0_6px_rgba(16,185,129,0.6)] group-hover:-translate-x-0.5" />

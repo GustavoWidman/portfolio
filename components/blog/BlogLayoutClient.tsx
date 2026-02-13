@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import BlogNavbar from "./BlogNavbar";
 import type { Language } from "@/lib/types";
@@ -10,16 +10,22 @@ import { BlogSearchProvider } from "./SearchProvider";
 interface BlogLayoutClientProps {
 	children: ReactNode;
 	initialLang?: Language;
-	isSubdomain?: boolean;
 }
 
 export default function BlogLayoutClient({
 	children,
 	initialLang = "en",
-	isSubdomain = false,
 }: BlogLayoutClientProps) {
 	const { lang, setLang } = useLanguage(initialLang);
 	const pathname = usePathname();
+	const [isSubdomain, setIsSubdomain] = useState(false);
+
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			setIsSubdomain(window.location.hostname.startsWith("blog."));
+		}
+	}, []);
+
 	const isPost = useMemo(
 		() => !!pathname && pathname.startsWith("/blog/") && pathname !== "/blog",
 		[pathname]
