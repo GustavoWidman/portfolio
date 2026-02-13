@@ -73,7 +73,7 @@ i noticed that the code loads the `FishingContext` from a static field `Projecti
 
 in rust, i replicated this signature scan. once my scanner finds those bytes, it extracts the `addr` (the `?? ?? ?? ??` part).
 
-```rust
+```rust title="scanner.rs"
 // scanner.rs snippet
 let instruction_addr = reader
     .pattern_scan(0x10000000, 0x40000000, &pattern)?;
@@ -95,7 +95,7 @@ why? because `rolledItemDrop` is just a memory address. nothing clears it. it st
 
 this forced me to upgrade from a read-only passive bot to an active memory manipulator.
 
-```rust title="test.rs"
+```rust title="reader.rs"
 fn zero_memory(&self) -> Result<()> {
     self.reader.write_memory(self.ptr, &0i32)?;
     debug!("zeroed fish memory at 0x{:X}", self.ptr);
@@ -109,7 +109,7 @@ now, immediately after a successful catch and reel-in, the bot forcibly writes `
 
 initially, scanning 1gb of memory sequentially took a few seconds. unacceptable. i swapped the standard iterator for `rayon`, rust's data parallelism library.
 
-```rust
+```rust title="scanner.rs"
 // from sequential scan to parallel joy
 memory_pages.par_iter().find_any(|page| scan_page(page, pattern))
 ```

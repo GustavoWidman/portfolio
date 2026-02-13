@@ -73,7 +73,7 @@ percebi que o código carrega o `FishingContext` de um campo estático `Projecti
 
 em rust, repliquei esse scan de assinatura. assim que meu scanner encontra esses bytes, ele extrai o `addr` (a parte `?? ?? ?? ??`).
 
-```rust
+```rust title="scanner.rs"
 // trecho de scanner.rs
 let instruction_addr = reader
     .pattern_scan(0x10000000, 0x40000000, &pattern)?;
@@ -95,7 +95,7 @@ por que? porque `rolledItemDrop` é apenas um endereço de memória. nada limpa 
 
 isso me forçou a atualizar de um bot passivo de leitura para um manipulador de memória ativo.
 
-```rust
+```rust title="reader.rs"
 fn zero_memory(&self) -> Result<()> {
     self.reader.write_memory(self.ptr, &0i32)?;
     debug!("zeroed fish memory at 0x{:X}", self.ptr);
@@ -109,7 +109,7 @@ agora, imediatamente após uma pesca e recolhimento bem-sucedidos, o bot forçad
 
 inicialmente, escanear 1gb de memória sequencialmente levava alguns segundos. inaceitável. troquei o iterador padrão pelo `rayon`, a biblioteca de paralelismo de dados do rust.
 
-```rust
+```rust title="scanner.rs"
 // de sequencial para alegria paralela
 memory_pages.par_iter().find_any(|page| scan_page(page, pattern))
 ```
