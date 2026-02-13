@@ -16,11 +16,6 @@ export function BlogSearchProvider({
 					api="/api/search"
 					type="static"
 					defaultTag={lang}
-					tags={[
-						{ name: "English", value: "en" },
-						{ name: "Portugues", value: "pt" },
-					]}
-					allowClear
 				/>
 			)}
 		>
