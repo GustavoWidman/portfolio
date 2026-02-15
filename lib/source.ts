@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { blog } from "@/.source";
 import type { MDXProps } from "mdx/types";
+import { isScheduled } from "@/lib/helpers";
 
 export interface BlogPost {
 	slug: string;
@@ -20,6 +21,7 @@ export interface BlogPostSummary {
 	date: string;
 	excerpt: string;
 	tags: string[];
+	scheduled: boolean;
 }
 
 // Get all blog posts
@@ -61,6 +63,7 @@ export function getBlogPostSummaries(): BlogPostSummary[] {
 			date: entry.date,
 			excerpt: entry.excerpt,
 			tags: entry.tags,
+			scheduled: isScheduled(entry.date),
 		};
 	});
 }

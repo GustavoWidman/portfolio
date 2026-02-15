@@ -17,7 +17,7 @@
     }:
     let
       pname = "portfolio";
-      version = "2.1.3";
+      version = "2.2.0";
     in
     flake-utils.lib.eachDefaultSystem (
       system:

@@ -202,6 +202,7 @@ export default React.memo(Example);
 ├── lib/
 │   ├── types.ts            # TypeScript type definitions
 │   ├── helpers.ts          # Utility functions
+│   ├── config.ts           # Site configuration (timezone, etc.)
 │   ├── source.ts           # Blog post data fetching
 │   ├── data/content.tsx    # Static content (projects, experience, translations)
 │   └── useLanguage.ts      # Language hook
@@ -233,6 +234,14 @@ Configured in `tsconfig.json`:
 - Translations stored in `lib/data/content.tsx` under `DATA` object
 - Language state managed via `useLanguage` hook
 - Blog posts have separate files per language (`blog/slug/en.mdx`, `blog/slug/pt.mdx`)
+
+## Scheduled Blog Posts
+
+- Posts with a future date are considered "scheduled" and displayed differently on the blog listing
+- Scheduled posts show a live countdown timer and are not accessible via URL
+- Site timezone is configured in `lib/config.ts` (`SITE_TIMEZONE`)
+- All dates are interpreted in the configured timezone and displayed in the user's browser timezone
+- Use `getDateInTimezone()` and `normalizeToTimezoneMidnight()` from `lib/helpers.ts` for date handling
 
 ## Performance Patterns
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getAllBlogSlugs, getBlogPost } from "@/lib/source";
+import { isScheduled } from "@/lib/helpers";
 import BlogPostClient from "@/components/blog/BlogPostClient";
 import { getMDXComponents } from "@/mdx-components";
 
@@ -62,6 +63,12 @@ export default async function BlogPostPage({ params }: PageProps) {
 
 	// If neither exists, 404
 	if (!postEn && !postPt) {
+		notFound();
+	}
+
+	// If the post is scheduled (future date), return 404
+	const postDate = postEn?.date || postPt?.date;
+	if (postDate && isScheduled(postDate)) {
 		notFound();
 	}
 
