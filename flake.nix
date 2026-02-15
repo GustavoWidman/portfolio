@@ -17,7 +17,7 @@
     }:
     let
       pname = "portfolio";
-      version = "2.1.2";
+      version = "2.1.3";
     in
     flake-utils.lib.eachDefaultSystem (
       system:
@@ -30,11 +30,16 @@
           src = ./.;
 
           dontPatchShebangs = true;
+          buildInputs = with pkgs; [
+            stdenv.cc.cc.lib
+            vips
+          ];
           bunDeps = bun2nix.packages.${system}.default.fetchBunDeps {
             bunNix = ./.bun.nix;
           };
           buildPhase = ''
             runHook preBuild
+            export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.vips}/lib:$LD_LIBRARY_PATH"
             bun run build
             runHook postBuild
           '';
