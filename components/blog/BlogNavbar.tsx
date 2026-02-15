@@ -64,45 +64,46 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
 
   const mobileOverlay = (
     <div
-      className={`fixed inset-0 bg-white dark:bg-black z-[60] flex flex-col items-center justify-center transition-all duration-300 ease-in-out md:hidden ${
+      className={`fixed inset-0 bg-white dark:bg-black z-[60] overflow-y-auto transition-all duration-300 ease-in-out md:hidden ${
         isMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
       }`}
       aria-hidden={!isMenuOpen}
-      style={{ paddingTop: "80px" }}
     >
       <button
         type="button"
-        className="absolute top-6 right-6 p-2 text-black dark:text-white"
+        className="fixed top-6 right-6 p-2 text-black dark:text-white z-[70]"
         onClick={() => setIsMenuOpen(false)}
         aria-label="Close Menu"
       >
         <X size={24} />
       </button>
-      <div className="flex flex-col items-center gap-8 mb-12 overflow-y-auto max-h-[calc(100vh-200px)] w-full px-4">
-        <Link
-          href={isSubdomain ? getMainDomainUrl("") : "/"}
-          onClick={() => setIsMenuOpen(false)}
-          className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
-        >
-          Portfolio
-        </Link>
-        <Link
-          href="/blog"
-          onClick={() => setIsMenuOpen(false)}
-          className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
-        >
-          Blog
-        </Link>
 
-        {/* Mobile Resume Button */}
-        <ResumeButton align="center" position="bottom">
-          <span className="text-xl font-bold text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest flex items-center gap-2 cursor-pointer">
-            <FileText size={20} /> {t.hero.resume}
-          </span>
-        </ResumeButton>
-      </div>
+      <div className="min-h-full flex flex-col items-center justify-center w-full p-4 pt-24 pb-20">
+        <div className="flex flex-col items-center gap-8 mb-12 w-full px-4">
+          <Link
+            href={isSubdomain ? getMainDomainUrl("") : "/"}
+            onClick={() => setIsMenuOpen(false)}
+            className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
+          >
+            Portfolio
+          </Link>
+          <Link
+            href="/blog"
+            onClick={() => setIsMenuOpen(false)}
+            className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
+          >
+            Blog
+          </Link>
 
-      <div className="flex items-center gap-8 mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-8 w-64 justify-center">
+          {/* Mobile Resume Button */}
+          <ResumeButton align="center" position="bottom">
+            <span className="text-xl font-bold text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest flex items-center gap-2 cursor-pointer">
+              <FileText size={20} /> {t.hero.resume}
+            </span>
+          </ResumeButton>
+        </div>
+
+        <div className="flex items-center gap-8 mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-8 w-64 justify-center">
         {/* Lang Toggle */}
         <button
           type="button"
@@ -110,7 +111,7 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
           className="flex flex-col items-center gap-2 text-zinc-600 dark:text-zinc-400"
           aria-label="Toggle Language"
         >
-          <div className="p-3 rounded-full bg-zinc-100 dark:bg-zinc-900">
+          <div className="p-3 rounded-full bg-zinc-100 dark:bg-zinc-900 w-[44px] h-[44px] flex items-center justify-center">
             <span className="font-mono text-sm font-bold">{lang.toUpperCase()}</span>
           </div>
           <span className="text-xs font-mono uppercase">Language</span>
@@ -136,6 +137,7 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
           </div>
           <span className="text-xs font-mono uppercase">Theme</span>
         </button>
+        </div>
       </div>
     </div>
   );
