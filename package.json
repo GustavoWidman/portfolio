@@ -9,6 +9,7 @@
     "generate-og": "bun run scripts/generate-og.tsx",
     "generate-locale-html": "bun run scripts/generate-locale-html.ts",
     "build": "bun run generate-og && next build && bun run generate-locale-html",
+    "preview": "bun run build && bunx serve@latest out",
     "postinstall": "fumadocs-mdx && bun2nix -o .bun.nix"
   },
   "dependencies": {
