@@ -1,12 +1,19 @@
 import { createMDX } from "fumadocs-mdx/next";
+import { readFileSync } from "fs";
+
+const packageJson = JSON.parse(readFileSync("./package.json", "utf-8"));
+const version = packageJson.version;
 
 /** @type {import('next').NextConfig} */
 const config = {
 	reactStrictMode: true,
 	output: "export",
-	// Handle static assets
 	images: {
-		unoptimized: true, // Required for static export
+		unoptimized: true,
+	},
+	env: {
+		NEXT_PUBLIC_APP_VERSION: version,
+		NEXT_PUBLIC_COMMIT_HASH: process.env.SOURCE_COMMIT ?? process.env.GIT_SHA ?? "unknown",
 	},
 };
 

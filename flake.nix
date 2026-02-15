@@ -13,11 +13,13 @@
       nixpkgs,
       bun2nix,
       flake-utils,
+      self,
       ...
     }:
     let
       pname = "portfolio";
-      version = "2.2.0";
+      version = "2.3.0";
+      commitHash = if self ? rev then self.rev else "dirty";
     in
     flake-utils.lib.eachDefaultSystem (
       system:
@@ -40,6 +42,7 @@
           buildPhase = ''
             runHook preBuild
             export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.vips}/lib:$LD_LIBRARY_PATH"
+            export SOURCE_COMMIT="${commitHash}"
             bun run build
             runHook postBuild
           '';

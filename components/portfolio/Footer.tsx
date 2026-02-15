@@ -15,7 +15,7 @@ const Footer: React.FC<FooterProps> = ({ lang }) => {
 	return (
 		<section
 			id="contact"
-			className="py-32 px-6 border-t border-zinc-200 dark:border-zinc-900 bg-white dark:bg-zinc-950 text-center transition-colors duration-300"
+			className="pt-32 pb-10 px-6 border-t border-zinc-200 dark:border-zinc-900 bg-white dark:bg-zinc-950 text-center transition-colors duration-300"
 		>
 			<div className="max-w-4xl mx-auto">
 				<h2 className="text-4xl md:text-6xl font-bold tracking-tighter mb-8 text-black dark:text-white">
