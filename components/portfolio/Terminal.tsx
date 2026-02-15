@@ -8,6 +8,10 @@ import {
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "unknown";
+const COMMIT_HASH = process.env.NEXT_PUBLIC_COMMIT_HASH ?? "unknown";
+const IS_DEV = process.env.NODE_ENV === "development";
+
 const BOOT_SEQUENCE = [
 	"Initializing boot sequence...",
 	"[ OK ] Loaded: rustc v1.91.1 (stable)",
@@ -136,7 +140,16 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
 							"  ls        - List projects",
 							"  cv [lang] - Download Resume (en/pt)",
 							"  blog      - Read my blog",
+							"  version   - Show version info",
 							"  clear     - Clear terminal"
+						);
+						break;
+					case "version":
+						newLines.push(
+							`portfolio v${APP_VERSION}`,
+							`commit: ${COMMIT_HASH}`,
+							`mode: ${IS_DEV ? "development" : "production"}`,
+							`built with Next.js 15 + React 19 + Nix`
 						);
 						break;
 					case "blog":
