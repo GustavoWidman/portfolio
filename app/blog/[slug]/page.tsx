@@ -76,13 +76,13 @@ export default async function BlogPostPage({ params }: PageProps) {
   // Strip the content function from the metadata objects
   const enMeta = postEn
     ? (() => {
-        const { content, ...rest } = postEn;
+        const { content: _, ...rest } = postEn;
         return rest;
       })()
     : undefined;
   const ptMeta = postPt
     ? (() => {
-        const { content, ...rest } = postPt;
+        const { content: _, ...rest } = postPt;
         return rest;
       })()
     : undefined;

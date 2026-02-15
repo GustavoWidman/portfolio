@@ -4,7 +4,7 @@ import { FileText, Menu, Moon, Sun, X } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { useTheme } from "next-themes";
+import { useThemeTransition } from "@/lib/useThemeTransition";
 import { DATA } from "@/lib/data/content";
 import type { Language } from "@/lib/types";
 import { ResumeButton } from "@/components/portfolio";
@@ -20,7 +20,7 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
   const t = DATA[lang];
   const [scrollY, setScrollY] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { setTheme, resolvedTheme } = useTheme();
+  const { resolvedTheme, toggleTheme } = useThemeTransition();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -119,7 +119,7 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
         {/* Theme Toggle */}
         <button
           type="button"
-          onClick={() => setTheme(currentTheme === "light" ? "dark" : "light")}
+          onClick={toggleTheme}
           className="flex flex-col items-center gap-2 text-zinc-600 dark:text-zinc-400"
           aria-label="Toggle Theme"
         >
@@ -210,7 +210,7 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
 
                   <button
                     type="button"
-                    onClick={() => setTheme(currentTheme === "light" ? "dark" : "light")}
+                    onClick={toggleTheme}
                     className="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400"
                     aria-label="Toggle Theme"
                   >

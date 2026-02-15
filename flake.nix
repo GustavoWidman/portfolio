@@ -18,7 +18,7 @@
     }:
     let
       pname = "portfolio";
-      version = "2.4.1";
+      version = "2.4.2";
       commitHash = if self ? rev then self.rev else "dirty";
     in
     flake-utils.lib.eachDefaultSystem (

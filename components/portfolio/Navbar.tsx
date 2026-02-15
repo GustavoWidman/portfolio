@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { useTheme } from "next-themes";
+import { useThemeTransition } from "@/lib/useThemeTransition";
 import { DATA } from "@/lib/data/content";
 import type { Language } from "@/lib/types";
 import ResumeButton from "./ResumeButton";
@@ -28,7 +28,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const t = DATA[lang];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { resolvedTheme, toggleTheme } = useThemeTransition();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -138,7 +138,7 @@ const Navbar: React.FC<NavbarProps> = ({
           className="flex flex-col items-center gap-2 text-zinc-600 dark:text-zinc-400"
           aria-label="Toggle Language"
         >
-          <div className="p-3 rounded-full bg-zinc-100 dark:bg-zinc-900">
+          <div className="p-2 rounded-full bg-zinc-100 dark:bg-zinc-900 w-[44px] h-[44px] flex items-center justify-center">
             <span className="font-mono text-sm font-bold">{lang.toUpperCase()}</span>
           </div>
           <span className="text-xs font-mono uppercase">Language</span>
@@ -147,7 +147,7 @@ const Navbar: React.FC<NavbarProps> = ({
         {/* Theme Toggle */}
         <button
           type="button"
-          onClick={() => setTheme(currentTheme === "light" ? "dark" : "light")}
+          onClick={toggleTheme}
           className="flex flex-col items-center gap-2 text-zinc-600 dark:text-zinc-400"
           aria-label="Toggle Theme"
         >
@@ -251,7 +251,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 {/* Theme Toggle */}
                 <button
                   type="button"
-                  onClick={() => setTheme(currentTheme === "light" ? "dark" : "light")}
+                  onClick={toggleTheme}
                   className="p-2 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-400"
                   aria-label="Toggle Theme"
                 >

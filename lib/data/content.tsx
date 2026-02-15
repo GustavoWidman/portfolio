@@ -1,5 +1,4 @@
 import { Container, Cpu, Server, Shield } from "lucide-react";
-import type { ReactNode } from "react";
 import { FaRust } from "react-icons/fa6";
 import { RiJavaLine } from "react-icons/ri";
 import { SiC, SiDocker, SiGithubactions, SiNixos, SiPython, SiWireguard } from "react-icons/si";

@@ -19,7 +19,6 @@ export default function HomeClient({ lang = "en", skipIntro = false }: HomeClien
     if (skipIntro) return false;
     return true;
   });
-  const [introComplete, setIntroComplete] = useState(skipIntro);
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -33,15 +32,14 @@ export default function HomeClient({ lang = "en", skipIntro = false }: HomeClien
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const shouldSkipParams = params.get("intro") === "false";
-      
+
       const lastSeen = localStorage.getItem(INTRO_KEY);
-      const shouldSkipStorage = lastSeen 
-        ? Date.now() - parseInt(lastSeen, 10) < INTRO_COOLDOWN 
+      const shouldSkipStorage = lastSeen
+        ? Date.now() - parseInt(lastSeen, 10) < INTRO_COOLDOWN
         : false;
 
       if (shouldSkipParams || shouldSkipStorage) {
         setShowIntro(false);
-        setIntroComplete(true);
       }
     }
   }, []);
@@ -49,11 +47,6 @@ export default function HomeClient({ lang = "en", skipIntro = false }: HomeClien
   const handleIntroComplete = () => {
     setShowIntro(false);
     localStorage.setItem(INTRO_KEY, Date.now().toString());
-    
-    // Small delay before showing portfolio with animation
-    setTimeout(() => {
-      setIntroComplete(true);
-    }, 100);
   };
 
   // Use dark as default during SSR to avoid flash

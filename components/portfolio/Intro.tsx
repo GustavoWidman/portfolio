@@ -28,8 +28,6 @@ const Intro = ({ onComplete }: IntroProps) => {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    let currentLine = 0;
-
     // Type out lines - optimized array operation
     const textInterval = setInterval(() => {
       setLines((prev) => {
