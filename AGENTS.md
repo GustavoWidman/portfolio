@@ -58,6 +58,19 @@ After completing a feature:
 2. Bump version in `flake.nix` (must match `package.json`)
 3. Commit the changes: `jj commit -m "[COMMIT_MESSAGE]"`
 
+### Viewing History
+```bash
+jj log -n 5            # Show last 5 commits
+jj log -n 10           # Show last 10 commits
+```
+
+### Commit Message Style
+**IMPORTANT**: Before creating a commit, run `jj history -n 5` to review recent commit messages and match the established style:
+- Use conventional commits format: `type(scope): description`
+- Common types: `feat`, `fix`, `refactor`, `chore`, `docs`, `style`, `test`
+- Keep descriptions lowercase, concise, and in imperative mood
+- Example: `refactor(blog): restructure posts to use bundled images`
+
 ### Restrictions
 - **NEVER** move or set bookmarks
 - **NEVER** push to remote
@@ -166,6 +179,11 @@ export default React.memo(Example);
 │   │   └── layout.tsx      # Blog layout
 │   ├── api/search/         # Search API route
 │   └── globals.css         # Global styles
+├── blog/                   # MDX blog posts (fumadocs-mdx)
+│   └── [slug]/             # Each post in its own directory
+│       ├── imgs/           # Post-specific images (bundled)
+│       ├── en.mdx          # English version
+│       └── pt.mdx          # Portuguese version
 ├── components/
 │   ├── portfolio/          # Main site components
 │   └── blog/               # Blog-specific components
@@ -175,8 +193,6 @@ export default React.memo(Example);
 │   ├── source.ts           # Blog post data fetching
 │   ├── data/content.tsx    # Static content (projects, experience, translations)
 │   └── useLanguage.ts      # Language hook
-├── content/blog/           # MDX blog posts (fumadocs-mdx)
-├── posts/                  # Legacy markdown posts
 └── scripts/                # Build scripts (OG generation, locale HTML)
 ```
 
@@ -204,7 +220,7 @@ Configured in `tsconfig.json`:
 - Supported languages: English (`en`), Portuguese (`pt`)
 - Translations stored in `lib/data/content.tsx` under `DATA` object
 - Language state managed via `useLanguage` hook
-- Blog posts have separate files per language (`content/blog/slug/en.mdx`, `content/blog/slug/pt.md`)
+- Blog posts have separate files per language (`blog/slug/en.mdx`, `blog/slug/pt.mdx`)
 
 ## Performance Patterns
 
