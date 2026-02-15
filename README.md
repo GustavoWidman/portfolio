@@ -105,4 +105,4 @@ production is deployed via nixos configuration at `/Users/r3dlust/GitHub/nix/hos
 
 ## license
 
-[mit](LICENSE) — gustavo widman, 2025
+[mit](LICENSE) — gustavo widman, 2026
