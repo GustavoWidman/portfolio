@@ -50,7 +50,8 @@ No test framework is configured. When implementing tests, ask the user which fra
 ### Commit Workflow
 
 Before starting any new feature or individual code change:
-1. Create a new commit to segment changes: `jj new`
+0. Check current repository state with `jj status`
+1. Optionally create a new commit to segment changes if the current state is dirty using `jj new`
 2. Optionally describe the planned changes: `jj describe -m "[DESCRIPTION]"`
 
 After completing a feature:
