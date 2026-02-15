@@ -450,7 +450,7 @@ async function main() {
 
 	// 3. Blog Post OGs
 	console.log("Generating Blog Post OG images...");
-	const contentDir = path.resolve("content/blog");
+	const contentDir = path.resolve("blog");
 	const slugDirs = await fs.readdir(contentDir, { withFileTypes: true });
 
 	for (const dir of slugDirs) {

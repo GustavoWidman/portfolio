@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const blog = defineCollections({
 	type: "doc",
-	dir: "./content/blog",
+	dir: "./blog",
 	schema: z.object({
 		title: z.string(),
 		// YAML parses dates as Date objects, so we coerce to string
@@ -47,10 +47,9 @@ export default defineConfig({
 			},
 			transformers: [addCodeMeta],
 		},
-		// Disable image imports - use plain src strings instead
-		// This prevents [object Object] issues with our custom img component
+		// Enable image imports for bundling images with blog posts
 		remarkImageOptions: {
-			useImport: false,
+			useImport: true,
 		},
 	},
 });

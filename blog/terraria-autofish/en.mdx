@@ -15,7 +15,7 @@ so naturally, i spent 20x the time it would take to catch the fish manually to w
 
 my first thought was "keep it simple". python + opencv + tesseract ocr. just take a screenshot of the game, look for the text that appears above your head when you catch something, and click.
 
-![image of my old python ocr setup](/blog/terraria-autofish/ocr-debug.png)
+![image of my old python ocr setup](./imgs/ocr-debug.png)
 
 it seemed reasonable until i realized terraria's font (`Andy-Bold`) was designed by a chaotic entity specifically to break optical character recognition. the kerning is weird, the outlines are thick, and the game renders text with a slight wobble.
 
@@ -33,7 +33,7 @@ easier because the metadata is preserved (function names, variable names). harde
 
 i found the holy grail in `Terraria.Projectile.FishingCheck_RollItemDrop`:
 
-![decompiled C# code of FishingCheck_RollItemDrop showing the fisher.rolledItemDrop variable](/blog/terraria-autofish/dnspy-code.png)
+![decompiled C# code of FishingCheck_RollItemDrop showing the fisher.rolledItemDrop variable](./imgs/dnspy-code.png)
 
 this function sets `fisher.rolledItemDrop` to the integer id of the fish you just hooked. if i could read that integer, i'd know exactly what was on the line before the game even rendered the text.
 
@@ -51,7 +51,7 @@ instead of hardcoding addresses, i wrote a scanner in rust that searches the pro
 
 i disassembled `Terraria.Projectile.FishingCheck` to find a stable anchor point.
 
-![disassembled code of FishingCheck showing the creation of FishingContext and the pointer to _context](/blog/terraria-autofish/disassembly.png)
+![disassembled code of FishingCheck showing the creation of FishingContext and the pointer to _context](./imgs/disassembly.png)
 
 i noticed that the code loads the `FishingContext` from a static field `Projectile._context`. the assembly looks something like this:
 
@@ -116,7 +116,7 @@ memory_pages.par_iter().find_any(|page| scan_page(page, pattern))
 
 profiling with `samply` showed the hot loop was allocation-free. scanning dropped from seconds to **milliseconds**. once the pointer is found, the polling loop runs in **microseconds**.
 
-![screenshot of the final rust app running with trace logging enabled showing the scan finding the pattern and following the pointer](/blog/terraria-autofish/final-run.png)
+![screenshot of the final rust app running with trace logging enabled showing the scan finding the pattern and following the pointer](./imgs/final-run.png)
 
 ## conclusion
 

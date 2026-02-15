@@ -3,7 +3,7 @@ import path from "node:path";
 import matter from "gray-matter";
 
 const OUT_DIR = path.resolve("out");
-const CONTENT_DIR = path.resolve("content/blog");
+const CONTENT_DIR = path.resolve("blog");
 
 // Metadata for static pages (non-blog-post)
 const PAGE_META: Record<

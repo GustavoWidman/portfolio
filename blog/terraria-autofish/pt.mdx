@@ -15,7 +15,7 @@ então, naturalmente, eu gastei 20x o tempo que levaria para pegar os peixes man
 
 meu primeiro pensamento foi "manter a simplicidade". python + opencv + tesseract ocr. apenas tirar um print do jogo, procurar pelo texto que aparece acima da cabeça quando você pesca algo e clicar.
 
-![imagem do meu setup antigo de ocr em python](/blog/terraria-autofish/ocr-debug.png)
+![imagem do meu setup antigo de ocr em python](./imgs/ocr-debug.png)
 
 parecia razoável até eu perceber que a fonte do terraria (`Andy-Bold`) foi desenhada por uma entidade caótica especificamente para quebrar ocr. o kerning é estranho, as bordas são grossas e o jogo renderiza o texto com uma leve oscilação.
 
@@ -33,7 +33,7 @@ mais fácil porque os metadados são preservados (nomes de funções, nomes de v
 
 eu encontrei o santo graal em `Terraria.Projectile.FishingCheck_RollItemDrop`:
 
-![screenshot do código c# descompilado de FishingCheck_RollItemDrop mostrando a variável fisher.rolledItemDrop](/blog/terraria-autofish/dnspy-code.png)
+![screenshot do código c# descompilado de FishingCheck_RollItemDrop mostrando a variável fisher.rolledItemDrop](./imgs/dnspy-code.png)
 
 essa função define `fisher.rolledItemDrop` com o id inteiro do peixe que você acabou de fisgar. se eu conseguisse ler esse inteiro, eu saberia exatamente o que estava na linha antes mesmo do jogo renderizar o texto.
 
@@ -51,7 +51,7 @@ em vez de hardcodar endereços, escrevi um scanner em rust que varre a memória 
 
 eu desmontei (disassemble) `Terraria.Projectile.FishingCheck` para encontrar um ponto de ancoragem estável.
 
-![screenshot do código assembly desmontado de FishingCheck mostrando a criação do FishingContext e o ponteiro para _context](/blog/terraria-autofish/disassembly.png)
+![screenshot do código assembly desmontado de FishingCheck mostrando a criação do FishingContext e o ponteiro para _context](./imgs/disassembly.png)
 
 percebi que o código carrega o `FishingContext` de um campo estático `Projectile._context`. o assembly se parece com isso:
 
@@ -116,7 +116,7 @@ memory_pages.par_iter().find_any(|page| scan_page(page, pattern))
 
 profiling com `samply` mostrou que o loop principal (hot loop) não tinha alocações desnecessárias. o scan caiu de segundos para **milissegundos**. uma vez que o ponteiro é encontrado, o loop de monitoramento roda em **microssegundos**.
 
-![screenshot do app final em rust rodando com trace logging ativado mostrando o scan encontrando o padrão e seguindo o ponteiro](/blog/terraria-autofish/final-run.png)
+![screenshot do app final em rust rodando com trace logging ativado mostrando o scan encontrando o padrão e seguindo o ponteiro](./imgs/final-run.png)
 
 ## conclusão
 
