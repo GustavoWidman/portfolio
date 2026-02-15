@@ -5,6 +5,9 @@ import { useTheme } from "next-themes";
 import { Intro, Portfolio, VersionFooter } from "@/components/portfolio";
 import type { Language } from "@/lib/types";
 
+const INTRO_KEY = "portfolio_intro_last_seen";
+const INTRO_COOLDOWN = 2 * 60 * 60 * 1000; // 2 hours
+
 interface HomeClientProps {
   lang?: Language;
   skipIntro?: boolean;
@@ -25,11 +28,18 @@ export default function HomeClient({ lang = "en", skipIntro = false }: HomeClien
     setMounted(true);
   }, []);
 
-  // Check URL params for intro=false on mount
+  // Check URL params for intro=false on mount and localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("intro") === "false") {
+      const shouldSkipParams = params.get("intro") === "false";
+      
+      const lastSeen = localStorage.getItem(INTRO_KEY);
+      const shouldSkipStorage = lastSeen 
+        ? Date.now() - parseInt(lastSeen, 10) < INTRO_COOLDOWN 
+        : false;
+
+      if (shouldSkipParams || shouldSkipStorage) {
         setShowIntro(false);
         setIntroComplete(true);
       }
@@ -38,6 +48,8 @@ export default function HomeClient({ lang = "en", skipIntro = false }: HomeClien
 
   const handleIntroComplete = () => {
     setShowIntro(false);
+    localStorage.setItem(INTRO_KEY, Date.now().toString());
+    
     // Small delay before showing portfolio with animation
     setTimeout(() => {
       setIntroComplete(true);
