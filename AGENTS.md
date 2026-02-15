@@ -250,3 +250,5 @@ Configured in `tsconfig.json`:
 - OG images generated at build time via `scripts/generate-og.tsx`
 - Static export compatible (no server-side runtime)
 - Production deployments use Nix flakes; see `/Users/r3dlust/GitHub/nix/hosts/oracle-2/portfolio.nix`
+- Nix build requires `vips` and `stdenv.cc.cc.lib` for sharp (image processing)
+- Blog images are bundled with posts via fumadocs-mdx `useImport: true`
