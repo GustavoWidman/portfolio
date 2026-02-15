@@ -4,7 +4,7 @@ my personal portfolio website. built with next.js 15 and react 19, featuring a b
 
 ## stack
 
-- **next.js** v15 — app router with static export
+- **next.js** v16 — app router with static export
 - **react** v19 — ui framework with hooks for state management
 - **typescript** — static typing throughout the codebase
 - **tailwind css** v4 — utility-first styling with custom theme
@@ -48,7 +48,15 @@ runs og image generation, next.js build, and locale-specific html generation. ou
 bun run lint
 ```
 
-uses biome for code quality checks.
+uses oxlint for code quality checks.
+
+### formatting
+
+```bash
+bun run format
+```
+
+uses oxfmt for code formatting.
 
 ## features
 

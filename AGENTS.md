@@ -4,35 +4,46 @@ Guidelines for AI coding agents working in this repository.
 
 ## Project Overview
 
-Personal portfolio website built with Next.js 15, React 19, and TypeScript. Features a main portfolio site with sections (About, Experience, Stack, Projects) and a blog powered by fumadocs-mdx. Supports dark mode and internationalization (English/Portuguese).
+Personal portfolio website built with Next.js 16, React 19, and TypeScript. Features a main portfolio site with sections (About, Experience, Stack, Projects) and a blog powered by fumadocs-mdx. Supports dark mode and internationalization (English/Portuguese).
 
 ## Toolchain
 
 - **Package Manager**: `bun` - used for all package management and development scripts
 - **Build Orchestrator**: `nix` - used for production builds and deployment
-- **Linting**: `biome` - fast linter and formatter
+- **Linting**: `oxlint` - fast linter written in rust
+- **Formatting**: `oxfmt` - fast formatter written in rust
 
 ## Commands
 
 ### Development
+
 ```bash
 bun run dev           # Start dev server at localhost:3000
 ```
 
 ### Build
+
 ```bash
 bun run build         # Generate OG images, build Next.js, generate locale HTML
 bun run generate-og   # Generate Open Graph images only
 bun run generate-locale-html  # Generate locale-specific HTML files
-nix build             # Production build via Nix flake
+nix build -L .        # Production build via Nix flake
 ```
 
 ### Linting
+
 ```bash
-bun run lint          # Run Biome linter (biome lint)
+bun run lint          # Run linter (oxlint)
+```
+
+### Formatting
+
+```bash
+bun run format        # Run formatter (oxfmt)
 ```
 
 ### Testing
+
 No test framework is configured. When implementing tests, ask the user which framework to use.
 
 ## Deployment
@@ -49,31 +60,37 @@ No test framework is configured. When implementing tests, ask the user which fra
 
 ### Commit Workflow
 
-Before starting any new feature or individual code change:
-0. Check current repository state with `jj status`
+Before starting any new feature or individual code change: 0. Check current repository state with `jj status`
+
 1. Optionally create a new commit to segment changes if the current state is dirty using `jj new`
 2. Optionally describe the planned changes: `jj describe -m "[DESCRIPTION]"`
 
 After completing a feature:
+
 1. Bump version in `package.json`
 2. Bump version in `flake.nix` (must match `package.json`)
 3. Commit the changes: `jj commit -m "[COMMIT_MESSAGE]"`
 
 ### Viewing History
+
 ```bash
-jj log -n 5            # Show last 5 commits
-jj log -n 10           # Show last 10 commits
+jj history -n 5            # Show last 5 commits
+jj history -n 10           # Show last 10 commits
 ```
 
 ### Commit Message Style
+
 **IMPORTANT**: Before creating a commit, run `jj history -n 5` to review recent commit messages and match the established style:
+
 - Use conventional commits format: `type(scope): description`
 - Common types: `feat`, `fix`, `refactor`, `chore`, `docs`, `style`, `test`
 - Keep descriptions lowercase, concise, and in imperative mood
 - Example: `refactor(blog): restructure posts to use bundled images`
 
 ### Keeping AGENTS.md Updated
+
 **IMPORTANT**: After any change that affects project structure, workflows, or conventions:
+
 1. Update `AGENTS.md` to reflect the change
 2. Commit AGENTS.md changes separately with: `jj commit -m "docs(agents): [description]"`
 3. Do not bump version for AGENTS.md-only changes
@@ -85,18 +102,21 @@ jj log -n 10           # Show last 10 commits
    - Modified conventions or patterns
 
 ### Restrictions
+
 - **NEVER** move or set bookmarks
 - **NEVER** push to remote
 - These actions are the sole responsibility of the user
 
 ## Code Style Guidelines
 
-### Formatting (Biome)
+### Formatting (oxfmt/oxfmt)
+
 - **Indentation**: 2 spaces
-- **Linting**: Biome with recommended rules enabled
-- Run `bun run lint` before committing significant changes
+- **Linting**: oxlint with recommended rules enabled
+- Run `bun run lint` and `bun run oxfmt` before committing significant changes
 
 ### TypeScript
+
 - **Strict mode**: Enabled
 - **Target**: ES2022
 - Always use `import type` for type-only imports
@@ -104,7 +124,9 @@ jj log -n 10           # Show last 10 commits
 - Prefer interfaces for object types, types for unions/primitives
 
 ### Imports Organization
+
 Order imports as follows (separated by blank lines):
+
 1. React/Next.js imports
 2. Third-party libraries (lucide-react, react-icons, etc.)
 3. Aliased internal imports (`@/lib/*`, `@components/*`)
@@ -112,6 +134,7 @@ Order imports as follows (separated by blank lines):
 5. Type imports (use `import type { X }` syntax)
 
 Example:
+
 ```typescript
 "use client";
 
@@ -124,6 +147,7 @@ import CustomComponent from "./CustomComponent";
 ```
 
 ### React Components
+
 - Use `"use client";` directive at the top of client components
 - Define interfaces for props with PascalCase naming (e.g., `HeroProps`)
 - Use `React.FC<Props>` or inline function syntax
@@ -132,6 +156,7 @@ import CustomComponent from "./CustomComponent";
 - Memoize callbacks with `useCallback`
 
 Component structure:
+
 ```typescript
 "use client";
 
@@ -145,7 +170,7 @@ interface ExampleProps {
 
 const Example: React.FC<ExampleProps> = ({ value, onClick }) => {
   const computed = useMemo(() => value.toUpperCase(), [value]);
-  
+
   return <div onClick={onClick}>{computed}</div>;
 };
 
@@ -153,6 +178,7 @@ export default React.memo(Example);
 ```
 
 ### Styling
+
 - **Tailwind CSS 4** with custom theme configuration
 - Use Tailwind utility classes; avoid custom CSS unless necessary
 - Dark mode: use `dark:` prefix (e.g., `text-black dark:text-white`)
@@ -160,6 +186,7 @@ export default React.memo(Example);
 - Custom CSS classes defined in `app/globals.css`
 
 ### Naming Conventions
+
 - **Files**: PascalCase for components (`Hero.tsx`, `BlogNavbar.tsx`)
 - **Components**: PascalCase (`Hero`, `BlogNavbar`)
 - **Functions**: camelCase (`formatDate`, `getDuration`)
@@ -168,12 +195,14 @@ export default React.memo(Example);
 - **Props interfaces**: ComponentName + Props (`HeroProps`, `NavbarProps`)
 
 ### Error Handling
+
 - Use TypeScript's strict null checking
 - Provide fallback values for optional data
 - Handle undefined/null explicitly with optional chaining (`?.`) or nullish coalescing (`??`)
 - API routes should export `dynamic = "force-static"` for static builds
 
 ### Exports
+
 - Barrel exports via `index.ts` files (see `components/portfolio/index.ts`)
 - Named exports for utilities and types
 - Default exports for React components
@@ -213,6 +242,7 @@ export default React.memo(Example);
 ## Path Aliases
 
 Configured in `tsconfig.json`:
+
 - `@/*` → root directory
 - `@components/*` → `./components/*`
 - `@lib/*` → `./lib/*`

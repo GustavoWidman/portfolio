@@ -39,9 +39,10 @@ this function sets `fisher.rolledItemDrop` to the integer id of the fish you jus
 
 ### the jit problem
 
-here's the catch: i can't just find a static pointer to `rolledItemDrop`. 
+here's the catch: i can't just find a static pointer to `rolledItemDrop`.
+
 1. **aslr (address space layout randomization)**: the operating system randomizes the memory locations of the program segments every time you run it.
-2. **jit (just-in-time) compilation**: .net compiles the intermediate language (il) to native machine code *at runtime*. the code literally doesn't exist at a fixed location until the function is called.
+2. **jit (just-in-time) compilation**: .net compiles the intermediate language (il) to native machine code _at runtime_. the code literally doesn't exist at a fixed location until the function is called.
 
 building a pointer chain in cheat engine took me 3+ hours and it broke the moment i restarted the game. i needed a dynamic approach.
 
@@ -91,7 +92,7 @@ so the final chain is:
 
 i ran into a funny bug immediately. i'd catch a bass (id 2290), reel it in, cast again... and the scanner would instantly scream "BASS DETECTED" again.
 
-why? because `rolledItemDrop` is just a memory address. nothing clears it. it still holds `2290` from the last catch. since i'm polling memory externally, i can't hook the "on catch" event to know when a *new* fish appears vs the *old* one still sitting there.
+why? because `rolledItemDrop` is just a memory address. nothing clears it. it still holds `2290` from the last catch. since i'm polling memory externally, i can't hook the "on catch" event to know when a _new_ fish appears vs the _old_ one still sitting there.
 
 this forced me to upgrade from a read-only passive bot to an active memory manipulator.
 

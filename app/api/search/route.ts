@@ -3,20 +3,20 @@ import { getBlogPostsForSearch } from "@/lib/source";
 
 // Build search indexes from blog posts
 function buildIndexes() {
-	const posts = getBlogPostsForSearch();
+  const posts = getBlogPostsForSearch();
 
-	return posts.map((post) => ({
-		id: `${post.slug}-${post.lang}`,
-		title: post.title,
-		description: post.excerpt,
-		url: `/blog/${post.slug}`,
-		tag: post.lang, // Use lang as tag for filtering
-		structuredData: post.structuredData,
-	}));
+  return posts.map((post) => ({
+    id: `${post.slug}-${post.lang}`,
+    title: post.title,
+    description: post.excerpt,
+    url: `/blog/${post.slug}`,
+    tag: post.lang, // Use lang as tag for filtering
+    structuredData: post.structuredData,
+  }));
 }
 
 const searchAPI = createSearchAPI("advanced", {
-	indexes: buildIndexes,
+  indexes: buildIndexes,
 });
 
 // Use staticGET for fully static export: exports the entire Orama search

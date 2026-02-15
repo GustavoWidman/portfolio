@@ -6,15 +6,17 @@ const version = packageJson.version;
 
 /** @type {import('next').NextConfig} */
 const config = {
-	reactStrictMode: true,
-	output: "export",
-	images: {
-		unoptimized: true,
-	},
-	env: {
-		NEXT_PUBLIC_APP_VERSION: version,
-		NEXT_PUBLIC_COMMIT_HASH: process.env.SOURCE_COMMIT ?? process.env.GIT_SHA ?? "unknown",
-	},
+  reactStrictMode: true,
+  output: "export",
+  images: {
+    unoptimized: true,
+  },
+  env: {
+    NEXT_PUBLIC_APP_VERSION: version,
+    NEXT_PUBLIC_COMMIT_HASH: process.env.SOURCE_COMMIT ?? process.env.GIT_SHA ?? "unknown",
+  },
+  // Temporarily disable Turbopack to debug fumadocs-mdx
+  // turbopack: {},
 };
 
 const withMDX = createMDX();

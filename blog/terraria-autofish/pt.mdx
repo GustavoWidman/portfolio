@@ -40,8 +40,9 @@ essa função define `fisher.rolledItemDrop` com o id inteiro do peixe que você
 ### o problema do jit
 
 aqui está a pegadinha: eu não posso simplesmente achar um ponteiro estático para `rolledItemDrop`.
+
 1. **aslr (address space layout randomization)**: o sistema operacional randomiza os locais de memória dos segmentos do programa toda vez que você o executa.
-2. **jit (just-in-time) compilation**: o .net compila a linguagem intermediária (il) para código de máquina nativo *em tempo de execução*. o código literalmente não existe em um local fixo até a função ser chamada.
+2. **jit (just-in-time) compilation**: o .net compila a linguagem intermediária (il) para código de máquina nativo _em tempo de execução_. o código literalmente não existe em um local fixo até a função ser chamada.
 
 construir uma cadeia de ponteiros (pointer chain) no cheat engine levou mais de 3 horas e quebrou no momento em que reiniciei o jogo. eu precisava de uma abordagem dinâmica.
 
@@ -91,7 +92,7 @@ assinatura de `FishingCheck()` -> extrair addr estático de `_context` -> ler po
 
 eu dei de cara com um bug engraçado imediatamente. eu pegava um bass (id 2290), recolhia a linha, lançava de novo... e o scanner gritava "BASS DETECTED" instantaneamente de novo.
 
-por que? porque `rolledItemDrop` é apenas um endereço de memória. nada limpa ele. ele ainda mantém `2290` da última pesca. como estou monitorando (polling) a memória externamente, não tenho como "hookar" o evento de pesca para saber quando um *novo* peixe aparece vs o *velho* ainda sentado lá.
+por que? porque `rolledItemDrop` é apenas um endereço de memória. nada limpa ele. ele ainda mantém `2290` da última pesca. como estou monitorando (polling) a memória externamente, não tenho como "hookar" o evento de pesca para saber quando um _novo_ peixe aparece vs o _velho_ ainda sentado lá.
 
 isso me forçou a atualizar de um bot passivo de leitura para um manipulador de memória ativo.
 

@@ -55,34 +55,38 @@ function CustomImage(props: React.ComponentProps<"img">) {
 }
 
 export function getMDXComponents(components: MDXComponents = {}): MDXComponents {
-	return {
-		...defaultMdxComponents,
-		pre: ({ ref: _ref, ...props }) => (
-			<CodeBlock keepBackground {...props} className="not-prose">
-				<Pre>{props.children}</Pre>
-			</CodeBlock>
-		),
-		// Override inline code to match old Vite styling (emerald text, no backticks)
-		code: ({ children, className, ...props }) => {
-			// If className contains "language-", it's a code block handled by pre above
-			if (className?.includes("language-")) {
-				return <code className={className} {...props}>{children}</code>;
-			}
-			return (
-				<code
-					className="bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/50 rounded px-1.5 py-0.5 text-sm font-mono font-medium text-emerald-600 dark:text-emerald-400 break-all whitespace-pre-wrap"
-					{...props}
-				>
-					{children}
-				</code>
-			);
-		},
-		// Override img to use ImageZoom for click-to-zoom functionality
-		img: CustomImage,
-		...components,
-	};
+  return {
+    ...defaultMdxComponents,
+    pre: ({ ref: _ref, ...props }) => (
+      <CodeBlock keepBackground {...props} className="not-prose">
+        <Pre>{props.children}</Pre>
+      </CodeBlock>
+    ),
+    // Override inline code to match old Vite styling (emerald text, no backticks)
+    code: ({ children, className, ...props }) => {
+      // If className contains "language-", it's a code block handled by pre above
+      if (className?.includes("language-")) {
+        return (
+          <code className={className} {...props}>
+            {children}
+          </code>
+        );
+      }
+      return (
+        <code
+          className="bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/50 rounded px-1.5 py-0.5 text-sm font-mono font-medium text-emerald-600 dark:text-emerald-400 break-all whitespace-pre-wrap"
+          {...props}
+        >
+          {children}
+        </code>
+      );
+    },
+    // Override img to use ImageZoom for click-to-zoom functionality
+    img: CustomImage,
+    ...components,
+  };
 }
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
-	return getMDXComponents(components);
+  return getMDXComponents(components);
 }

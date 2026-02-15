@@ -10,197 +10,197 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-    --font-sans:
-        ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-        "Segoe UI Symbol", "Noto Color Emoji";
-    --font-mono: var(--font-jetbrains-mono), monospace;
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: var(--font-jetbrains-mono), monospace;
 
-    --animate-fade-in: fadeIn 0.5s ease-out;
-    --animate-pulse-subtle: pulseSubtle 2s ease-in-out infinite;
-    --animate-bounce-subtle: bounceSubtle 1.5s ease-in-out infinite;
+  --animate-fade-in: fadeIn 0.5s ease-out;
+  --animate-pulse-subtle: pulseSubtle 2s ease-in-out infinite;
+  --animate-bounce-subtle: bounceSubtle 1.5s ease-in-out infinite;
 
-    @keyframes fadeIn {
-        0% {
-            opacity: 0;
-        }
-        100% {
-            opacity: 1;
-        }
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
     }
-    @keyframes pulseSubtle {
-        0%,
-        100% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0.5;
-        }
+    100% {
+      opacity: 1;
     }
-    @keyframes bounceSubtle {
-        0%,
-        100% {
-            transform: translateY(0);
-        }
-        50% {
-            transform: translateY(-0.5rem);
-        }
+  }
+  @keyframes pulseSubtle {
+    0%,
+    100% {
+      opacity: 1;
     }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  @keyframes bounceSubtle {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-0.5rem);
+    }
+  }
 
-    --color-fd-primary: hsl(160, 60%, 45%);
-    --color-fd-primary-foreground: hsl(0, 0%, 100%);
-    --color-fd-background: hsl(0, 0%, 98%);
-    --color-fd-foreground: hsl(0, 0%, 3.9%);
-    --color-fd-muted: hsl(0, 0%, 96.1%);
-    --color-fd-muted-foreground: hsl(0, 0%, 45.1%);
-    --color-fd-popover: hsl(0, 0%, 100%);
-    --color-fd-popover-foreground: hsl(0, 0%, 15.1%);
-    --color-fd-card: hsl(0, 0%, 99.7%);
-    --color-fd-card-foreground: hsl(0, 0%, 3.9%);
-    --color-fd-border: hsla(0, 0%, 60%, 0.2);
-    --color-fd-secondary: hsl(0, 0%, 96.1%);
-    --color-fd-secondary-foreground: hsl(0, 0%, 9%);
-    --color-fd-accent: hsl(0, 0%, 94.1%);
-    --color-fd-accent-foreground: hsl(0, 0%, 9%);
-    --color-fd-ring: hsl(0, 0%, 63.9%);
+  --color-fd-primary: hsl(160, 60%, 45%);
+  --color-fd-primary-foreground: hsl(0, 0%, 100%);
+  --color-fd-background: hsl(0, 0%, 98%);
+  --color-fd-foreground: hsl(0, 0%, 3.9%);
+  --color-fd-muted: hsl(0, 0%, 96.1%);
+  --color-fd-muted-foreground: hsl(0, 0%, 45.1%);
+  --color-fd-popover: hsl(0, 0%, 100%);
+  --color-fd-popover-foreground: hsl(0, 0%, 15.1%);
+  --color-fd-card: hsl(0, 0%, 99.7%);
+  --color-fd-card-foreground: hsl(0, 0%, 3.9%);
+  --color-fd-border: hsla(0, 0%, 60%, 0.2);
+  --color-fd-secondary: hsl(0, 0%, 96.1%);
+  --color-fd-secondary-foreground: hsl(0, 0%, 9%);
+  --color-fd-accent: hsl(0, 0%, 94.1%);
+  --color-fd-accent-foreground: hsl(0, 0%, 9%);
+  --color-fd-ring: hsl(0, 0%, 63.9%);
 }
 
 .dark {
-    /* zinc-950 = #09090b = hsl(240, 10%, 3.9%) */
-    --color-fd-background: hsl(240, 10%, 3.9%);
-    --color-fd-foreground: hsl(0, 0%, 98%);
-    --color-fd-muted: hsl(240, 5%, 10%);
-    --color-fd-muted-foreground: hsl(0, 0%, 60%);
-    --color-fd-popover: hsl(240, 10%, 5%);
-    --color-fd-popover-foreground: hsl(0, 0%, 98%);
-    --color-fd-card: hsl(240, 10%, 5%);
-    --color-fd-card-foreground: hsl(0, 0%, 98%);
-    --color-fd-border: hsl(240, 5%, 15%);
-    --color-fd-primary: hsl(158, 64%, 52%);
-    --color-fd-primary-foreground: hsl(0, 0%, 0%);
-    --color-fd-secondary: hsl(240, 5%, 13%);
-    --color-fd-secondary-foreground: hsl(0, 0%, 98%);
-    --color-fd-accent: hsl(240, 5%, 15%);
-    --color-fd-accent-foreground: hsl(0, 0%, 100%);
-    --color-fd-ring: hsl(0, 0%, 34.9%);
+  /* zinc-950 = #09090b = hsl(240, 10%, 3.9%) */
+  --color-fd-background: hsl(240, 10%, 3.9%);
+  --color-fd-foreground: hsl(0, 0%, 98%);
+  --color-fd-muted: hsl(240, 5%, 10%);
+  --color-fd-muted-foreground: hsl(0, 0%, 60%);
+  --color-fd-popover: hsl(240, 10%, 5%);
+  --color-fd-popover-foreground: hsl(0, 0%, 98%);
+  --color-fd-card: hsl(240, 10%, 5%);
+  --color-fd-card-foreground: hsl(0, 0%, 98%);
+  --color-fd-border: hsl(240, 5%, 15%);
+  --color-fd-primary: hsl(158, 64%, 52%);
+  --color-fd-primary-foreground: hsl(0, 0%, 0%);
+  --color-fd-secondary: hsl(240, 5%, 13%);
+  --color-fd-secondary-foreground: hsl(0, 0%, 98%);
+  --color-fd-accent: hsl(240, 5%, 15%);
+  --color-fd-accent-foreground: hsl(0, 0%, 100%);
+  --color-fd-ring: hsl(0, 0%, 34.9%);
 }
 
 @layer base {
-    /* Slightly brighter dark theme text to match Vite.
+  /* Slightly brighter dark theme text to match Vite.
 	   Inside @layer base so that @layer utilities (hover rules) can override.
 	   Uses :where() for minimal specificity within the layer. */
-    :where(.dark) .text-zinc-400 {
-        color: hsl(0, 0%, 72%);
-    }
-    :where(.dark) .text-zinc-500 {
-        color: hsl(0, 0%, 64%);
-    }
-    :where(.dark) .text-zinc-600 {
-        color: hsl(0, 0%, 60%);
-    }
+  :where(.dark) .text-zinc-400 {
+    color: hsl(0, 0%, 72%);
+  }
+  :where(.dark) .text-zinc-500 {
+    color: hsl(0, 0%, 64%);
+  }
+  :where(.dark) .text-zinc-600 {
+    color: hsl(0, 0%, 60%);
+  }
 }
 
 @layer base {
-    html {
-        scroll-behavior: smooth;
-    }
+  html {
+    scroll-behavior: smooth;
+  }
 
-    body {
-        @apply overflow-x-hidden transition-colors duration-300;
-        scrollbar-gutter: stable;
-    }
+  body {
+    @apply overflow-x-hidden transition-colors duration-300;
+    scrollbar-gutter: stable;
+  }
 
-    .font-mono {
-        font-family: "JetBrains Mono", "Fira Code", monospace;
-    }
+  .font-mono {
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+  }
 }
 
 /* Custom scrollbar with optimized rendering */
 ::-webkit-scrollbar {
-    width: 6px;
-    scrollbar-gutter: stable;
+  width: 6px;
+  scrollbar-gutter: stable;
 }
 
 ::-webkit-scrollbar-track {
-    background: transparent;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #52525b;
-    border-radius: 3px;
+  background: #52525b;
+  border-radius: 3px;
 }
 
 .mesh-bg-dark {
-    background-image:
-        radial-gradient(at 80% 0%, rgba(50, 50, 50, 0.15) 0px, transparent 50%),
-        radial-gradient(at 0% 50%, rgba(30, 30, 30, 0.1) 0px, transparent 50%);
+  background-image:
+    radial-gradient(at 80% 0%, rgba(50, 50, 50, 0.15) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(30, 30, 30, 0.1) 0px, transparent 50%);
 }
 
 .mesh-bg-light {
-    background-image:
-        radial-gradient(at 80% 0%, rgba(200, 200, 200, 0.25) 0px, transparent 50%),
-        radial-gradient(at 0% 50%, rgba(220, 220, 220, 0.2) 0px, transparent 50%);
+  background-image:
+    radial-gradient(at 80% 0%, rgba(200, 200, 200, 0.25) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(220, 220, 220, 0.2) 0px, transparent 50%);
 }
 
 .bg-grid-dark {
-    background-size: 40px 40px;
-    background-image:
-        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-    contain: style;
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  contain: style;
 }
 
 .bg-grid-light {
-    background-size: 40px 40px;
-    background-image:
-        linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
-    contain: style;
+  background-size: 40px 40px;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  contain: style;
 }
 
 /* Component-level paint containment and optimization */
 section {
-    contain: style;
+  contain: style;
 }
 
 /* Enable GPU acceleration when explicitly requested */
 .gpu-accel {
-    transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* Replace GPU-intensive animations with efficient alternatives */
 .animate-ping {
-    animation: none;
-    opacity: 0.75;
+  animation: none;
+  opacity: 0.75;
 }
 
 .animate-bounce {
-    animation: bounceSubtle 1.5s ease-in-out infinite;
+  animation: bounceSubtle 1.5s ease-in-out infinite;
 }
 
 .animate-pulse {
-    animation: pulseSubtle 2s ease-in-out infinite;
+  animation: pulseSubtle 2s ease-in-out infinite;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+  width: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+  background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #52525b;
-    border-radius: 3px;
+  background: #52525b;
+  border-radius: 3px;
 }
 
 /* Remove underlines from links inside headings (autolink-headings) */
 .prose :where(h1, h2, h3, h4, h5, h6) a {
-    text-decoration: none !important;
-    font-weight: inherit !important;
-    border-bottom: none !important;
-    color: inherit !important;
+  text-decoration: none !important;
+  font-weight: inherit !important;
+  border-bottom: none !important;
+  color: inherit !important;
 }
 
 /* Fix codeblock styling: the <figure> (CodeBlock) owns the background
@@ -211,68 +211,68 @@ section {
    which leaks onto the <code> inside codeblocks despite not-prose. */
 figure.shiki pre,
 figure.shiki code {
-    background-color: transparent !important;
-    border: none !important;
+  background-color: transparent !important;
+  border: none !important;
 }
 
 /* Animation keyframes */
 @keyframes bounceSubtle {
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-8px);
-    }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 @keyframes pulseSubtle {
-    0%,
-    100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.7;
-    }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 @keyframes fade-in {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .animate-fade-in {
-    animation: fade-in 0.3s ease-out forwards;
+  animation: fade-in 0.3s ease-out forwards;
 }
 
 /* Blog post layout — bypasses Tailwind responsive class issues */
 .blog-post-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 3rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
 }
 
 .blog-post-sidebar {
-    display: none;
+  display: none;
 }
 
 .blog-post-mobile-toc {
-    display: block;
+  display: block;
 }
 
 @media (min-width: 1024px) {
-    .blog-post-grid {
-        grid-template-columns: 1fr 3fr;
-        gap: 3rem;
-    }
-    .blog-post-sidebar {
-        display: block;
-    }
-    .blog-post-mobile-toc {
-        display: none;
-    }
+  .blog-post-grid {
+    grid-template-columns: 1fr 3fr;
+    gap: 3rem;
+  }
+  .blog-post-sidebar {
+    display: block;
+  }
+  .blog-post-mobile-toc {
+    display: none;
+  }
 }
