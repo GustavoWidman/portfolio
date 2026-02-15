@@ -75,7 +75,7 @@ jj log -n 10           # Show last 10 commits
 **IMPORTANT**: After any change that affects project structure, workflows, or conventions:
 1. Update `AGENTS.md` to reflect the change
 2. Commit AGENTS.md changes separately with: `jj commit -m "docs(agents): [description]"`
-3. Bump version by **0.0.1** (patch) for AGENTS.md-only changes
+3. Do not bump version for AGENTS.md-only changes
 4. Examples of changes requiring AGENTS.md updates:
    - New directories or file structure changes
    - New commands or scripts
