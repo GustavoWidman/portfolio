@@ -71,6 +71,18 @@ jj log -n 10           # Show last 10 commits
 - Keep descriptions lowercase, concise, and in imperative mood
 - Example: `refactor(blog): restructure posts to use bundled images`
 
+### Keeping AGENTS.md Updated
+**IMPORTANT**: After any change that affects project structure, workflows, or conventions:
+1. Update `AGENTS.md` to reflect the change
+2. Commit AGENTS.md changes separately with: `jj commit -m "docs(agents): [description]"`
+3. Bump version by **0.0.1** (patch) for AGENTS.md-only changes
+4. Examples of changes requiring AGENTS.md updates:
+   - New directories or file structure changes
+   - New commands or scripts
+   - Changes to build/deployment process
+   - New dependencies or tooling changes
+   - Modified conventions or patterns
+
 ### Restrictions
 - **NEVER** move or set bookmarks
 - **NEVER** push to remote
