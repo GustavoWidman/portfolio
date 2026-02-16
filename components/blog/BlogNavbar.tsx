@@ -104,39 +104,39 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
         </div>
 
         <div className="flex items-center gap-8 mt-8 border-t border-zinc-200 dark:border-zinc-800 pt-8 w-64 justify-center">
-        {/* Lang Toggle */}
-        <button
-          type="button"
-          onClick={() => setLang(lang === "en" ? "pt" : "en")}
-          className="flex flex-col items-center gap-2 text-zinc-600 dark:text-zinc-400"
-          aria-label="Toggle Language"
-        >
-          <div className="p-3 rounded-full bg-zinc-100 dark:bg-zinc-900 w-[44px] h-[44px] flex items-center justify-center">
-            <span className="font-mono text-sm font-bold">{lang.toUpperCase()}</span>
-          </div>
-          <span className="text-xs font-mono uppercase">Language</span>
-        </button>
+          {/* Lang Toggle */}
+          <button
+            type="button"
+            onClick={() => setLang(lang === "en" ? "pt" : "en")}
+            className="flex flex-col items-center gap-2 text-zinc-600 dark:text-zinc-400"
+            aria-label="Toggle Language"
+          >
+            <div className="p-3 rounded-full bg-zinc-100 dark:bg-zinc-900 w-[44px] h-[44px] flex items-center justify-center">
+              <span className="font-mono text-sm font-bold">{lang.toUpperCase()}</span>
+            </div>
+            <span className="text-xs font-mono uppercase">Language</span>
+          </button>
 
-        {/* Theme Toggle */}
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="flex flex-col items-center gap-2 text-zinc-600 dark:text-zinc-400"
-          aria-label="Toggle Theme"
-        >
-          <div className="p-3 rounded-full bg-zinc-100 dark:bg-zinc-900">
-            {mounted ? (
-              currentTheme === "light" ? (
-                <Moon size={20} />
+          {/* Theme Toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex flex-col items-center gap-2 text-zinc-600 dark:text-zinc-400"
+            aria-label="Toggle Theme"
+          >
+            <div className="p-3 rounded-full bg-zinc-100 dark:bg-zinc-900">
+              {mounted ? (
+                currentTheme === "light" ? (
+                  <Moon size={20} />
+                ) : (
+                  <Sun size={20} />
+                )
               ) : (
-                <Sun size={20} />
-              )
-            ) : (
-              <Moon size={20} />
-            )}
-          </div>
-          <span className="text-xs font-mono uppercase">Theme</span>
-        </button>
+                <Moon size={20} />
+              )}
+            </div>
+            <span className="text-xs font-mono uppercase">Theme</span>
+          </button>
         </div>
       </div>
     </div>

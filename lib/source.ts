@@ -105,16 +105,20 @@ export function getAllBlogSlugs(): string[] {
 }
 
 export function getBlogPostsForSearch() {
-  return blog.map((entry) => {
-    const { slug, lang } = parseEntryPath(entry.info.path);
+  return blog
+    .map((entry) => {
+      const { slug, lang } = parseEntryPath(entry.info.path);
+      const date = formatDateValue(entry.date);
 
-    return {
-      slug,
-      lang,
-      title: entry.title,
-      excerpt: entry.excerpt,
-      tags: entry.tags,
-      structuredData: entry.structuredData,
-    };
-  });
+      return {
+        slug,
+        lang,
+        title: entry.title,
+        excerpt: entry.excerpt,
+        tags: entry.tags,
+        structuredData: entry.structuredData,
+        date,
+      };
+    })
+    .filter((post) => !isScheduled(post.date));
 }
