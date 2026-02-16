@@ -73,4 +73,12 @@ export interface TranslationData {
     linkedin: string;
     resume: string;
   };
+  notFound: {
+    title: string;
+    subtitle: string;
+    description: string;
+    backHome: string;
+    viewProjects: string;
+    readBlog: string;
+  };
 }

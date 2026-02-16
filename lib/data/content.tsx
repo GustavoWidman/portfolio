@@ -189,6 +189,14 @@ export const DATA: Record<string, TranslationData> = {
       linkedin: "LinkedIn",
       resume: "Download Resume",
     },
+    notFound: {
+      title: "404",
+      subtitle: "Page Not Found",
+      description: "The page you're looking for doesn't exist or has been moved.",
+      backHome: "Back to Home",
+      viewProjects: "View Projects",
+      readBlog: "Read Blog",
+    },
   },
   pt: {
     nav: {
@@ -370,6 +378,14 @@ export const DATA: Record<string, TranslationData> = {
       email: "Me envie um email",
       linkedin: "LinkedIn",
       resume: "Baixar CV",
+    },
+    notFound: {
+      title: "404",
+      subtitle: "Página Não Encontrada",
+      description: "A página que você está procurando não existe ou foi movida.",
+      backHome: "Voltar ao Início",
+      viewProjects: "Ver Projetos",
+      readBlog: "Ler Blog",
     },
   },
 };

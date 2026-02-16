@@ -1,6 +1,6 @@
 {
-  "name": "gustavo-widman-portfolio",
-  "version": "2.4.4",
+  "name": "portfolio",
+  "version": "2.4.5",
   "private": true,
   "type": "module",
   "scripts": {
