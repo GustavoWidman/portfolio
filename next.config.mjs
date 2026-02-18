@@ -15,8 +15,19 @@ const config = {
     NEXT_PUBLIC_APP_VERSION: version,
     NEXT_PUBLIC_COMMIT_HASH: process.env.SOURCE_COMMIT ?? process.env.GIT_SHA ?? "unknown",
   },
-  // Temporarily disable Turbopack to debug fumadocs-mdx
-  // turbopack: {},
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "react-icons",
+      "react-icons/fa6",
+      "react-icons/si",
+      "react-icons/tb",
+      "react-icons/ri",
+      "fumadocs-ui",
+      "fumadocs-core",
+      "fumadocs-mdx",
+    ],
+  },
 };
 
 const withMDX = createMDX();

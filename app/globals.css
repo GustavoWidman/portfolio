@@ -111,7 +111,7 @@
   }
 
   .font-mono {
-    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-family: var(--font-jetbrains-mono), monospace;
   }
 }
 

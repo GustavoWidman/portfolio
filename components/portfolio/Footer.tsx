@@ -1,6 +1,5 @@
-import { FileText, Mail } from "lucide-react";
+import { FileText, Linkedin, Mail } from "lucide-react";
 import React from "react";
-import { LuLinkedin } from "react-icons/lu";
 import { DATA } from "@/lib/data/content";
 import type { Language } from "@/lib/types";
 import ResumeButton from "./ResumeButton";
@@ -38,7 +37,7 @@ const Footer: React.FC<FooterProps> = ({ lang }) => {
             rel="noreferrer"
             className="px-8 py-4 bg-transparent border border-zinc-300 dark:border-zinc-800 text-black dark:text-white font-bold rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors flex items-center justify-center gap-2"
           >
-            <LuLinkedin size={20} /> {t.footer.linkedin}
+            <Linkedin size={20} /> {t.footer.linkedin}
           </a>
 
           <ResumeButton align="center" position="top">

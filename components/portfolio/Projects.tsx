@@ -2,13 +2,13 @@ import {
   Brain,
   Container,
   Cpu,
+  Github,
   Lock,
   Server,
   Shield,
   Terminal as TerminalIcon,
 } from "lucide-react";
 import React from "react";
-import { LuGithub } from "react-icons/lu";
 import { DATA, STATIC_PROJECTS } from "@/lib/data/content";
 import type { Language } from "@/lib/types";
 
@@ -76,7 +76,7 @@ const Projects: React.FC<ProjectsProps> = ({ lang }) => {
                         rel="noreferrer"
                         className="inline-flex items-center gap-2 text-black dark:text-white border-b border-black dark:border-white pb-1 hover:text-zinc-600 dark:hover:text-zinc-400 hover:border-zinc-600 dark:hover:border-zinc-400 transition-colors"
                       >
-                        <LuGithub size={18} /> {t.projects.viewSource}
+                        <Github size={18} /> {t.projects.viewSource}
                       </a>
                     )}
                   </div>
