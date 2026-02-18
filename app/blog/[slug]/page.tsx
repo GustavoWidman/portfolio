@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getAllBlogSlugs, getBlogPost } from "@/lib/source";
 import { isScheduled } from "@/lib/helpers";
 import BlogPostClient from "@/components/blog/BlogPostClient";
+import { JsonLd, blogPostingSchema, breadcrumbSchema } from "@/components/shared/JsonLd";
 import { getMDXComponents } from "@/mdx-components";
 
 interface PageProps {
@@ -14,6 +15,8 @@ export async function generateStaticParams() {
   const slugs = getAllBlogSlugs();
   return slugs.map((slug) => ({ slug }));
 }
+
+const SITE_URL = "https://guswid.com";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -26,13 +29,30 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
+  const postKeywords = [...post.tags, "guswid", "gustavo widman", "blog"].join(", ");
+  const postUrl = `${SITE_URL}/blog/${slug}`;
+
   return {
     title: `${post.title} | Gustavo Widman`,
     description: post.excerpt,
+    keywords: postKeywords,
+    authors: [{ name: "Gustavo Widman", url: SITE_URL }],
+    alternates: {
+      canonical: postUrl,
+      languages: {
+        en: postUrl,
+        pt: postUrl,
+      },
+    },
     openGraph: {
       title: post.title,
       description: post.excerpt,
       type: "article",
+      url: postUrl,
+      siteName: "Gustavo Widman",
+      publishedTime: post.date,
+      authors: ["Gustavo Widman"],
+      tags: post.tags,
       images: [
         {
           url: `/og/${slug}-en.png`,
@@ -47,6 +67,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: post.title,
       description: post.excerpt,
       images: [`/og/${slug}-en.png`],
+      creator: "@guswid",
     },
   };
 }
@@ -87,8 +108,28 @@ export default async function BlogPostPage({ params }: PageProps) {
       })()
     : undefined;
 
+  // Use English metadata for structured data, fallback to Portuguese
+  const structuredPost = postEn || postPt;
+  const postStructuredData = structuredPost
+    ? blogPostingSchema({
+        title: structuredPost.title,
+        excerpt: structuredPost.excerpt,
+        date: structuredPost.date,
+        slug,
+        tags: structuredPost.tags,
+      })
+    : null;
+
+  const breadcrumbData = breadcrumbSchema([
+    { name: "Home", url: SITE_URL },
+    { name: "Blog", url: `${SITE_URL}/blog` },
+    { name: structuredPost?.title || "Post", url: `${SITE_URL}/blog/${slug}` },
+  ]);
+
   return (
     <Suspense>
+      {postStructuredData && <JsonLd data={postStructuredData} />}
+      <JsonLd data={breadcrumbData} />
       <BlogPostClient enPost={enMeta} ptPost={ptMeta} enContent={EnContent} ptContent={PtContent} />
     </Suspense>
   );
