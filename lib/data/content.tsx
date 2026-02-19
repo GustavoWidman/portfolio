@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Container, Cpu, Server, Shield } from "lucide-react";
 import { FaRust } from "react-icons/fa6";
 import { RiJavaLine } from "react-icons/ri";
@@ -440,10 +441,12 @@ export const STATIC_EXPERIENCE: Experience[] = [
     id: "camelsec",
     company: "CamelSec",
     logo: (
-      <img
+      <Image
         src="/icons/camelsec_logo.jpg"
         alt="CamelSec Logo"
-        className="w-full h-full object-cover rounded"
+        fill
+        sizes="48px"
+        className="object-cover rounded"
       />
     ),
     positions: [
@@ -468,10 +471,12 @@ export const STATIC_EXPERIENCE: Experience[] = [
     id: "echosec",
     company: "EchoSec",
     logo: (
-      <img
+      <Image
         src="/icons/echosec_logo.jpg"
         alt="EchoSec Logo"
-        className="w-full h-full object-cover rounded"
+        fill
+        sizes="48px"
+        className="object-cover rounded"
       />
     ),
     positions: [
@@ -502,10 +507,12 @@ export const STATIC_EXPERIENCE: Experience[] = [
     id: "mwapp",
     company: "MW APP IT Consulting",
     logo: (
-      <img
+      <Image
         src="/icons/mwapp_logo.jpg"
         alt="MW APP IT Consulting Logo"
-        className="w-full h-full object-cover rounded"
+        fill
+        sizes="48px"
+        className="object-cover rounded"
       />
     ),
     positions: [

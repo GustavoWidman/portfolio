@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface IntroLine {
   id: number;
   text: string;
-}
-
-interface IntroProps {
-  onComplete: () => void;
 }
 
 const bootText = [
@@ -23,38 +19,44 @@ const bootText = [
   "> ACCESS GRANTED.",
 ];
 
+interface IntroProps {
+  onComplete: () => void;
+}
+
 const Intro = ({ onComplete }: IntroProps) => {
   const [lines, setLines] = useState<IntroLine[]>([]);
   const [progress, setProgress] = useState(0);
+  const progressRef = useRef(0);
 
   useEffect(() => {
-    // Type out lines - optimized array operation
+    let lineIndex = 0;
+    let currentProgress = 0;
+
     const textInterval = setInterval(() => {
-      setLines((prev) => {
-        const index = prev.length;
-        if (index >= bootText.length) {
-          clearInterval(textInterval);
-          return prev;
-        }
-        return [...prev, { id: index, text: bootText[index] }];
-      });
+      if (lineIndex >= bootText.length) {
+        clearInterval(textInterval);
+        return;
+      }
+      setLines((prev) => [...prev, { id: lineIndex, text: bootText[lineIndex] }]);
+      lineIndex++;
     }, 150);
 
-    // Progress bar
     const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(progressInterval);
-          setTimeout(onComplete, 800); // Wait a bit after 100% before finishing
-          return 100;
-        }
-        return prev + 2;
-      });
+      currentProgress = Math.min(currentProgress + 2, 100);
+      progressRef.current = currentProgress;
+      setProgress(currentProgress);
     }, 30);
+
+    const completionTimeout = setTimeout(() => {
+      clearInterval(progressInterval);
+      setProgress(100);
+      setTimeout(onComplete, 800);
+    }, 1500);
 
     return () => {
       clearInterval(textInterval);
       clearInterval(progressInterval);
+      clearTimeout(completionTimeout);
     };
   }, [onComplete]);
 

@@ -1,7 +1,7 @@
 import type { Language } from "@/lib/types";
 import { SITE_TIMEZONE } from "@/lib/config";
 
-export function getDateInTimezone(dateString: string): Date {
+function getDateInTimezone(dateString: string): Date {
   if (!dateString || typeof dateString !== "string") {
     return new Date();
   }
@@ -48,7 +48,7 @@ function getTimezoneOffsetMs(timezone: string, utcMs: number): number {
   return utcMs - tzMs;
 }
 
-export function getCurrentTimeInTimezone(): Date {
+function getCurrentTimeInTimezone(): Date {
   const now = new Date();
   const tzParts = new Intl.DateTimeFormat("en-US", {
     timeZone: SITE_TIMEZONE,

@@ -29,7 +29,7 @@ const ExperienceSection: React.FC<ExperienceProps> = ({ lang }) => {
               {/* Company Header */}
               <div className="flex items-center gap-4 mb-8">
                 {/* Logo Container */}
-                <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg shadow-black/5 ring-1 ring-zinc-900/5 dark:ring-white/10 shrink-0">
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden shadow-lg shadow-black/5 ring-1 ring-zinc-900/5 dark:ring-white/10 shrink-0">
                   {companyData.logo || (
                     <div className="w-full h-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
                       <Building2 className="text-zinc-400" />

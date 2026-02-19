@@ -42,7 +42,7 @@ function Background() {
           width: "600px",
           height: "600px",
           background: "radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(0,0,0,0) 70%)",
-          filter: "blur(40px)",
+          filter: "blur(8px)",
           zIndex: 0,
           display: "flex",
         }}

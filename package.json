@@ -1,6 +1,6 @@
 {
   "name": "portfolio",
-  "version": "2.4.6",
+  "version": "2.4.7",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,7 +11,8 @@
     "generate-locale-html": "bun run scripts/generate-locale-html.ts",
     "build": "bun run generate-og && next build && bun run generate-locale-html",
     "preview": "bun run build && bunx serve@latest out",
-    "postinstall": "fumadocs-mdx && bun2nix -o .bun.nix"
+    "postinstall": "fumadocs-mdx && bun2nix -o .bun.nix",
+    "doctor": "react-doctor --no-ami --offline --verbose"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
+    "@seomator/seo-audit": "^3.0.0",
     "@shikijs/types": "^3.22.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/typography": "^0.5.19",
@@ -45,6 +47,7 @@
     "oxfmt": "^0.32.0",
     "oxlint": "^1.47.0",
     "postcss": "^8.5.6",
+    "react-doctor": "^0.0.24",
     "satori": "^0.19.2",
     "tailwindcss": "^4.1.18",
     "tailwindcss-animate": "^1.0.7",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { normalizeToTimezoneMidnight } from "@/lib/helpers";
 
@@ -19,30 +19,27 @@ interface TimeRemaining {
 }
 
 function useCountdown(targetDate: Date): TimeRemaining {
-  const [mounted, setMounted] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
+  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>(() =>
+    calculateTimeRemaining(targetDate),
+  );
+  const targetDateRef = useRef(targetDate);
 
   useEffect(() => {
-    setMounted(true);
-    const update = () => setTimeRemaining(calculateTimeRemaining(targetDate));
+    targetDateRef.current = targetDate;
+    const update = () => setTimeRemaining(calculateTimeRemaining(targetDateRef.current));
     update();
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [targetDate]);
 
-  if (!mounted) {
-    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-  }
-
   return timeRemaining;
 }
 
 function calculateTimeRemaining(targetDate: Date): TimeRemaining {
+  if (typeof window === "undefined") {
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  }
+
   const now = new Date();
   const diff = targetDate.getTime() - now.getTime();
 

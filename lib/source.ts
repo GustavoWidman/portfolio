@@ -51,7 +51,7 @@ function formatDateValue(date: unknown): string {
   return String(date);
 }
 
-export function getBlogPosts(): BlogPost[] {
+function getBlogPosts(): BlogPost[] {
   return blog.map((entry) => {
     const { slug, lang } = parseEntryPath(entry.info.path);
     const date = formatDateValue(entry.date);
@@ -88,10 +88,6 @@ export function getBlogPostSummaries(): BlogPostSummary[] {
       scheduled: isScheduled(date),
     };
   });
-}
-
-export function getBlogPostsByLang(lang: "en" | "pt"): BlogPost[] {
-  return getBlogPosts().filter((post) => post.lang === lang);
 }
 
 export function getBlogPost(slug: string, lang: "en" | "pt"): BlogPost | undefined {

@@ -9,6 +9,7 @@ import { useThemeTransition } from "@/lib/useThemeTransition";
 import { DATA } from "@/lib/data/content";
 import type { Language } from "@/lib/types";
 import ResumeButton from "./ResumeButton";
+import { useMounted } from "@/lib/useMounted";
 
 interface NavbarProps {
   scrollY: number;
@@ -29,20 +30,16 @@ const Navbar: React.FC<NavbarProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
   const { resolvedTheme, toggleTheme } = useThemeTransition();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
 
-  useEffect(() => {
-    setMounted(true);
+  const handleBodyScroll = useCallback((isOpen: boolean) => {
+    document.body.style.overflow = isOpen ? "hidden" : "unset";
   }, []);
 
-  // Lock body scroll when menu is open
   useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-  }, [isMenuOpen]);
+    handleBodyScroll(isMenuOpen);
+    return () => handleBodyScroll(false);
+  }, [isMenuOpen, handleBodyScroll]);
 
   // Memoize the navbar className — transparent at top of home page, opaque after scroll
   const navbarClass = useMemo(() => {

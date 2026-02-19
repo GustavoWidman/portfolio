@@ -2,13 +2,14 @@
 
 import { FileText, Menu, Moon, Sun, X } from "lucide-react";
 import Link from "next/link";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useThemeTransition } from "@/lib/useThemeTransition";
 import { DATA } from "@/lib/data/content";
 import type { Language } from "@/lib/types";
 import { ResumeButton } from "@/components/portfolio";
 import { SearchTrigger } from "@/components/blog/SearchTrigger";
+import { useMounted } from "@/lib/useMounted";
 
 interface BlogNavbarProps {
   lang: Language;
@@ -21,11 +22,7 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
   const [scrollY, setScrollY] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { resolvedTheme, toggleTheme } = useThemeTransition();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   useEffect(() => {
     let ticking = false;
@@ -46,11 +43,8 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
     document.body.style.overflow = isMenuOpen ? "hidden" : "unset";
   }, [isMenuOpen]);
 
-  const navbarClass = useMemo(
-    () =>
-      "fixed top-0 w-full z-40 transition-all duration-300 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-zinc-200 dark:border-white/5",
-    [],
-  );
+  const navbarClass =
+    "fixed top-0 w-full z-40 transition-all duration-300 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-zinc-200 dark:border-white/5";
 
   const getMainDomainUrl = (hash: string) => {
     if (typeof window === "undefined") return `/#${hash}`;

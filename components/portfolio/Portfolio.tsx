@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { Hero, About, Stack, Experience, Projects, Footer, Navbar } from "@/components/portfolio";
 import type { Language } from "@/lib/types";
 import { useLanguage } from "@/lib/useLanguage";
+import { useMounted } from "@/lib/useMounted";
 
 interface PortfolioProps {
   lang?: Language;
@@ -18,12 +19,7 @@ export default function Portfolio({
   const { lang, setLang } = useLanguage(initialLang);
   const [scrollY, setScrollY] = useState(0);
   const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  // Avoid hydration mismatch with theme
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   // Throttled scroll handler using RAF
   useEffect(() => {

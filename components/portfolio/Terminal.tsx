@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, Maximize2, Terminal as TerminalIcon } from "lucide-react";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useReducer, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "unknown";
@@ -31,15 +31,47 @@ const generateLsLikeDate = () => {
   return `${monthAbbr} ${day} ${hours}:${minutes}`;
 };
 
+interface TerminalState {
+  lines: string[];
+  isBooting: boolean;
+  isMinimized: boolean;
+}
+
+type TerminalAction =
+  | { type: "ADD_LINE"; line: string }
+  | { type: "SET_LINES"; lines: string[] }
+  | { type: "FINISH_BOOT" }
+  | { type: "MINIMIZE" }
+  | { type: "RESTORE" };
+
+function terminalReducer(state: TerminalState, action: TerminalAction): TerminalState {
+  switch (action.type) {
+    case "ADD_LINE":
+      return { ...state, lines: [...state.lines, action.line] };
+    case "SET_LINES":
+      return { ...state, lines: action.lines };
+    case "FINISH_BOOT":
+      return { ...state, isBooting: false };
+    case "MINIMIZE":
+      return { lines: [], isBooting: true, isMinimized: true };
+    case "RESTORE":
+      return { ...state, isMinimized: false };
+    default:
+      return state;
+  }
+}
+
 interface TerminalProps {
   startBoot?: boolean;
 }
 
 const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
-  const [lines, setLines] = useState<string[]>([]);
-  const [input, setInput] = useState("");
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [isBooting, setIsBooting] = useState(true);
+  const [state, dispatch] = useReducer(terminalReducer, {
+    lines: [],
+    isBooting: true,
+    isMinimized: false,
+  });
+  const [input, setInput] = React.useState("");
   const contentRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -47,15 +79,15 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
   useEffect(() => {
     if (!startBoot) return;
 
+    let lineIndex = 0;
     const interval = setInterval(() => {
-      setLines((prev) => {
-        if (prev.length >= BOOT_SEQUENCE.length) {
-          setIsBooting(false);
-          clearInterval(interval);
-          return prev;
-        }
-        return [...prev, BOOT_SEQUENCE[prev.length]];
-      });
+      if (lineIndex >= BOOT_SEQUENCE.length) {
+        dispatch({ type: "FINISH_BOOT" });
+        clearInterval(interval);
+        return;
+      }
+      dispatch({ type: "ADD_LINE", line: BOOT_SEQUENCE[lineIndex] });
+      lineIndex++;
     }, 200);
 
     return () => clearInterval(interval);
@@ -65,160 +97,157 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
     if (contentRef.current) {
       contentRef.current.scrollTop = contentRef.current.scrollHeight;
     }
-  }, [lines, isMinimized]);
+  }, [state.lines, state.isMinimized]);
 
   useEffect(() => {
-    if (!isBooting && !isMinimized && inputRef.current) {
+    if (!state.isBooting && !state.isMinimized && inputRef.current) {
       inputRef.current.focus();
     }
-  }, [isBooting, isMinimized]);
+  }, [state.isBooting, state.isMinimized]);
 
   const handleCommand = useCallback(
     (cmd: string) => {
-      setLines((prevLines) => {
-        const newLines = [...prevLines, `widman@nixos:~$ ${cmd}`];
-        const lowerCmd = cmd.toLowerCase().trim();
+      const newLines = [...state.lines, `widman@nixos:~$ ${cmd}`];
+      const lowerCmd = cmd.toLowerCase().trim();
 
-        // Easter Egg: rm -rf /
-        if (lowerCmd.includes("rm -rf /") || lowerCmd.includes("rm -rf --no-preserve-root /")) {
-          newLines.push(
-            "CRITICAL: ROOT PERMISSION GRANTED.",
-            "Deleting system files...",
-            "KERNEL PANIC: Attempted to kill init!",
-            "System is halting NOW.",
-          );
-          setLines(newLines);
-          setInput("");
+      if (lowerCmd.includes("rm -rf /") || lowerCmd.includes("rm -rf --no-preserve-root /")) {
+        newLines.push(
+          "CRITICAL: ROOT PERMISSION GRANTED.",
+          "Deleting system files...",
+          "KERNEL PANIC: Attempted to kill init!",
+          "System is halting NOW.",
+        );
+        dispatch({ type: "SET_LINES", lines: newLines });
+        setInput("");
 
-          setTimeout(() => {
-            setIsMinimized(true);
-            setLines([]);
-            setIsBooting(true);
-          }, 1500);
-          return newLines;
-        }
+        setTimeout(() => {
+          dispatch({ type: "MINIMIZE" });
+        }, 1500);
+        return;
+      }
 
-        // CV Command Parser
-        if (lowerCmd.startsWith("cv")) {
-          const args = lowerCmd.split(" ");
-          if (args.length === 1) {
-            newLines.push("Usage: cv [en|pt]");
-            newLines.push("Example: cv en");
+      if (lowerCmd.startsWith("cv")) {
+        const args = lowerCmd.split(" ");
+        if (args.length === 1) {
+          newLines.push("Usage: cv [en|pt]");
+          newLines.push("Example: cv en");
+        } else {
+          const lang = args[1];
+          if (["en", "english", "us"].includes(lang)) {
+            newLines.push("Downloading CV (English)...");
+            window.open("/resume-en.pdf", "_blank");
+          } else if (["pt", "br", "portuguese"].includes(lang)) {
+            newLines.push("Downloading CV (Portuguese)...");
+            window.open("/resume-pt.pdf", "_blank");
           } else {
-            const lang = args[1];
-            if (["en", "english", "us"].includes(lang)) {
-              newLines.push("Downloading CV (English)...");
-              window.open("/resume-en.pdf", "_blank");
-            } else if (["pt", "br", "portuguese"].includes(lang)) {
-              newLines.push("Downloading CV (Portuguese)...");
-              window.open("/resume-pt.pdf", "_blank");
-            } else {
-              newLines.push(`Error: Language '${lang}' not found. Available: en, pt`);
-            }
+            newLines.push(`Error: Language '${lang}' not found. Available: en, pt`);
           }
-          return newLines;
         }
+        dispatch({ type: "SET_LINES", lines: newLines });
+        setInput("");
+        return;
+      }
 
-        switch (lowerCmd) {
-          case "help":
-            newLines.push(
-              "Available commands:",
-              "  whoami    - Bio & Role",
-              "  stack     - Tech Stack",
-              "  github    - Open GitHub Profile",
-              "  linkedin  - Open LinkedIn Profile",
-              "  exp       - Professional Experience",
-              "  ls        - List projects",
-              "  cv [lang] - Download Resume (en/pt)",
-              "  blog      - Read my blog",
-              "  version   - Show version info",
-              "  clear     - Clear terminal",
-            );
-            break;
-          case "version":
-            newLines.push(
-              `portfolio v${APP_VERSION}`,
-              `commit: ${COMMIT_HASH}`,
-              `mode: ${IS_DEV ? "development" : "production"}`,
-              `built with Next.js 15 + React 19 + Nix`,
-            );
-            break;
-          case "blog":
-            newLines.push("Opening blog...");
-            router.push("/blog");
-            break;
-          case "whoami":
-            newLines.push(
-              "Gustavo Widman.",
-              "Backend Engineer.",
-              "Specialist in Systems Programming, NixOS Infrastructure,",
-              "and Cybersecurity (Red Teaming).",
-            );
-            break;
-          case "exp":
-            newLines.push(
-              "--- Professional Experience ---",
-              "CTO @ CamelSec (August 2025 - December 2025)",
-              " > Orchestrating NixOS-based infrastructure",
-              " > Leading Pentesting & Red Team operations",
-              "",
-              "EchoSec (2023-Present)",
-              " > Counselor / President / Member",
-              "",
-              "MW APP IT Consulting (2021-2025)",
-              " > Full-Stack Developer",
-              " > Managed client projects with Python, ",
-              " > React, Vue, MSSQL, C# and more...",
-            );
-            break;
-          case "stack":
-            newLines.push(
-              "--- Systems & Low Level ---",
-              "Rust, C, Assembly (x86), Kernel Dev",
-              "",
-              "--- DevOps & Cloud ---",
-              "NixOS, Docker, K8s, WireGuard, CI/CD",
-              "",
-              "--- High Level ---",
-              "Go, Python, Java, TypeScript",
-            );
-            break;
-          case "ls":
-            newLines.push(
-              "total 6",
-              `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} based-kernel`,
-              `drwx------ 1 widman nixos  1024 ${generateLsLikeDate()} nix`,
-              `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} rust-rnn`,
-              `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} chatbot`,
-              `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} 1brc`,
-              `drwx------ 1 widman golang 1024 ${generateLsLikeDate()} screenium`,
-            );
-            break;
-          case "sudo":
-            newLines.push("user is not in the sudoers file. This incident will be reported.");
-            break;
-          case "linkedin":
-            newLines.push("Opening LinkedIn...");
-            window.open("https://www.linkedin.com/in/gustavo-widman", "_blank");
-            break;
-          case "github":
-            newLines.push("Opening GitHub...");
-            window.open("https://github.com/GustavoWidman", "_blank");
-            break;
-          case "clear":
-            setInput("");
-            return [];
-          case "":
-            break;
-          default:
-            newLines.push(`bash: command not found: ${cmd}`);
-        }
+      switch (lowerCmd) {
+        case "help":
+          newLines.push(
+            "Available commands:",
+            "  whoami    - Bio & Role",
+            "  stack     - Tech Stack",
+            "  github    - Open GitHub Profile",
+            "  linkedin  - Open LinkedIn Profile",
+            "  exp       - Professional Experience",
+            "  ls        - List projects",
+            "  cv [lang] - Download Resume (en/pt)",
+            "  blog      - Read my blog",
+            "  version   - Show version info",
+            "  clear     - Clear terminal",
+          );
+          break;
+        case "version":
+          newLines.push(
+            `portfolio v${APP_VERSION}`,
+            `commit: ${COMMIT_HASH}`,
+            `mode: ${IS_DEV ? "development" : "production"}`,
+            `built with Next.js 15 + React 19 + Nix`,
+          );
+          break;
+        case "blog":
+          newLines.push("Opening blog...");
+          router.push("/blog");
+          break;
+        case "whoami":
+          newLines.push(
+            "Gustavo Widman.",
+            "Backend Engineer.",
+            "Specialist in Systems Programming, NixOS Infrastructure,",
+            "and Cybersecurity (Red Teaming).",
+          );
+          break;
+        case "exp":
+          newLines.push(
+            "--- Professional Experience ---",
+            "CTO @ CamelSec (August 2025 - December 2025)",
+            " > Orchestrating NixOS-based infrastructure",
+            " > Leading Pentesting & Red Team operations",
+            "",
+            "EchoSec (2023-Present)",
+            " > Counselor / President / Member",
+            "",
+            "MW APP IT Consulting (2021-2025)",
+            " > Full-Stack Developer",
+            " > Managed client projects with Python, ",
+            " > React, Vue, MSSQL, C# and more...",
+          );
+          break;
+        case "stack":
+          newLines.push(
+            "--- Systems & Low Level ---",
+            "Rust, C, Assembly (x86), Kernel Dev",
+            "",
+            "--- DevOps & Cloud ---",
+            "NixOS, Docker, K8s, WireGuard, CI/CD",
+            "",
+            "--- High Level ---",
+            "Go, Python, Java, TypeScript",
+          );
+          break;
+        case "ls":
+          newLines.push(
+            "total 6",
+            `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} based-kernel`,
+            `drwx------ 1 widman nixos  1024 ${generateLsLikeDate()} nix`,
+            `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} rust-rnn`,
+            `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} chatbot`,
+            `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} 1brc`,
+            `drwx------ 1 widman golang 1024 ${generateLsLikeDate()} screenium`,
+          );
+          break;
+        case "sudo":
+          newLines.push("user is not in the sudoers file. This incident will be reported.");
+          break;
+        case "linkedin":
+          newLines.push("Opening LinkedIn...");
+          window.open("https://www.linkedin.com/in/gustavo-widman", "_blank");
+          break;
+        case "github":
+          newLines.push("Opening GitHub...");
+          window.open("https://github.com/GustavoWidman", "_blank");
+          break;
+        case "clear":
+          setInput("");
+          dispatch({ type: "SET_LINES", lines: [] });
+          return;
+        case "":
+          break;
+        default:
+          newLines.push(`bash: command not found: ${cmd}`);
+      }
 
-        return newLines;
-      });
+      dispatch({ type: "SET_LINES", lines: newLines });
       setInput("");
     },
-    [router],
+    [router, state.lines],
   );
 
   const handleKeyDown = useCallback(
@@ -231,28 +260,11 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
     [input, handleCommand],
   );
 
-  const renderLine = (line: string) => {
-    if (line.startsWith("[ OK ]")) {
-      return (
-        <span>
-          <span className="text-zinc-500">[ </span>
-          <span className="text-green-500 font-bold">OK</span>
-          <span className="text-zinc-500"> ]</span>
-          {line.substring(6)}
-        </span>
-      );
-    }
-    if (line.includes("KERNEL PANIC") || line.includes("CRITICAL")) {
-      return <span className="text-red-500 font-bold">{line}</span>;
-    }
-    return line;
-  };
-
-  if (isMinimized) {
+  if (state.isMinimized) {
     return (
       <button
         type="button"
-        onClick={() => setIsMinimized(false)}
+        onClick={() => dispatch({ type: "RESTORE" })}
         className="w-full h-12 bg-zinc-900 border border-red-500/50 rounded-xl overflow-hidden shadow-2xl flex items-center justify-between px-4 cursor-pointer hover:bg-zinc-800 transition-colors animate-pulse"
         style={{
           contain: "layout style paint",
@@ -292,22 +304,20 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
         onClick={() => inputRef.current?.focus()}
         onKeyDown={() => inputRef.current?.focus()}
       >
-        {lines.map((item, index) => {
+        {state.lines.map((item, index) => {
           if (!item || typeof item !== "string") {
             return null;
           }
 
           return (
-            <div
-              className="mb-1.5 wrap-break-word leading-relaxed whitespace-pre-wrap"
-              key={`${index}-${item.substring(0, 20)}`}
-            >
-              {renderLine(item)}
-            </div>
+            <TerminalLine
+              key={`${item.substring(0, 30)}-${index}`}
+              line={item}
+            />
           );
         })}
 
-        {!isBooting && (
+        {!state.isBooting && (
           <div className="flex items-center gap-2 mt-2">
             <span className="text-white font-bold">widman@nixos:~$</span>
             <input
@@ -326,5 +336,34 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
     </div>
   );
 };
+
+const TerminalLine: React.FC<{ line: string }> = React.memo(({ line }) => {
+  if (line.startsWith("[ OK ]")) {
+    return (
+      <div className="mb-1.5 wrap-break-word leading-relaxed whitespace-pre-wrap">
+        <span>
+          <span className="text-zinc-500">[ </span>
+          <span className="text-green-500 font-bold">OK</span>
+          <span className="text-zinc-500"> ]</span>
+          {line.substring(6)}
+        </span>
+      </div>
+    );
+  }
+  if (line.includes("KERNEL PANIC") || line.includes("CRITICAL")) {
+    return (
+      <div className="mb-1.5 wrap-break-word leading-relaxed whitespace-pre-wrap">
+        <span className="text-red-500 font-bold">{line}</span>
+      </div>
+    );
+  }
+  return (
+    <div className="mb-1.5 wrap-break-word leading-relaxed whitespace-pre-wrap">
+      {line}
+    </div>
+  );
+});
+
+TerminalLine.displayName = "TerminalLine";
 
 export default React.memo(Terminal);
