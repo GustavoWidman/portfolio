@@ -1,10 +1,7 @@
-import { Suspense } from "react";
+import { detectLanguage } from "@/lib/language-server";
 import { HomeClient } from "@/components/portfolio";
 
-export default function HomePage() {
-  return (
-    <Suspense>
-      <HomeClient />
-    </Suspense>
-  );
+export default async function HomePage() {
+  const serverLang = await detectLanguage();
+  return <HomeClient lang={serverLang} />;
 }

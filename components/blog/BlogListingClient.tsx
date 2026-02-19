@@ -3,20 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { normalizeToTimezoneMidnight } from "@/lib/helpers";
-import type { BlogPostSummary } from "../../lib/source";
-import { useLanguage } from "../../lib/useLanguage";
+import type { BlogPostSummary } from "@/lib/source";
+import { useLanguage } from "@/lib/useLanguage";
 import { SearchTrigger } from "./SearchTrigger";
 import ScheduledPostCard from "./ScheduledPostCard";
 
-import type { Language } from "../../lib/types";
+import type { Language } from "@/lib/types";
 
 interface BlogListingClientProps {
   posts: BlogPostSummary[];
-  initialLang?: Language;
+  serverLang?: Language;
 }
 
-export default function BlogListingClient({ posts, initialLang = "en" }: BlogListingClientProps) {
-  const { lang } = useLanguage(initialLang);
+export default function BlogListingClient({ posts, serverLang = "en" }: BlogListingClientProps) {
+  const { lang } = useLanguage(serverLang);
   const [isSubdomain, setIsSubdomain] = useState(false);
   const filtered = posts.filter((post) => post.lang === lang);
 

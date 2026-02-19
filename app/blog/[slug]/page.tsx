@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getAllBlogSlugs, getBlogPost } from "@/lib/source";
 import { isScheduled } from "@/lib/helpers";
+import { detectLanguage, getLanguageFromParam } from "@/lib/language-server";
 import BlogPostClient from "@/components/blog/BlogPostClient";
 import { JsonLd, blogPostingSchema, breadcrumbSchema } from "@/components/shared/JsonLd";
 import { getMDXComponents } from "@/mdx-components";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ lang?: string }>;
 }
 
 export async function generateStaticParams() {
@@ -20,7 +21,6 @@ const SITE_URL = "https://guswid.com";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  // Use English as the canonical metadata language; client handles switching
   const post = getBlogPost(slug, "en") || getBlogPost(slug, "pt");
 
   if (!post) {
@@ -72,29 +72,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function BlogPostPage({ params }: PageProps) {
+export default async function BlogPostPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const searchParamsObj = await searchParams;
 
-  // Fetch both languages to allow client-side switching
   const postEn = getBlogPost(slug, "en");
   const postPt = getBlogPost(slug, "pt");
 
-  // If neither exists, 404
   if (!postEn && !postPt) {
     notFound();
   }
 
-  // If the post is scheduled (future date), return 404
   const postDate = postEn?.date || postPt?.date;
   if (postDate && isScheduled(postDate)) {
     notFound();
   }
 
-  // Prepare content rendering on server to avoid passing functions to client
+  const urlLang = await getLanguageFromParam(searchParamsObj.lang || null);
+  const serverLang = urlLang || (await detectLanguage());
+
   const EnContent = postEn ? <postEn.content components={getMDXComponents()} /> : undefined;
   const PtContent = postPt ? <postPt.content components={getMDXComponents()} /> : undefined;
 
-  // Strip the content function from the metadata objects
   const enMeta = postEn
     ? (() => {
         const { content: _, ...rest } = postEn;
@@ -108,7 +107,6 @@ export default async function BlogPostPage({ params }: PageProps) {
       })()
     : undefined;
 
-  // Use English metadata for structured data, fallback to Portuguese
   const structuredPost = postEn || postPt;
   const postStructuredData = structuredPost
     ? blogPostingSchema({
@@ -127,10 +125,16 @@ export default async function BlogPostPage({ params }: PageProps) {
   ]);
 
   return (
-    <Suspense>
+    <>
       {postStructuredData && <JsonLd data={postStructuredData} />}
       <JsonLd data={breadcrumbData} />
-      <BlogPostClient enPost={enMeta} ptPost={ptMeta} enContent={EnContent} ptContent={PtContent} />
-    </Suspense>
+      <BlogPostClient
+        enPost={enMeta}
+        ptPost={ptMeta}
+        enContent={EnContent}
+        ptContent={PtContent}
+        serverLang={serverLang}
+      />
+    </>
   );
 }

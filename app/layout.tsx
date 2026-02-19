@@ -102,7 +102,7 @@ export const metadata = {
       follow: true,
       "max-video-preview": -1,
       "max-image-preview": "large",
-      "max-snippet": -1,
+      "max-snippet": 320,
     },
   },
   icons: {

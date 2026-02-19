@@ -4,7 +4,7 @@ Guidelines for AI coding agents working in this repository.
 
 ## Project Overview
 
-Personal portfolio website built with Next.js 16, React 19, and TypeScript. Features a main portfolio site with sections (About, Experience, Stack, Projects) and a blog powered by fumadocs-mdx. Supports dark mode and internationalization (English/Portuguese).
+Personal portfolio website built with Next.js 16, React 19, and TypeScript. Features a main portfolio site with sections (About, Experience, Stack, Projects) and a blog powered by fumadocs-mdx. Supports dark mode and internationalization (English/Portuguese). Deployed as a standalone SSR server via NixOS.
 
 ## Toolchain
 
@@ -24,10 +24,15 @@ bun run dev           # Start dev server at localhost:3000
 ### Build
 
 ```bash
-bun run build         # Generate OG images, build Next.js, generate locale HTML
+bun run build         # Generate OG images, build Next.js standalone
 bun run generate-og   # Generate Open Graph images only
-bun run generate-locale-html  # Generate locale-specific HTML files
 nix build -L .        # Production build via Nix flake
+```
+
+### Production
+
+```bash
+bun run start         # Start production server locally on port 3000
 ```
 
 ### Linting
@@ -49,6 +54,7 @@ No test framework is configured. When implementing tests, ask the user which fra
 ## Deployment
 
 - **Nix Configuration**: `/Users/r3dlust/GitHub/nix/hosts/oracle-2/portfolio.nix`
+- **Server**: Next.js standalone server running as a systemd service, proxied by Caddy
 - **Production URLs**:
   - Portfolio: `r3dlust.com`, `www.r3dlust.com`, `guswid.com`, `www.guswid.com`
   - Blog only: `blog.r3dlust.com`, `blog.guswid.com`
@@ -199,7 +205,6 @@ export default React.memo(Example);
 - Use TypeScript's strict null checking
 - Provide fallback values for optional data
 - Handle undefined/null explicitly with optional chaining (`?.`) or nullish coalescing (`??`)
-- API routes should export `dynamic = "force-static"` for static builds
 
 ### Exports
 
@@ -228,15 +233,17 @@ export default React.memo(Example);
 │       └── pt.mdx          # Portuguese version
 ├── components/
 │   ├── portfolio/          # Main site components
-│   └── blog/               # Blog-specific components
+│   ├── blog/               # Blog-specific components
+│   └── shared/             # Shared components (NotFoundClient, JsonLd, etc.)
 ├── lib/
 │   ├── types.ts            # TypeScript type definitions
 │   ├── helpers.ts          # Utility functions
 │   ├── config.ts           # Site configuration (timezone, etc.)
 │   ├── source.ts           # Blog post data fetching
+│   ├── language-server.ts  # Server-side language detection (cookies, headers)
 │   ├── data/content.tsx    # Static content (projects, experience, translations)
-│   └── useLanguage.ts      # Language hook
-└── scripts/                # Build scripts (OG generation, locale HTML)
+│   └── useLanguage.ts      # Client-side language hook
+└── scripts/                # Build scripts (OG generation)
 ```
 
 ## Path Aliases
@@ -250,7 +257,7 @@ Configured in `tsconfig.json`:
 
 ## Key Dependencies
 
-- **Next.js 15**: App Router, static export
+- **Next.js 15**: App Router, standalone SSR
 - **React 19**: UI framework
 - **Tailwind CSS 4**: Styling with custom theme
 - **fumadocs-mdx/ui**: Blog documentation system
@@ -263,13 +270,17 @@ Configured in `tsconfig.json`:
 
 - Supported languages: English (`en`), Portuguese (`pt`)
 - Translations stored in `lib/data/content.tsx` under `DATA` object
-- Language state managed via `useLanguage` hook
+- Language state managed via `useLanguage` hook with server-side detection
 - Blog posts have separate files per language (`blog/slug/en.mdx`, `blog/slug/pt.mdx`)
+- Server-side detection priority: URL param `?lang=` → Cookie → Accept-Language header
+- Client-side priority: URL param → localStorage → Accept-Language
+- Language preference synced between cookie (for SSR) and localStorage (for client)
 
 ## Scheduled Blog Posts
 
 - Posts with a future date are considered "scheduled" and displayed differently on the blog listing
 - Scheduled posts show a live countdown timer and are not accessible via URL
+- With SSR, scheduled status is evaluated at request time (not build time), so posts automatically become available when their release time passes
 - Site timezone is configured in `lib/config.ts` (`SITE_TIMEZONE`)
 - All dates are interpreted in the configured timezone and displayed in the user's browser timezone
 - Use `getDateInTimezone()` and `normalizeToTimezoneMidnight()` from `lib/helpers.ts` for date handling
@@ -288,7 +299,7 @@ Configured in `tsconfig.json`:
 - Build requires `bun` runtime
 - Postinstall runs `fumadocs-mdx` to process MDX content
 - OG images generated at build time via `scripts/generate-og.tsx`
-- Static export compatible (no server-side runtime)
+- Standalone SSR compatible (Next.js server runtime)
 - Production deployments use Nix flakes; see `/Users/r3dlust/GitHub/nix/hosts/oracle-2/portfolio.nix`
 - Nix build requires `vips` and `stdenv.cc.cc.lib` for sharp (image processing)
 - Blog images are bundled with posts via fumadocs-mdx `useImport: true`

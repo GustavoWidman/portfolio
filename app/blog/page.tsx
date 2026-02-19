@@ -1,6 +1,6 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { getBlogPostSummaries } from "@/lib/source";
+import { detectLanguage, getLanguageFromParam } from "@/lib/language-server";
 import BlogListingClient from "@/components/blog/BlogListingClient";
 import { JsonLd, breadcrumbSchema } from "@/components/shared/JsonLd";
 
@@ -78,14 +78,21 @@ const blogCollectionSchema = {
   inLanguage: ["en", "pt"],
 };
 
-export default function BlogPage() {
+interface BlogPageProps {
+  searchParams: Promise<{ lang?: string }>;
+}
+
+export default async function BlogPage({ searchParams }: BlogPageProps) {
+  const params = await searchParams;
+  const urlLang = await getLanguageFromParam(params.lang || null);
+  const serverLang = urlLang || (await detectLanguage());
   const posts = getBlogPostSummaries();
 
   return (
-    <Suspense>
+    <>
       <JsonLd data={blogBreadcrumbData} />
       <JsonLd data={blogCollectionSchema} />
-      <BlogListingClient posts={posts} />
-    </Suspense>
+      <BlogListingClient posts={posts} serverLang={serverLang} />
+    </>
   );
 }

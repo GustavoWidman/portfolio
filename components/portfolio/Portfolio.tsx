@@ -13,10 +13,10 @@ interface PortfolioProps {
 }
 
 export default function Portfolio({
-  lang: initialLang = "en",
+  lang: serverLang = "en",
   isSubdomain = false,
 }: PortfolioProps) {
-  const { lang, setLang } = useLanguage(initialLang);
+  const { lang, setLang } = useLanguage(serverLang);
   const [scrollY, setScrollY] = useState(0);
   const { resolvedTheme } = useTheme();
   const mounted = useMounted();

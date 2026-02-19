@@ -1,6 +1,6 @@
 {
   "name": "portfolio",
-  "version": "2.4.7",
+  "version": "2.5.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,9 +8,9 @@
     "lint": "oxlint",
     "format": "oxfmt",
     "generate-og": "bun run scripts/generate-og.tsx",
-    "generate-locale-html": "bun run scripts/generate-locale-html.ts",
-    "build": "bun run generate-og && next build && bun run generate-locale-html",
-    "preview": "bun run build && bunx serve@latest out",
+    "build": "bun run generate-og && next build",
+    "start": "next start -p 3000",
+    "preview": "bun run build && bun run start",
     "postinstall": "fumadocs-mdx && bun2nix -o .bun.nix",
     "doctor": "react-doctor --no-ami --offline --verbose"
   },

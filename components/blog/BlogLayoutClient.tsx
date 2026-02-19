@@ -9,11 +9,11 @@ import { VersionFooter } from "@/components/portfolio";
 
 interface BlogLayoutClientProps {
   children: ReactNode;
-  initialLang?: Language;
+  serverLang?: Language;
 }
 
-export default function BlogLayoutClient({ children, initialLang = "en" }: BlogLayoutClientProps) {
-  const { lang, setLang } = useLanguage(initialLang);
+export default function BlogLayoutClient({ children, serverLang = "en" }: BlogLayoutClientProps) {
+  const { lang, setLang } = useLanguage(serverLang);
   const [isSubdomain, setIsSubdomain] = useState(false);
 
   useEffect(() => {

@@ -7,8 +7,8 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { normalizeToTimezoneMidnight } from "@/lib/helpers";
 import { BlogTOC } from "./BlogTOC";
-import type { BlogPost } from "../../lib/source";
-import { useLanguage } from "../../lib/useLanguage";
+import type { BlogPost } from "@/lib/source";
+import { useLanguage } from "@/lib/useLanguage";
 
 type BlogPostMetadata = Omit<BlogPost, "content">;
 
@@ -17,7 +17,7 @@ interface BlogPostClientProps {
   ptPost?: BlogPostMetadata;
   enContent?: ReactNode;
   ptContent?: ReactNode;
-  initialLang?: "en" | "pt";
+  serverLang?: "en" | "pt";
 }
 
 export default function BlogPostClient({
@@ -25,9 +25,9 @@ export default function BlogPostClient({
   ptPost,
   enContent,
   ptContent,
-  initialLang = "en",
+  serverLang = "en",
 }: BlogPostClientProps) {
-  const { lang } = useLanguage(initialLang);
+  const { lang } = useLanguage(serverLang);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isSubdomain, setIsSubdomain] = useState(false);
 

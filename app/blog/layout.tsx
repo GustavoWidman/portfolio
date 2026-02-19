@@ -1,10 +1,12 @@
-import { Suspense, type ReactNode } from "react";
+import type { ReactNode } from "react";
+import { detectLanguage } from "@/lib/language-server";
 import BlogLayoutClient from "@/components/blog/BlogLayoutClient";
 
-export default function BlogLayout({ children }: { children: ReactNode }) {
-  return (
-    <Suspense>
-      <BlogLayoutClient>{children}</BlogLayoutClient>
-    </Suspense>
-  );
+interface BlogLayoutProps {
+  children: ReactNode;
+}
+
+export default async function BlogLayout({ children }: BlogLayoutProps) {
+  const serverLang = await detectLanguage();
+  return <BlogLayoutClient serverLang={serverLang}>{children}</BlogLayoutClient>;
 }

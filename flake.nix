@@ -17,8 +17,6 @@
       ...
     }:
     let
-      pname = "portfolio";
-      version = "2.4.7";
       commitHash = if self ? rev then self.rev else "dirty";
     in
     flake-utils.lib.eachDefaultSystem (
@@ -28,7 +26,7 @@
       in
       {
         packages.default = bun2nix.packages.${system}.default.mkDerivation {
-          inherit pname version;
+          packageJson = ./package.json; # inherit `name` and `version` from package.json
           src = ./.;
 
           dontPatchShebangs = true;
@@ -40,20 +38,40 @@
             bunNix = ./.bun.nix;
           };
           buildPhase = ''
-            runHook preBuild
             export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.vips}/lib:$LD_LIBRARY_PATH"
+            export NEXT_TELEMETRY_DISABLED=1
             export SOURCE_COMMIT="${commitHash}"
+
             bun run build
-            runHook postBuild
           '';
 
           installPhase = ''
-            runHook preInstall
-
             mkdir -p $out
-            cp -r out/* $out
+            # cp -r .next/standalone/* $out/share/
+            # cp -r .next/standalone/.* $out/share/
+            mv .next/standalone $out/share
 
-            runHook postInstall
+            # cp -r .next/static/* $out/share/.next/static/
+            # cp -r .next/static/.* $out/share/.next/static/
+            mv .next/static $out/share/.next/static
+
+            # cp -r public/* $out/share/public/
+            # cp -r public/.* $out/share/public/
+            mv public $out/share/public
+
+            mkdir -p $out/bin
+            cat > $out/bin/portfolio << EOF
+            #!/bin/sh
+
+            export NEXT_TELEMETRY_DISABLED=1
+            export NODE_ENV=production
+            export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.vips}/lib:$LD_LIBRARY_PATH"
+            export SOURCE_COMMIT="${commitHash}"
+
+            cd $out/share
+            ${pkgs.bun}/bin/bun $out/share/server.js
+            EOF
+            chmod +x $out/bin/portfolio
           '';
 
           meta = with pkgs.lib; {
@@ -63,5 +81,88 @@
           };
         };
       }
-    );
+    )
+    // {
+      nixosModules.default =
+        {
+          config,
+          lib,
+          pkgs,
+          ...
+        }:
+        with lib;
+        let
+          cfg = config.services.portfolio;
+        in
+        {
+          options.services.portfolio = {
+            enable = lib.mkEnableOption "Enable portfolio service";
+
+            package = lib.mkOption {
+              type = lib.types.package;
+              default = self.packages.${pkgs.system}.default;
+              description = "portfolio package to use";
+            };
+
+            port = mkOption {
+              type = types.port;
+              default = 3000;
+              description = "Port number for the Next.js server to listen on";
+            };
+
+            host = mkOption {
+              type = types.str;
+              default = "127.0.0.1";
+              description = "Host address for the Next.js server to bind to";
+            };
+          };
+
+          config = lib.mkIf cfg.enable {
+            systemd.services.portfolio = {
+              description = "portfolio service";
+              wantedBy = [ "multi-user.target" ];
+              after = [ "network.target" ];
+
+              serviceConfig = {
+                Type = "simple";
+                ExecStart = "${cfg.package}/bin/portfolio";
+                Restart = "on-failure";
+                RestartSec = 5;
+                Environment = [
+                  "PORT=${toString cfg.port}"
+                  "HOSTNAME=${cfg.host}"
+                ];
+
+                DynamicUser = true;
+
+                ProtectKernelTunables = true;
+                ProtectKernelModules = true;
+                ProtectKernelLogs = true;
+                ProtectControlGroups = true;
+                ProtectClock = true;
+                ProtectHostname = true;
+
+                RestrictAddressFamilies = [
+                  "AF_INET"
+                  "AF_INET6"
+                  "AF_UNIX"
+                ];
+                CapabilityBoundingSet = "";
+                SystemCallFilter = [ "@system-service" ];
+                SystemCallArchitectures = "native";
+                SystemCallErrorNumber = "EPERM";
+                RestrictNamespaces = true;
+                RestrictRealtime = true;
+                RestrictSUIDSGID = true;
+                LockPersonality = true;
+
+                NoNewPrivileges = true;
+                PrivateTmp = true;
+                ProtectSystem = "strict";
+                ProtectHome = true;
+              };
+            };
+          };
+        };
+    };
 }

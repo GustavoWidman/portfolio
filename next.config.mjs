@@ -7,7 +7,7 @@ const version = packageJson.version;
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
-  output: "export",
+  output: "standalone",
   images: {
     unoptimized: true,
   },
