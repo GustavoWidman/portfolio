@@ -8,6 +8,7 @@ const version = packageJson.version;
 const config = {
   reactStrictMode: true,
   output: "standalone",
+  skipTrailingSlashRedirect: true,
   images: {
     unoptimized: true,
   },
