@@ -318,7 +318,7 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
         })}
 
         {!state.isBooting && (
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2">
             <span className="text-white font-bold">widman@nixos:~$</span>
             <input
               ref={inputRef}
@@ -338,6 +338,16 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
 };
 
 const TerminalLine: React.FC<{ line: string }> = React.memo(({ line }) => {
+  if (line.startsWith("widman@nixos:~$")) {
+    const prompt = "widman@nixos:~$";
+    const rest = line.substring(prompt.length);
+    return (
+      <div className="mb-1.5 wrap-break-word leading-relaxed whitespace-pre-wrap">
+        <span className="text-white font-bold">{prompt}</span>
+        <span>{rest}</span>
+      </div>
+    );
+  }
   if (line.startsWith("[ OK ]")) {
     return (
       <div className="mb-1.5 wrap-break-word leading-relaxed whitespace-pre-wrap">

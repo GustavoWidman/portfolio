@@ -37,7 +37,8 @@ const Intro = ({ onComplete }: IntroProps) => {
         clearInterval(textInterval);
         return;
       }
-      setLines((prev) => [...prev, { id: lineIndex, text: bootText[lineIndex] }]);
+      const currentIndex = lineIndex;
+      setLines((prev) => [...prev, { id: currentIndex, text: bootText[currentIndex] }]);
       lineIndex++;
     }, 150);
 
@@ -63,7 +64,8 @@ const Intro = ({ onComplete }: IntroProps) => {
   return (
     <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center font-mono text-xs md:text-sm text-zinc-400 p-8 cursor-wait">
       <div className="w-full max-w-lg space-y-4">
-        <div className="flex flex-col gap-1 min-h-[200px] justify-end">
+        <div className="flex flex-col gap-1 h-[200px] justify-end overflow-hidden relative">
+          <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-black to-transparent pointer-events-none z-10" />
           {lines.map((line) => (
             <div
               key={line.id}

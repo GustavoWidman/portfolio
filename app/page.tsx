@@ -1,7 +1,16 @@
-import { detectLanguage } from "@/lib/language-server";
+import { detectLanguage, shouldSkipIntro } from "@/lib/language-server";
 import { HomeClient } from "@/components/portfolio";
 
-export default async function HomePage() {
-  const serverLang = await detectLanguage();
-  return <HomeClient lang={serverLang} />;
+interface HomePageProps {
+  searchParams: Promise<{ lang?: string; intro?: string }>;
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const params = await searchParams;
+  const [serverLang, skipIntro] = await Promise.all([
+    detectLanguage(),
+    shouldSkipIntro(params.intro),
+  ]);
+  
+  return <HomeClient lang={serverLang} skipIntro={skipIntro} />;
 }

@@ -4,22 +4,29 @@ import { useState } from "react";
 import { useTheme } from "next-themes";
 import { Intro, Portfolio, VersionFooter } from "@/components/portfolio";
 import type { Language } from "@/lib/types";
-import { useMounted, useSkipIntro } from "@/lib/useMounted";
+import { useMounted } from "@/lib/useMounted";
 
 interface HomeClientProps {
   lang?: Language;
   skipIntro?: boolean;
 }
 
+const INTRO_COOKIE = "portfolio_intro_last_seen";
+
+function setIntroCookie() {
+  const expires = new Date(Date.now() + 2 * 60 * 60 * 1000).toUTCString();
+  document.cookie = `${INTRO_COOKIE}=${Date.now()};path=/;expires=${expires};SameSite=Lax`;
+}
+
 export default function HomeClient({ lang = "en", skipIntro = false }: HomeClientProps) {
-  const shouldSkip = useSkipIntro();
-  const [showIntro, setShowIntro] = useState(!skipIntro && !shouldSkip);
+  const [showIntro, setShowIntro] = useState(!skipIntro);
   const { resolvedTheme } = useTheme();
   const mounted = useMounted();
 
   const handleIntroComplete = () => {
     setShowIntro(false);
-    localStorage.setItem("portfolio_intro_last_seen", Date.now().toString());
+    setIntroCookie();
+    localStorage.setItem(INTRO_COOKIE, Date.now().toString());
   };
 
   const theme = mounted ? resolvedTheme || "dark" : "dark";

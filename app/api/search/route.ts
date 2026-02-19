@@ -18,4 +18,4 @@ const searchAPI = createSearchAPI("advanced", {
   indexes: buildIndexes,
 });
 
-export const GET = searchAPI.GET;
+export const GET = searchAPI.staticGET;

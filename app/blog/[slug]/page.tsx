@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const postUrl = `${SITE_URL}/blog/${slug}`;
 
   return {
-    title: `${post.title} | Gustavo Widman`,
+    title: post.title,
     description: post.excerpt,
     keywords: postKeywords,
     authors: [{ name: "Gustavo Widman", url: SITE_URL }],
