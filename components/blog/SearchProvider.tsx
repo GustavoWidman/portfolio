@@ -14,7 +14,7 @@ export function BlogSearchProvider({
   return (
     <SearchProvider
       SearchDialog={(props) => (
-        <SearchDialog {...props} api="/api/search" type="static" defaultTag={lang} />
+        <SearchDialog {...props} api="/api/search" type="fetch" defaultTag={lang} />
       )}
     >
       {children}
