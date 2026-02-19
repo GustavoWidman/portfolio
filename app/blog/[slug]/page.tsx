@@ -19,8 +19,9 @@ export async function generateStaticParams() {
 
 const SITE_URL = "https://guswid.com";
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  const searchParamsObj = await searchParams;
   const post = getBlogPost(slug, "en") || getBlogPost(slug, "pt");
 
   if (!post) {
@@ -29,12 +30,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const postKeywords = [...post.tags, "guswid", "gustavo widman", "blog"].join(", ");
+  const urlLang = await getLanguageFromParam(searchParamsObj.lang || null);
+  const lang = urlLang || (await detectLanguage());
+  const localizedPost = getBlogPost(slug, lang) || post;
+
+  const postKeywords = [...localizedPost.tags, "guswid", "gustavo widman", "blog"].join(", ");
   const postUrl = `${SITE_URL}/blog/${slug}`;
 
   return {
-    title: post.title,
-    description: post.excerpt,
+    title: localizedPost.title,
+    description: localizedPost.excerpt,
     keywords: postKeywords,
     authors: [{ name: "Gustavo Widman", url: SITE_URL }],
     alternates: {
@@ -45,28 +50,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       },
     },
     openGraph: {
-      title: post.title,
-      description: post.excerpt,
+      title: localizedPost.title,
+      description: localizedPost.excerpt,
       type: "article",
       url: postUrl,
       siteName: "Gustavo Widman",
-      publishedTime: post.date,
+      publishedTime: localizedPost.date,
       authors: ["Gustavo Widman"],
-      tags: post.tags,
+      tags: localizedPost.tags,
       images: [
         {
-          url: `/og/${slug}-en.png`,
+          url: `/og/${slug}-${lang}.png`,
           width: 1200,
           height: 630,
-          alt: post.title,
+          alt: localizedPost.title,
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
-      title: post.title,
-      description: post.excerpt,
-      images: [`/og/${slug}-en.png`],
+      title: localizedPost.title,
+      description: localizedPost.excerpt,
+      images: [`/og/${slug}-${lang}.png`],
       creator: "@guswid",
     },
   };

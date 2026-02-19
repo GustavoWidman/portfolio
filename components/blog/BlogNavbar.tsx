@@ -82,11 +82,11 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
             Portfolio
           </Link>
           <Link
-            href="/blog"
+            href={isSubdomain ? "/" : "/blog"}
             onClick={() => setIsMenuOpen(false)}
             className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
           >
-            Blog
+            {isSubdomain ? "Home" : "Blog"}
           </Link>
 
           {/* Mobile Resume Button */}
