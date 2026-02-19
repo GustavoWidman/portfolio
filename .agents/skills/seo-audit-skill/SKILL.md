@@ -19,9 +19,9 @@ It provides a list of issues with severity levels, affected URLs, and actionable
 
 ## Links
 
-* SEOmator npm package: [npmjs.com/package/@seomator/seo-audit](https://www.npmjs.com/package/@seomator/seo-audit)
-* GitHub repository: [github.com/seo-skills/seo-audit-skill](https://github.com/seo-skills/seo-audit-skill)
-* Web UI: [seomator.com/free-seo-audit-tool](https://seomator.com/free-seo-audit-tool)
+- SEOmator npm package: [npmjs.com/package/@seomator/seo-audit](https://www.npmjs.com/package/@seomator/seo-audit)
+- GitHub repository: [github.com/seo-skills/seo-audit-skill](https://github.com/seo-skills/seo-audit-skill)
+- Web UI: [seomator.com/free-seo-audit-tool](https://seomator.com/free-seo-audit-tool)
 
 ## What This Skill Does
 
@@ -49,6 +49,7 @@ This skill enables AI agents to audit websites for **251 rules** in **20 categor
 - **Legal Compliance** (1 rule): Cookie consent
 
 The audit crawls the website, analyzes each page against audit rules, and returns a comprehensive report with:
+
 - Overall health score (0-100) with letter grade (A-F)
 - Category breakdowns with pass/warn/fail counts
 - Specific issues with affected URLs grouped by rule
@@ -57,6 +58,7 @@ The audit crawls the website, analyzes each page against audit rules, and return
 ## When to Use
 
 Use this skill when you need to:
+
 - Analyze a website's SEO health
 - Debug technical SEO issues
 - Check for broken links and redirect chains
@@ -90,6 +92,7 @@ bunx seomator self doctor
 ```
 
 This checks:
+
 - Node.js version (18+ recommended)
 - npm availability
 - Chrome/Chromium for Core Web Vitals and JS rendering
@@ -117,6 +120,7 @@ If there is no `seomator.toml` in the directory, CREATE ONE with `seomator init`
 **YOU SHOULD always prefer `--format llm`** - it provides token-optimized XML output specifically designed for AI agents (50-70% smaller than JSON).
 
 When auditing:
+
 1. **Prefer live websites** over local dev servers for accurate performance and rendering data
 2. **Use `--no-cwv` for faster audits** when Core Web Vitals and JS rendering checks aren't needed
 3. **Scope fixes as concurrent tasks** when implementing multiple fixes
@@ -125,6 +129,7 @@ When auditing:
 ### Website Discovery
 
 If the user doesn't provide a website to audit:
+
 1. Check for local dev server configurations (package.json scripts, .env files)
 2. Look for Vercel/Netlify project links
 3. Check environment variables for deployment URLs
@@ -148,26 +153,31 @@ bunx seomator audit https://example.com --crawl -m 20 --format llm
 ### Advanced Options
 
 Force fresh crawl (ignore cache):
+
 ```bash
 bunx seomator audit https://example.com --refresh --format llm
 ```
 
 Resume interrupted crawl:
+
 ```bash
 bunx seomator audit https://example.com --resume --format llm
 ```
 
 Audit specific categories only:
+
 ```bash
 bunx seomator audit https://example.com -c core,security,js --format llm --no-cwv
 ```
 
 Save HTML report for sharing:
+
 ```bash
 bunx seomator audit https://example.com --format html -o report.html
 ```
 
 Verbose output for debugging:
+
 ```bash
 bunx seomator audit https://example.com --format llm -v
 ```
@@ -176,19 +186,19 @@ bunx seomator audit https://example.com --format llm -v
 
 ### Audit Command Options
 
-| Option | Alias | Description | Default |
-|--------|-------|-------------|---------|
-| `--format <fmt>` | `-f` | Output format: console, json, html, markdown, llm | console |
-| `--max-pages <n>` | `-m` | Maximum pages to crawl | 10 |
-| `--crawl` | | Enable multi-page crawl | false |
-| `--categories <list>` | `-c` | Comma-separated categories to audit | All |
-| `--refresh` | `-r` | Ignore cache, fetch fresh | false |
-| `--resume` | | Resume interrupted crawl | false |
-| `--no-cwv` | | Skip Core Web Vitals + JS rendering | false |
-| `--verbose` | `-v` | Show progress | false |
-| `--output <path>` | `-o` | Output file path | |
-| `--config <path>` | | Config file path | |
-| `--save` | | Save to ~/.seomator | false |
+| Option                | Alias | Description                                       | Default |
+| --------------------- | ----- | ------------------------------------------------- | ------- |
+| `--format <fmt>`      | `-f`  | Output format: console, json, html, markdown, llm | console |
+| `--max-pages <n>`     | `-m`  | Maximum pages to crawl                            | 10      |
+| `--crawl`             |       | Enable multi-page crawl                           | false   |
+| `--categories <list>` | `-c`  | Comma-separated categories to audit               | All     |
+| `--refresh`           | `-r`  | Ignore cache, fetch fresh                         | false   |
+| `--resume`            |       | Resume interrupted crawl                          | false   |
+| `--no-cwv`            |       | Skip Core Web Vitals + JS rendering               | false   |
+| `--verbose`           | `-v`  | Show progress                                     | false   |
+| `--output <path>`     | `-o`  | Output file path                                  |         |
+| `--config <path>`     |       | Config file path                                  |         |
+| `--save`              |       | Save to ~/.seomator                               | false   |
 
 ### Other Commands
 
@@ -202,15 +212,16 @@ bunx seomator db stats          # Show database statistics
 
 ## Output Formats
 
-| Format | Flag | Best For |
-|--------|------|----------|
-| console | `--format console` | Human terminal output (default) |
-| json | `--format json` | CI/CD, programmatic processing |
-| html | `--format html` | Standalone reports, sharing |
-| markdown | `--format markdown` | Documentation, GitHub |
-| llm | `--format llm` | **AI agents** (recommended) |
+| Format   | Flag                | Best For                        |
+| -------- | ------------------- | ------------------------------- |
+| console  | `--format console`  | Human terminal output (default) |
+| json     | `--format json`     | CI/CD, programmatic processing  |
+| html     | `--format html`     | Standalone reports, sharing     |
+| markdown | `--format markdown` | Documentation, GitHub           |
+| llm      | `--format llm`      | **AI agents** (recommended)     |
 
 The `--format llm` output is a compact XML format optimized for token efficiency:
+
 - **50-70% smaller** than JSON output
 - Issues sorted by severity (critical first)
 - Fix suggestions included for each issue
@@ -257,13 +268,13 @@ bunx seomator audit https://example.com -c js,redirect --format llm
 
 ### Score Ranges
 
-| Score | Grade | Meaning |
-|-------|-------|---------|
-| 90-100 | A | Excellent - Minor optimizations only |
-| 80-89 | B | Good - Address warnings |
-| 70-79 | C | Needs Work - Priority fixes required |
-| 50-69 | D | Poor - Multiple critical issues |
-| 0-49 | F | Critical - Major problems to resolve |
+| Score  | Grade | Meaning                              |
+| ------ | ----- | ------------------------------------ |
+| 90-100 | A     | Excellent - Minor optimizations only |
+| 80-89  | B     | Good - Address warnings              |
+| 70-79  | C     | Needs Work - Priority fixes required |
+| 50-69  | D     | Poor - Multiple critical issues      |
+| 0-49   | F     | Critical - Major problems to resolve |
 
 ### Priority Order (by category weight)
 
@@ -309,6 +320,7 @@ When planning scope, organize tasks so they can run concurrently as sub-agents t
 If you see this error, seomator is not installed or not in your PATH.
 
 **Solution:**
+
 ```bash
 bun install -D @seomator/seo-audit
 ```
@@ -318,6 +330,7 @@ bun install -D @seomator/seo-audit
 If CWV metrics are missing, Chrome/Chromium may not be available.
 
 **Solution:**
+
 1. Install Chrome, Chromium, or Edge
 2. Run `bunx seomator self doctor` to verify browser detection
 3. Use `--no-cwv` to skip CWV if not needed
@@ -327,6 +340,7 @@ If CWV metrics are missing, Chrome/Chromium may not be available.
 For large sites, audits may take several minutes.
 
 **Solution:**
+
 - Use `--verbose` to see progress
 - Limit pages with `-m 20` for faster results
 - Use `--no-cwv` to skip browser-based measurements

@@ -4,10 +4,7 @@ interface JsonLdProps {
 
 export function JsonLd({ data }: JsonLdProps) {
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
   );
 }
 
@@ -23,10 +20,7 @@ export const personSchema = {
   jobTitle: "Backend Engineer",
   description:
     "Backend Engineer specializing in systems programming, NixOS infrastructure, and cybersecurity.",
-  sameAs: [
-    "https://github.com/GustavoWidman",
-    "https://www.linkedin.com/in/gustavo-widman",
-  ],
+  sameAs: ["https://github.com/GustavoWidman", "https://www.linkedin.com/in/gustavo-widman"],
   knowsAbout: [
     "Systems Programming",
     "Rust",

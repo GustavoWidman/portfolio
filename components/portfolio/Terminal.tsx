@@ -309,12 +309,7 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
             return null;
           }
 
-          return (
-            <TerminalLine
-              key={`${item.substring(0, 30)}-${index}`}
-              line={item}
-            />
-          );
+          return <TerminalLine key={`${item.substring(0, 30)}-${index}`} line={item} />;
         })}
 
         {!state.isBooting && (
@@ -367,11 +362,7 @@ const TerminalLine: React.FC<{ line: string }> = React.memo(({ line }) => {
       </div>
     );
   }
-  return (
-    <div className="mb-1.5 wrap-break-word leading-relaxed whitespace-pre-wrap">
-      {line}
-    </div>
-  );
+  return <div className="mb-1.5 wrap-break-word leading-relaxed whitespace-pre-wrap">{line}</div>;
 });
 
 TerminalLine.displayName = "TerminalLine";

@@ -49,13 +49,13 @@ export async function shouldSkipIntro(urlIntro?: string | null): Promise<boolean
 
   const cookieStore = await cookies();
   const introCookie = cookieStore.get(INTRO_COOKIE)?.value;
-  
+
   if (introCookie) {
     const lastSeen = parseInt(introCookie, 10);
     if (!Number.isNaN(lastSeen) && Date.now() - lastSeen < INTRO_COOLDOWN_MS) {
       return true;
     }
   }
-  
+
   return false;
 }

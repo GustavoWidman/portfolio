@@ -11,6 +11,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     detectLanguage(),
     shouldSkipIntro(params.intro),
   ]);
-  
+
   return <HomeClient lang={serverLang} skipIntro={skipIntro} />;
 }
