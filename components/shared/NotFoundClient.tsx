@@ -3,15 +3,13 @@
 import { BookOpen, FolderCode, Home } from "lucide-react";
 import Link from "next/link";
 import { DATA } from "@/lib/data/content";
-import { useLanguage } from "@/lib/useLanguage";
 import type { Language } from "@/lib/types";
 
 interface NotFoundClientProps {
-  serverLang?: Language;
+  lang: Language;
 }
 
-export default function NotFoundClient({ serverLang = "en" }: NotFoundClientProps) {
-  const { lang } = useLanguage(serverLang);
+export default function NotFoundClient({ lang }: NotFoundClientProps) {
   const t = DATA[lang].notFound;
 
   return (
