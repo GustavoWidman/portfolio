@@ -46,6 +46,9 @@
             mv .next/static $out/share/.next/static
             mv public $out/share/public
 
+            rm -rf $out/share/.next/cache
+            ln -s /var/cache/portfolio $out/share/.next/cache
+
             mkdir -p $out/bin
             cat > $out/bin/portfolio << EOF
             #!/bin/sh
@@ -55,7 +58,7 @@
             export SOURCE_COMMIT="${commitHash}"
 
             cd $out/share
-            ${pkgs.bun}/bin/bun $out/share/server.js
+            exec ${pkgs.bun}/bin/bun $out/share/server.js
             EOF
             chmod +x $out/bin/portfolio
           '';
@@ -120,6 +123,7 @@
                 ];
 
                 DynamicUser = true;
+                CacheDirectory = "portfolio";
 
                 ProtectKernelTunables = true;
                 ProtectKernelModules = true;

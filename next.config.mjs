@@ -9,9 +9,6 @@ const config = {
   reactStrictMode: true,
   output: "standalone",
   skipTrailingSlashRedirect: true,
-  images: {
-    unoptimized: true,
-  },
   env: {
     NEXT_PUBLIC_APP_VERSION: version,
     NEXT_PUBLIC_COMMIT_HASH: process.env.SOURCE_COMMIT ?? process.env.GIT_SHA ?? "unknown",
