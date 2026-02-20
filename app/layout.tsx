@@ -1,7 +1,7 @@
 import { RootProvider } from "fumadocs-ui/provider/next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
-import { JsonLd, personSchema, websiteSchema } from "@/components/shared/JsonLd";
+import { PersonJsonLd, WebsiteJsonLd } from "@/components/shared/JsonLd";
 import "./globals.css";
 
 const jetbrainsMono = localFont({
@@ -114,8 +114,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body className="font-sans">
-        <JsonLd data={personSchema} />
-        <JsonLd data={websiteSchema} />
+        <PersonJsonLd />
+        <WebsiteJsonLd />
         <RootProvider
           search={{ enabled: false }}
           theme={{ defaultTheme: "dark", enableSystem: false }}

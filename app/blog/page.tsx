@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getBlogPostSummaries } from "@/lib/source";
 import { detectLanguage, getLanguageFromParam } from "@/lib/language-server";
 import BlogListingClient from "@/components/blog/BlogListingClient";
-import { JsonLd, breadcrumbSchema } from "@/components/shared/JsonLd";
+import { BlogBreadcrumbJsonLd, BlogJsonLd } from "@/components/shared/JsonLd";
 
 const SITE_URL = "https://guswid.com";
 
@@ -63,30 +63,10 @@ export async function generateMetadata({ searchParams }: BlogPageProps): Promise
   };
 }
 
-const blogBreadcrumbData = breadcrumbSchema([
+const blogBreadcrumbItems = [
   { name: "Home", url: SITE_URL },
   { name: "Blog", url: `${SITE_URL}/blog` },
-]);
-
-const blogCollectionSchema = {
-  "@context": "https://schema.org",
-  "@type": "Blog",
-  name: "Gustavo Widman's Blog",
-  description:
-    "Technical articles on systems programming, NixOS infrastructure, and cybersecurity research.",
-  url: `${SITE_URL}/blog`,
-  author: {
-    "@type": "Person",
-    name: "Gustavo Widman",
-    url: SITE_URL,
-  },
-  publisher: {
-    "@type": "Person",
-    name: "Gustavo Widman",
-    url: SITE_URL,
-  },
-  inLanguage: ["en", "pt"],
-};
+];
 
 export default async function BlogPage({ searchParams }: BlogPageProps) {
   const params = await searchParams;
@@ -96,8 +76,8 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
 
   return (
     <>
-      <JsonLd data={blogBreadcrumbData} />
-      <JsonLd data={blogCollectionSchema} />
+      <BlogBreadcrumbJsonLd items={blogBreadcrumbItems} />
+      <BlogJsonLd />
       <BlogListingClient posts={posts} serverLang={serverLang} />
     </>
   );

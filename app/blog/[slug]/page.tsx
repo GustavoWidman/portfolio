@@ -4,7 +4,7 @@ import { getAllBlogSlugs, getBlogPost } from "@/lib/source";
 import { isScheduled } from "@/lib/helpers";
 import { detectLanguage, getLanguageFromParam } from "@/lib/language-server";
 import BlogPostClient from "@/components/blog/BlogPostClient";
-import { JsonLd, blogPostingSchema, breadcrumbSchema } from "@/components/shared/JsonLd";
+import { BlogPostingJsonLd, BlogBreadcrumbJsonLd } from "@/components/shared/JsonLd";
 import { getMDXComponents } from "@/mdx-components";
 
 interface PageProps {
@@ -113,26 +113,25 @@ export default async function BlogPostPage({ params, searchParams }: PageProps) 
     : undefined;
 
   const structuredPost = postEn || postPt;
-  const postStructuredData = structuredPost
-    ? blogPostingSchema({
-        title: structuredPost.title,
-        excerpt: structuredPost.excerpt,
-        date: structuredPost.date,
-        slug,
-        tags: structuredPost.tags,
-      })
-    : null;
 
-  const breadcrumbData = breadcrumbSchema([
+  const breadcrumbItems = [
     { name: "Home", url: SITE_URL },
     { name: "Blog", url: `${SITE_URL}/blog` },
     { name: structuredPost?.title || "Post", url: `${SITE_URL}/blog/${slug}` },
-  ]);
+  ];
 
   return (
     <>
-      {postStructuredData && <JsonLd data={postStructuredData} />}
-      <JsonLd data={breadcrumbData} />
+      {structuredPost && (
+        <BlogPostingJsonLd
+          title={structuredPost.title}
+          excerpt={structuredPost.excerpt}
+          date={structuredPost.date}
+          slug={slug}
+          tags={structuredPost.tags}
+        />
+      )}
+      <BlogBreadcrumbJsonLd items={breadcrumbItems} />
       <BlogPostClient
         enPost={enMeta}
         ptPost={ptMeta}
