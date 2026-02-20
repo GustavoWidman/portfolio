@@ -30,15 +30,10 @@
           src = ./.;
 
           dontPatchShebangs = true;
-          buildInputs = with pkgs; [
-            stdenv.cc.cc.lib
-            vips
-          ];
           bunDeps = bun2nix.packages.${system}.default.fetchBunDeps {
             bunNix = ./.bun.nix;
           };
           buildPhase = ''
-            export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.vips}/lib:$LD_LIBRARY_PATH"
             export NEXT_TELEMETRY_DISABLED=1
             export SOURCE_COMMIT="${commitHash}"
 
@@ -47,16 +42,8 @@
 
           installPhase = ''
             mkdir -p $out
-            # cp -r .next/standalone/* $out/share/
-            # cp -r .next/standalone/.* $out/share/
             mv .next/standalone $out/share
-
-            # cp -r .next/static/* $out/share/.next/static/
-            # cp -r .next/static/.* $out/share/.next/static/
             mv .next/static $out/share/.next/static
-
-            # cp -r public/* $out/share/public/
-            # cp -r public/.* $out/share/public/
             mv public $out/share/public
 
             mkdir -p $out/bin
@@ -65,7 +52,6 @@
 
             export NEXT_TELEMETRY_DISABLED=1
             export NODE_ENV=production
-            export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.vips}/lib:$LD_LIBRARY_PATH"
             export SOURCE_COMMIT="${commitHash}"
 
             cd $out/share
