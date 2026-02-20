@@ -17,7 +17,6 @@ const OG_HEIGHT = 630;
 function Background() {
   return (
     <>
-      {/* Grid Pattern */}
       <div
         style={{
           position: "absolute",
@@ -29,11 +28,9 @@ function Background() {
             "linear-gradient(to right, #27272a 1px, transparent 1px), linear-gradient(to bottom, #27272a 1px, transparent 1px)",
           backgroundSize: "40px 40px",
           opacity: 0.2,
-          zIndex: 0,
           display: "flex",
         }}
       />
-      {/* Glow Effect */}
       <div
         style={{
           position: "absolute",
@@ -43,7 +40,6 @@ function Background() {
           height: "600px",
           background: "radial-gradient(circle, rgba(16,185,129,0.15) 0%, rgba(0,0,0,0) 70%)",
           filter: "blur(8px)",
-          zIndex: 0,
           display: "flex",
         }}
       />
@@ -163,7 +159,6 @@ function PortfolioOG({ lang }: { lang: "en" | "pt" }) {
         style={{
           display: "flex",
           flexDirection: "column",
-          zIndex: 1,
           gap: "20px",
         }}
       >
@@ -188,7 +183,6 @@ function PortfolioOG({ lang }: { lang: "en" | "pt" }) {
           alignItems: "flex-end",
           justifyContent: "space-between",
           width: "100%",
-          zIndex: 1,
         }}
       >
         <div style={{ display: "flex", gap: "16px" }}>
@@ -234,7 +228,6 @@ function BlogIndexOG({ lang }: { lang: "en" | "pt" }) {
         style={{
           display: "flex",
           flexDirection: "column",
-          zIndex: 1,
           gap: "20px",
         }}
       >
@@ -259,7 +252,6 @@ function BlogIndexOG({ lang }: { lang: "en" | "pt" }) {
           alignItems: "flex-end",
           justifyContent: "space-between",
           width: "100%",
-          zIndex: 1,
         }}
       >
         <div style={{ display: "flex", gap: "16px" }}>
@@ -317,7 +309,6 @@ function BlogPostOG({
         style={{
           display: "flex",
           flexDirection: "column",
-          zIndex: 1,
           gap: "20px",
         }}
       >
@@ -331,7 +322,6 @@ function BlogPostOG({
           alignItems: "flex-end",
           justifyContent: "space-between",
           width: "100%",
-          zIndex: 1,
         }}
       >
         <div style={{ display: "flex", gap: "16px" }}>
