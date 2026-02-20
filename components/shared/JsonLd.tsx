@@ -69,7 +69,14 @@ interface BlogPostingJsonLdProps {
   image?: string;
 }
 
-export function BlogPostingJsonLd({ title, excerpt, date, slug, tags, image }: BlogPostingJsonLdProps) {
+export function BlogPostingJsonLd({
+  title,
+  excerpt,
+  date,
+  slug,
+  tags,
+  image,
+}: BlogPostingJsonLdProps) {
   const url = `${SITE_URL}/blog/${slug}`;
   const imageUrl = image || `${SITE_URL}/og/${slug}-en.png`;
 

@@ -43,7 +43,9 @@ export default function BlogListingClient({ posts, serverLang = "en" }: BlogList
           </p>
 
           <div className="md:hidden">
-            <SearchTrigger placeholder={lang === "en" ? "Search articles..." : "Buscar artigos..."} />
+            <SearchTrigger
+              placeholder={lang === "en" ? "Search articles..." : "Buscar artigos..."}
+            />
           </div>
         </div>
 

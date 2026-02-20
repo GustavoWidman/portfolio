@@ -29,7 +29,9 @@ function logItem(name: string, isLastSection: boolean, isLastItem: boolean, dura
   const branch = isLastItem ? "└" : "├";
   const formattedName = `${italic}${magenta}${name}${reset}`;
   const timing = duration < 1000 ? `${duration}ms` : `${(duration / 1000).toFixed(1)}s`;
-  console.log(`${prefix} ${branch} ${green}✓${reset} Generated: ${formattedName} ${bold}(${timing})${reset}`);
+  console.log(
+    `${prefix} ${branch} ${green}✓${reset} Generated: ${formattedName} ${bold}(${timing})${reset}`,
+  );
 }
 
 // Shared background elements used by all OG images
@@ -485,7 +487,12 @@ async function main() {
     const post = posts[i];
     const start = Date.now();
     const png = await renderToPng(
-      <BlogPostOG title={post.title} date={post.date} tags={post.tags} lang={post.lang as "en" | "pt"} />,
+      <BlogPostOG
+        title={post.title}
+        date={post.date}
+        tags={post.tags}
+        lang={post.lang as "en" | "pt"}
+      />,
       fonts,
     );
     const name = `${post.slug}-${post.lang}.png`;

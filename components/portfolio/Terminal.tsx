@@ -53,9 +53,17 @@ type TerminalAction =
 function terminalReducer(state: TerminalState, action: TerminalAction): TerminalState {
   switch (action.type) {
     case "ADD_LINE":
-      return { ...state, lines: [...state.lines, { id: state.nextId, text: action.line }], nextId: state.nextId + 1 };
+      return {
+        ...state,
+        lines: [...state.lines, { id: state.nextId, text: action.line }],
+        nextId: state.nextId + 1,
+      };
     case "SET_LINES":
-      return { ...state, lines: action.lines.map((text, i) => ({ id: state.nextId + i, text })), nextId: state.nextId + action.lines.length };
+      return {
+        ...state,
+        lines: action.lines.map((text, i) => ({ id: state.nextId + i, text })),
+        nextId: state.nextId + action.lines.length,
+      };
     case "FINISH_BOOT":
       return { ...state, isBooting: false };
     case "MINIMIZE":
