@@ -11,9 +11,19 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+/.pnp
+.pnp.js
 dist
 dist-ssr
 *.local
+
+# next.js
+/.next/
+/out/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 
 # Editor directories and files
 .vscode/*
