@@ -13,17 +13,18 @@ const VersionFooter: React.FC<VersionFooterProps> = ({ className = "" }) => {
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 py-1 px-3 text-[10px] font-mono text-zinc-400 dark:text-zinc-600 bg-white/80 dark:bg-black/80 backdrop-blur-sm border-t border-zinc-100 dark:border-zinc-900 flex items-center justify-between z-50 ${className}`}
+      className={`w-full py-2 px-3 text-[10px] font-mono text-zinc-400 dark:text-zinc-600 flex items-center justify-center gap-2 ${className}`}
     >
-      <span className="flex items-center gap-2">
-        <span>v{APP_VERSION}</span>
-        <span className="text-zinc-300 dark:text-zinc-700">|</span>
-        <span className="text-zinc-500 dark:text-zinc-500">{shortHash}</span>
-      </span>
+      <span>v{APP_VERSION}</span>
+      <span className="text-zinc-300 dark:text-zinc-700">|</span>
+      <span className="text-zinc-500 dark:text-zinc-500">{shortHash}</span>
       {IS_DEV && (
-        <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-semibold">
-          DEV
-        </span>
+        <>
+          <span className="text-zinc-300 dark:text-zinc-700">|</span>
+          <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-semibold">
+            DEV
+          </span>
+        </>
       )}
     </div>
   );

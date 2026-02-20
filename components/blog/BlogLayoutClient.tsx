@@ -5,7 +5,6 @@ import BlogNavbar from "./BlogNavbar";
 import type { Language } from "@/lib/types";
 import { useLanguage } from "@/lib/useLanguage";
 import { BlogSearchProvider } from "./SearchProvider";
-import { VersionFooter } from "@/components/portfolio";
 
 interface BlogLayoutClientProps {
   children: ReactNode;
@@ -25,10 +24,9 @@ export default function BlogLayoutClient({ children, serverLang = "en" }: BlogLa
   return (
     <BlogSearchProvider lang={lang}>
       <BlogNavbar lang={lang} setLang={setLang} isSubdomain={isSubdomain} />
-      <main className="min-h-screen bg-white dark:bg-black text-black dark:text-white pb-6">
+      <main className="flex flex-col min-h-screen bg-white dark:bg-black text-black dark:text-white">
         {children}
       </main>
-      <VersionFooter />
     </BlogSearchProvider>
   );
 }

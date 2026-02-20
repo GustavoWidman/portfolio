@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTheme } from "next-themes";
-import { Intro, Portfolio, VersionFooter } from "@/components/portfolio";
+import { Intro, Portfolio } from "@/components/portfolio";
 import type { Language } from "@/lib/types";
 import { useMounted } from "@/lib/useMounted";
 
@@ -44,8 +44,6 @@ export default function HomeClient({ lang = "en", skipIntro = false }: HomeClien
       <div className={containerClassName}>
         <Portfolio lang={lang} />
       </div>
-
-      <VersionFooter />
     </>
   );
 }

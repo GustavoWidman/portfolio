@@ -3,6 +3,7 @@ import React from "react";
 import { DATA } from "@/lib/data/content";
 import type { Language } from "@/lib/types";
 import ResumeButton from "./ResumeButton";
+import VersionFooter from "./VersionFooter";
 
 interface FooterProps {
   lang: Language;
@@ -50,6 +51,8 @@ const Footer: React.FC<FooterProps> = ({ lang }) => {
         <footer className="text-zinc-500 dark:text-zinc-700 text-xs font-mono uppercase tracking-widest">
           © {new Date().getFullYear()} Gustavo Widman
         </footer>
+
+        <VersionFooter className="mt-4" />
       </div>
     </section>
   );

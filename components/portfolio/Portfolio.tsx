@@ -63,7 +63,7 @@ export default function Portfolio({
         scrollTo={scrollTo}
         isSubdomain={isSubdomain}
       />
-      <main className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-colors duration-300 pb-6">
+      <main className="min-h-screen bg-white dark:bg-black text-black dark:text-white transition-colors duration-300">
         <Hero
           scrollY={scrollY}
           lang={lang}
