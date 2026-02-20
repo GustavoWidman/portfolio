@@ -5,13 +5,32 @@ import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 import React from "react";
 
+const OG_WIDTH = 1200;
+const OG_HEIGHT = 630;
+
 const fontPath = path.resolve("node_modules/@fontsource/inter/files/inter-latin-700-normal.woff");
 const fontMonoPath = path.resolve(
   "node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-500-normal.woff",
 );
 
-const OG_WIDTH = 1200;
-const OG_HEIGHT = 630;
+const cyan = "\x1b[36m";
+const green = "\x1b[32m";
+const magenta = "\x1b[35m";
+const bold = "\x1b[1m";
+const italic = "\x1b[3m";
+const reset = "\x1b[0m";
+
+function logHeader() {
+  console.log(`\n${bold}${cyan}generate-og.tsx${reset}\n`);
+}
+
+function logItem(name: string, isLastSection: boolean, isLastItem: boolean, duration: number) {
+  const prefix = isLastSection ? " " : "│";
+  const branch = isLastItem ? "└" : "├";
+  const formattedName = `${italic}${magenta}${name}${reset}`;
+  const timing = duration < 1000 ? `${duration}ms` : `${(duration / 1000).toFixed(1)}s`;
+  console.log(`${prefix} ${branch} ${green}✓${reset} Generated: ${formattedName} ${bold}(${timing})${reset}`);
+}
 
 // Shared background elements used by all OG images
 function Background() {
@@ -380,7 +399,6 @@ async function renderToPng(
 
 async function writePng(outDir: string, name: string, data: Buffer) {
   await fs.writeFile(path.join(outDir, name), data);
-  console.log(`  Generated: ${name}`);
 }
 
 // --- Main ---
@@ -389,7 +407,6 @@ async function main() {
   const outDir = path.resolve("public/og");
   await fs.mkdir(outDir, { recursive: true });
 
-  // Clean old OG images
   const existing = await fs.readdir(outDir);
   for (const file of existing) {
     if (file.endsWith(".png")) {
@@ -410,24 +427,35 @@ async function main() {
     },
   ];
 
-  // 1. Portfolio OG (pt/en)
-  console.log("Generating Portfolio OG images...");
-  for (const lang of ["en", "pt"] as const) {
+  logHeader();
+
+  const portfolioItems = ["en", "pt"] as const;
+  const blogIndexItems = ["en", "pt"] as const;
+
+  console.log(`├ Portfolio OG Images...`);
+  for (let i = 0; i < portfolioItems.length; i++) {
+    const lang = portfolioItems[i];
+    const start = Date.now();
     const png = await renderToPng(<PortfolioOG lang={lang} />, fonts);
-    await writePng(outDir, `portfolio-${lang}.png`, png);
+    const name = `portfolio-${lang}.png`;
+    await writePng(outDir, name, png);
+    logItem(name, false, i === portfolioItems.length - 1, Date.now() - start);
   }
 
-  // 2. Blog Index OG (pt/en)
-  console.log("Generating Blog Index OG images...");
-  for (const lang of ["en", "pt"] as const) {
+  console.log(`├ Blog Index OG Images...`);
+  for (let i = 0; i < blogIndexItems.length; i++) {
+    const lang = blogIndexItems[i];
+    const start = Date.now();
     const png = await renderToPng(<BlogIndexOG lang={lang} />, fonts);
-    await writePng(outDir, `blog-index-${lang}.png`, png);
+    const name = `blog-index-${lang}.png`;
+    await writePng(outDir, name, png);
+    logItem(name, false, i === blogIndexItems.length - 1, Date.now() - start);
   }
 
-  // 3. Blog Post OGs
-  console.log("Generating Blog Post OG images...");
+  console.log(`└ Blog Post OG Images...`);
   const contentDir = path.resolve("blog");
   const slugDirs = await fs.readdir(contentDir, { withFileTypes: true });
+  const posts: { slug: string; lang: string; title: string; date: string; tags: string[] }[] = [];
 
   for (const dir of slugDirs) {
     if (!dir.isDirectory()) continue;
@@ -437,25 +465,35 @@ async function main() {
 
     for (const file of files) {
       if (!file.endsWith(".mdx") && !file.endsWith(".md")) continue;
-      const lang = file.replace(/\.mdx?$/, "") as "en" | "pt";
+      const lang = file.replace(/\.mdx?$/, "");
       if (lang !== "en" && lang !== "pt") continue;
 
       const content = await fs.readFile(path.join(slugDir, file), "utf-8");
       const { data } = matter(content);
 
-      const title = data.title || "Blog Post";
-      const date = data.date ? new Date(data.date).toISOString().split("T")[0] : "";
-      const tags = Array.isArray(data.tags) ? data.tags : [];
-
-      const png = await renderToPng(
-        <BlogPostOG title={title} date={date} tags={tags} lang={lang} />,
-        fonts,
-      );
-      await writePng(outDir, `${slug}-${lang}.png`, png);
+      posts.push({
+        slug,
+        lang,
+        title: data.title || "Blog Post",
+        date: data.date ? new Date(data.date).toISOString().split("T")[0] : "",
+        tags: Array.isArray(data.tags) ? data.tags : [],
+      });
     }
   }
 
-  console.log("Done!");
+  for (let i = 0; i < posts.length; i++) {
+    const post = posts[i];
+    const start = Date.now();
+    const png = await renderToPng(
+      <BlogPostOG title={post.title} date={post.date} tags={post.tags} lang={post.lang as "en" | "pt"} />,
+      fonts,
+    );
+    const name = `${post.slug}-${post.lang}.png`;
+    await writePng(outDir, name, png);
+    logItem(name, true, i === posts.length - 1, Date.now() - start);
+  }
+
+  console.log();
 }
 
 main().catch((e) => {
