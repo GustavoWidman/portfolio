@@ -34,8 +34,9 @@ const Intro = ({ onComplete }: IntroProps) => {
 
     let lineIndex = 0;
     let animationFrame: number;
-    let lastProgressUpdate = 0;
-    let lastLineUpdate = 0;
+    let startTime: number | null = null;
+    let lastProgressTime = 0;
+    let lastLineTime = 0;
     let isComplete = false;
 
     const updateProgress = (progress: number) => {
@@ -67,19 +68,24 @@ const Intro = ({ onComplete }: IntroProps) => {
     const animate = (timestamp: number) => {
       if (isComplete) return;
 
-      if (timestamp - lastProgressUpdate >= 30) {
+      if (startTime === null) {
+        startTime = timestamp;
+      }
+      const elapsed = timestamp - startTime;
+
+      if (elapsed - lastProgressTime >= 30) {
         progressRef.current = Math.min(progressRef.current + 2, 100);
         updateProgress(progressRef.current);
-        lastProgressUpdate = timestamp;
+        lastProgressTime = elapsed;
       }
 
-      if (timestamp - lastLineUpdate >= 150 && lineIndex < bootText.length) {
+      if (elapsed - lastLineTime >= 150 && lineIndex < bootText.length) {
         addLine(lineIndex, bootText[lineIndex]);
         lineIndex++;
-        lastLineUpdate = timestamp;
+        lastLineTime = elapsed;
       }
 
-      if (timestamp >= 1500 && !isComplete) {
+      if (elapsed >= 1500) {
         isComplete = true;
         updateProgress(100);
         setTimeout(onComplete, 800);
@@ -98,7 +104,10 @@ const Intro = ({ onComplete }: IntroProps) => {
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center font-mono text-xs md:text-sm text-zinc-400 p-8 cursor-wait">
+    <div
+      ref={containerRef}
+      className="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center font-mono text-xs md:text-sm text-zinc-400 p-8 cursor-wait"
+    >
       <div className="w-full max-w-lg space-y-4">
         <div className="flex flex-col gap-1 h-[200px] justify-end overflow-hidden relative">
           <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-black to-transparent pointer-events-none z-10" />
