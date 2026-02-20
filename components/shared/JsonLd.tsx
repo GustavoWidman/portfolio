@@ -1,10 +1,18 @@
+import Script from "next/script";
+
 interface JsonLdProps {
   data: object;
 }
 
 export function JsonLd({ data }: JsonLdProps) {
+  const jsonStr = JSON.stringify(data);
   return (
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
+    <Script
+      id="json-ld"
+      type="application/ld+json"
+      strategy="lazyOnload"
+      dangerouslySetInnerHTML={{ __html: jsonStr }}
+    />
   );
 }
 

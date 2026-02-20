@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 interface IntroLine {
   id: number;
@@ -24,40 +24,76 @@ interface IntroProps {
 }
 
 const Intro = ({ onComplete }: IntroProps) => {
-  const [lines, setLines] = useState<IntroLine[]>([]);
-  const [progress, setProgress] = useState(0);
+  const linesRef = useRef<IntroLine[]>([]);
   const progressRef = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let lineIndex = 0;
-    let currentProgress = 0;
+    const container = containerRef.current;
+    if (!container) return;
 
-    const textInterval = setInterval(() => {
-      if (lineIndex >= bootText.length) {
-        clearInterval(textInterval);
+    let lineIndex = 0;
+    let animationFrame: number;
+    let lastProgressUpdate = 0;
+    let lastLineUpdate = 0;
+    let isComplete = false;
+
+    const updateProgress = (progress: number) => {
+      progressRef.current = progress;
+      const progressEl = container.querySelector("[data-progress]") as HTMLElement;
+      const progressText = container.querySelector("[data-progress-text]");
+      if (progressEl) {
+        progressEl.style.transform = `scaleX(${progress / 100})`;
+      }
+      if (progressText) {
+        progressText.textContent = `${progress}%`;
+      }
+    };
+
+    const addLine = (id: number, text: string) => {
+      linesRef.current = [...linesRef.current, { id, text }];
+      const linesContainer = container.querySelector("[data-lines]");
+      if (linesContainer) {
+        const lineEl = document.createElement("div");
+        lineEl.textContent = text;
+        lineEl.className = "text-zinc-500";
+        linesContainer.appendChild(lineEl);
+        if (id === bootText.length - 1) {
+          lineEl.className = "text-white animate-pulse";
+        }
+      }
+    };
+
+    const animate = (timestamp: number) => {
+      if (isComplete) return;
+
+      if (timestamp - lastProgressUpdate >= 30) {
+        progressRef.current = Math.min(progressRef.current + 2, 100);
+        updateProgress(progressRef.current);
+        lastProgressUpdate = timestamp;
+      }
+
+      if (timestamp - lastLineUpdate >= 150 && lineIndex < bootText.length) {
+        addLine(lineIndex, bootText[lineIndex]);
+        lineIndex++;
+        lastLineUpdate = timestamp;
+      }
+
+      if (timestamp >= 1500 && !isComplete) {
+        isComplete = true;
+        updateProgress(100);
+        setTimeout(onComplete, 800);
         return;
       }
-      const currentIndex = lineIndex;
-      setLines((prev) => [...prev, { id: currentIndex, text: bootText[currentIndex] }]);
-      lineIndex++;
-    }, 150);
 
-    const progressInterval = setInterval(() => {
-      currentProgress = Math.min(currentProgress + 2, 100);
-      progressRef.current = currentProgress;
-      setProgress(currentProgress);
-    }, 30);
+      animationFrame = requestAnimationFrame(animate);
+    };
 
-    const completionTimeout = setTimeout(() => {
-      clearInterval(progressInterval);
-      setProgress(100);
-      setTimeout(onComplete, 800);
-    }, 1500);
+    animationFrame = requestAnimationFrame(animate);
 
     return () => {
-      clearInterval(textInterval);
-      clearInterval(progressInterval);
-      clearTimeout(completionTimeout);
+      isComplete = true;
+      cancelAnimationFrame(animationFrame);
     };
   }, [onComplete]);
 
@@ -66,25 +102,15 @@ const Intro = ({ onComplete }: IntroProps) => {
       <div className="w-full max-w-lg space-y-4">
         <div className="flex flex-col gap-1 h-[200px] justify-end overflow-hidden relative">
           <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-black to-transparent pointer-events-none z-10" />
-          {lines.map((line) => (
-            <div
-              key={line.id}
-              className={
-                line.id === lines[lines.length - 1]?.id
-                  ? "text-white animate-pulse"
-                  : "text-zinc-500"
-              }
-            >
-              {line.text}
-            </div>
-          ))}
+          <div data-lines className="flex flex-col gap-1" />
         </div>
 
         <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
           <div
-            className="h-full bg-white transition-all duration-75 ease-out"
+            data-progress
+            className="h-full bg-white transition-none"
             style={{
-              transform: `scaleX(${progress / 100})`,
+              transform: "scaleX(0)",
               transformOrigin: "left",
             }}
           />
@@ -92,7 +118,7 @@ const Intro = ({ onComplete }: IntroProps) => {
 
         <div className="flex justify-between text-zinc-600 text-[10px] uppercase tracking-widest">
           <span>Boot Sequence</span>
-          <span>{progress}%</span>
+          <span data-progress-text>0%</span>
         </div>
       </div>
     </div>

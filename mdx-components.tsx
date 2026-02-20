@@ -53,7 +53,7 @@ function isStaticImageData(src: unknown): src is StaticImageData {
 
 // Override the img component to handle both string URLs and StaticImageData
 function CustomImage(props: React.ComponentProps<"img">) {
-  const { src, alt, ...rest } = props;
+  const { src, alt } = props;
 
   // Handle StaticImageData objects (Next.js image imports)
   if (isStaticImageData(src)) {
@@ -77,8 +77,14 @@ function CustomImage(props: React.ComponentProps<"img">) {
 
   return (
     <ImageZoom>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img {...rest} src={srcString} alt={alt || ""} className="rounded-lg" />
+      <Image
+        src={srcString}
+        alt={alt || ""}
+        width={800}
+        height={450}
+        unoptimized
+        className="rounded-lg w-full h-auto"
+      />
     </ImageZoom>
   );
 }

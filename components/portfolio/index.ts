@@ -4,7 +4,6 @@ export { default as Stack } from "./Stack";
 export { default as Experience } from "./Experience";
 export { default as Projects } from "./Projects";
 export { default as Footer } from "./Footer";
-export { default as Terminal } from "./Terminal";
 export { default as ResumeButton } from "./ResumeButton";
 export { default as Portfolio } from "./Portfolio";
 export { default as Navbar } from "./Navbar";

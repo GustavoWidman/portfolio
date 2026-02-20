@@ -31,8 +31,14 @@ const generateLsLikeDate = () => {
   return `${monthAbbr} ${day} ${hours}:${minutes}`;
 };
 
+interface TerminalLine {
+  id: number;
+  text: string;
+}
+
 interface TerminalState {
-  lines: string[];
+  lines: TerminalLine[];
+  nextId: number;
   isBooting: boolean;
   isMinimized: boolean;
 }
@@ -47,13 +53,13 @@ type TerminalAction =
 function terminalReducer(state: TerminalState, action: TerminalAction): TerminalState {
   switch (action.type) {
     case "ADD_LINE":
-      return { ...state, lines: [...state.lines, action.line] };
+      return { ...state, lines: [...state.lines, { id: state.nextId, text: action.line }], nextId: state.nextId + 1 };
     case "SET_LINES":
-      return { ...state, lines: action.lines };
+      return { ...state, lines: action.lines.map((text, i) => ({ id: state.nextId + i, text })), nextId: state.nextId + action.lines.length };
     case "FINISH_BOOT":
       return { ...state, isBooting: false };
     case "MINIMIZE":
-      return { lines: [], isBooting: true, isMinimized: true };
+      return { lines: [], nextId: 0, isBooting: true, isMinimized: true };
     case "RESTORE":
       return { ...state, isMinimized: false };
     default:
@@ -68,6 +74,7 @@ interface TerminalProps {
 const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
   const [state, dispatch] = useReducer(terminalReducer, {
     lines: [],
+    nextId: 0,
     isBooting: true,
     isMinimized: false,
   });
@@ -107,17 +114,18 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
 
   const handleCommand = useCallback(
     (cmd: string) => {
-      const newLines = [...state.lines, `widman@nixos:~$ ${cmd}`];
+      const existingTexts = state.lines.map((l) => l.text);
+      const newTexts = [...existingTexts, `widman@nixos:~$ ${cmd}`];
       const lowerCmd = cmd.toLowerCase().trim();
 
       if (lowerCmd.includes("rm -rf /") || lowerCmd.includes("rm -rf --no-preserve-root /")) {
-        newLines.push(
+        newTexts.push(
           "CRITICAL: ROOT PERMISSION GRANTED.",
           "Deleting system files...",
           "KERNEL PANIC: Attempted to kill init!",
           "System is halting NOW.",
         );
-        dispatch({ type: "SET_LINES", lines: newLines });
+        dispatch({ type: "SET_LINES", lines: newTexts });
         setInput("");
 
         setTimeout(() => {
@@ -129,28 +137,28 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
       if (lowerCmd.startsWith("cv")) {
         const args = lowerCmd.split(" ");
         if (args.length === 1) {
-          newLines.push("Usage: cv [en|pt]");
-          newLines.push("Example: cv en");
+          newTexts.push("Usage: cv [en|pt]");
+          newTexts.push("Example: cv en");
         } else {
           const lang = args[1];
           if (["en", "english", "us"].includes(lang)) {
-            newLines.push("Downloading CV (English)...");
+            newTexts.push("Downloading CV (English)...");
             window.open("/resume-en.pdf", "_blank");
           } else if (["pt", "br", "portuguese"].includes(lang)) {
-            newLines.push("Downloading CV (Portuguese)...");
+            newTexts.push("Downloading CV (Portuguese)...");
             window.open("/resume-pt.pdf", "_blank");
           } else {
-            newLines.push(`Error: Language '${lang}' not found. Available: en, pt`);
+            newTexts.push(`Error: Language '${lang}' not found. Available: en, pt`);
           }
         }
-        dispatch({ type: "SET_LINES", lines: newLines });
+        dispatch({ type: "SET_LINES", lines: newTexts });
         setInput("");
         return;
       }
 
       switch (lowerCmd) {
         case "help":
-          newLines.push(
+          newTexts.push(
             "Available commands:",
             "  whoami    - Bio & Role",
             "  stack     - Tech Stack",
@@ -165,7 +173,7 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
           );
           break;
         case "version":
-          newLines.push(
+          newTexts.push(
             `portfolio v${APP_VERSION}`,
             `commit: ${COMMIT_HASH}`,
             `mode: ${IS_DEV ? "development" : "production"}`,
@@ -173,11 +181,11 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
           );
           break;
         case "blog":
-          newLines.push("Opening blog...");
+          newTexts.push("Opening blog...");
           router.push("/blog");
           break;
         case "whoami":
-          newLines.push(
+          newTexts.push(
             "Gustavo Widman.",
             "Backend Engineer.",
             "Specialist in Systems Programming, NixOS Infrastructure,",
@@ -185,7 +193,7 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
           );
           break;
         case "exp":
-          newLines.push(
+          newTexts.push(
             "--- Professional Experience ---",
             "CTO @ CamelSec (August 2025 - December 2025)",
             " > Orchestrating NixOS-based infrastructure",
@@ -201,7 +209,7 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
           );
           break;
         case "stack":
-          newLines.push(
+          newTexts.push(
             "--- Systems & Low Level ---",
             "Rust, C, Assembly (x86), Kernel Dev",
             "",
@@ -213,7 +221,7 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
           );
           break;
         case "ls":
-          newLines.push(
+          newTexts.push(
             "total 6",
             `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} based-kernel`,
             `drwx------ 1 widman nixos  1024 ${generateLsLikeDate()} nix`,
@@ -224,14 +232,14 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
           );
           break;
         case "sudo":
-          newLines.push("user is not in the sudoers file. This incident will be reported.");
+          newTexts.push("user is not in the sudoers file. This incident will be reported.");
           break;
         case "linkedin":
-          newLines.push("Opening LinkedIn...");
+          newTexts.push("Opening LinkedIn...");
           window.open("https://www.linkedin.com/in/gustavo-widman", "_blank");
           break;
         case "github":
-          newLines.push("Opening GitHub...");
+          newTexts.push("Opening GitHub...");
           window.open("https://github.com/GustavoWidman", "_blank");
           break;
         case "clear":
@@ -241,10 +249,10 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
         case "":
           break;
         default:
-          newLines.push(`bash: command not found: ${cmd}`);
+          newTexts.push(`bash: command not found: ${cmd}`);
       }
 
-      dispatch({ type: "SET_LINES", lines: newLines });
+      dispatch({ type: "SET_LINES", lines: newTexts });
       setInput("");
     },
     [router, state.lines],
@@ -304,12 +312,12 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
         onClick={() => inputRef.current?.focus()}
         onKeyDown={() => inputRef.current?.focus()}
       >
-        {state.lines.map((item, index) => {
-          if (!item || typeof item !== "string") {
+        {state.lines.map((item) => {
+          if (!item || !item.text) {
             return null;
           }
 
-          return <TerminalLine key={`${item.substring(0, 30)}-${index}`} line={item} />;
+          return <TerminalLine key={item.id} line={item.text} />;
         })}
 
         {!state.isBooting && (
