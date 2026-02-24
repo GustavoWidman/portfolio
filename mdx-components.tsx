@@ -53,39 +53,73 @@ function isStaticImageData(src: unknown): src is StaticImageData {
 
 // Override the img component to handle both string URLs and StaticImageData
 function CustomImage(props: React.ComponentProps<"img">) {
-  const { src, alt } = props;
+  const { src, alt, title } = props;
+  const caption = title || alt;
 
-  // Handle StaticImageData objects (Next.js image imports)
-  if (isStaticImageData(src)) {
+  const renderImage = () => {
+    // Handle StaticImageData objects (Next.js image imports)
+    if (isStaticImageData(src)) {
+      const isAnimated = src.src.toLowerCase().endsWith(".gif");
+      return (
+        <ImageZoom>
+          <Image
+            src={src.src}
+            alt={alt || ""}
+            width={src.width}
+            height={src.height}
+            placeholder={src.blurDataURL ? "blur" : "empty"}
+            blurDataURL={src.blurDataURL}
+            unoptimized={isAnimated}
+            className="rounded-lg mx-auto block max-w-full h-auto my-0!"
+            suppressHydrationWarning
+          />
+        </ImageZoom>
+      );
+    }
+
+    // Handle string URLs (including absolute paths like /blog/...)
+    const srcString = typeof src === "string" ? src : String(src);
+    const isAnimated = srcString.toLowerCase().endsWith(".gif");
     return (
       <ImageZoom>
         <Image
-          src={src.src}
+          src={srcString}
           alt={alt || ""}
-          width={src.width}
-          height={src.height}
-          placeholder={src.blurDataURL ? "blur" : "empty"}
-          blurDataURL={src.blurDataURL}
-          className="rounded-lg"
+          width={800}
+          height={450}
+          unoptimized={isAnimated}
+          className="rounded-lg mx-auto block max-w-full h-auto my-0!"
         />
       </ImageZoom>
     );
-  }
-
-  // Handle string URLs (including absolute paths like /blog/...)
-  const srcString = typeof src === "string" ? src : String(src);
+  };
 
   return (
-    <ImageZoom>
-      <Image
-        src={srcString}
-        alt={alt || ""}
-        width={800}
-        height={450}
-        unoptimized
-        className="rounded-lg w-full h-auto"
-      />
-    </ImageZoom>
+    <span
+      style={{
+        display: "block",
+        textAlign: "center",
+        width: "100%",
+        marginTop: "2rem",
+        marginBottom: "2rem",
+      }}
+    >
+      {renderImage()}
+      {caption && (
+        <span
+          style={{
+            display: "block",
+            textAlign: "center",
+            fontSize: "0.875rem",
+            color: "#71717a",
+            marginTop: "0.5rem",
+          }}
+          className="dark:text-zinc-400"
+        >
+          {caption}
+        </span>
+      )}
+    </span>
   );
 }
 
