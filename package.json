@@ -12,7 +12,8 @@
     "start": "next start -p 3000",
     "preview": "bun run build && bun run start",
     "postinstall": "fumadocs-mdx && bun2nix -o .bun.nix",
-    "doctor": "react-doctor --no-ami --offline --verbose"
+    "doctor": "react-doctor --no-ami --offline --verbose",
+    "compile-resumes": "typst compile typst/resume-en.typ public/resume-en.pdf && typst compile typst/resume-pt.typ public/resume-pt.pdf"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",

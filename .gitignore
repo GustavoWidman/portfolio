@@ -38,6 +38,7 @@ next-env.d.ts
 
 # Folder for playing around with resumes
 /latex
+/typst/*.pdf
 
 # Generated OG Images
 public/og/
