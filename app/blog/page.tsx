@@ -81,7 +81,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   const acceptHeader = headersList.get("accept");
 
   if (shouldServeMarkdown(userAgent, params.format, params.raw, acceptHeader)) {
-    redirect("/blog.mdx");
+    redirect("/llms.mdx/blog");
   }
 
   const posts = getBlogPostSummaries();

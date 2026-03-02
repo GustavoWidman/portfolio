@@ -100,7 +100,7 @@ export default async function BlogPostPage({ params, searchParams }: PageProps) 
   const acceptHeader = headersList.get("accept");
 
   if (shouldServeMarkdown(userAgent, searchParamsObj.format, searchParamsObj.raw, acceptHeader)) {
-    redirect(`/blog/${slug}.mdx`);
+    redirect(`/llms.mdx/blog/${slug}`);
   }
 
   const urlLang = await getLanguageFromParam(searchParamsObj.lang || null);
