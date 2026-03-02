@@ -46,6 +46,8 @@
             mv .next/static $out/share/.next/static
             mv public $out/share/public
 
+            cp -r blog $out/share/blog
+
             rm -rf $out/share/.next/cache
             ln -s /var/cache/portfolio $out/share/.next/cache
 

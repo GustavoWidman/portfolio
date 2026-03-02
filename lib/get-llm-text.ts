@@ -47,8 +47,8 @@ export async function getLLMText(entry: (typeof blog)[number]): Promise<string> 
   const date = formatDateValue(entry.date);
   const url = `https://guswid.com/blog/${slug}`;
 
-  // Get processed markdown content (method is on entry itself)
-  const markdown = await entry.getText("processed");
+  // Get raw markdown content (original MDX file)
+  const markdown = await entry.getText("raw");
 
   // Format with metadata header for LLM consumption
   return `# ${entry.title}
