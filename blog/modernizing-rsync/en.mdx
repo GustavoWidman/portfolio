@@ -1,0 +1,241 @@
+---
+title: modernizing rsync for the multi-gigabit era
+date: 2026-03-02
+excerpt: a thesis on why rsync's 1996 algorithm is cpu-bound on modern networks and how hardware optimizations might finally unlock our bandwidth.
+tags: [rust, systems-programming, optimization, thesis, rsync]
+---
+
+# the problem with rsync in 2026
+
+in early 2024, i was building a file sync tool in rust. nothing fancy. just something to keep my desktop and laptop in sync without thinking about it. things were going smoothly until i asked myself a question that would consume the next two years of my life:
+
+"am i really going to re-transfer the entire file every time i change it?"
+
+i knew git didn't do this. i knew `rsync` existed. so i dove into how file differential algorithms actually work.
+
+what i found shocked me.
+
+the rsync algorithm, written by andrew tridgell in 1996, was benchmarked on a **50MHz SPARC 10 CPU running SunOS**. it uses MD4 as its strong hash. it's single-threaded. and somehow, almost three decades later, it's still the backbone of how we synchronize files. dropbox's `fast_rsync`, your backup software, cloud storage providers, they all trace their lineage back to this algorithm.
+
+our networks got faster. our cpus got faster. but the software? it's still running the same math from 1996.
+
+![a timeline showing 1996 rsync vs 2026 network speeds](./imgs/timeline.png)
+
+the gap between 50MHz CPUs and 10Gbps networks is where the problem lives.
+
+## the network bottleneck is dead
+
+historically, rsync was designed for slow networks. modems. isdn. the algorithm was clever because it minimized what you sent over the wire, even if it meant burning cpu cycles to figure out what changed.
+
+but here's the thing. on modern fiber and gigabit+ networks, that tradeoff no longer makes sense.
+
+the cpu is now the bottleneck.
+
+a 2021 paper from he et al. (the `dsync` project) explicitly measured this. on gigabit networks, rsync-based tools spend **up to 10× more time matching blocks** than actually transmitting data. your fancy 10gbps network card is sitting there, bored, while your cpu chugs through a single-threaded byte-by-byte scan.
+
+this is the gap. this is where ferrisync lives.
+
+## how rsync actually works (the deep dive)
+
+to understand why rsync is cpu-bound, you need to understand how it works. let's get technical.
+
+rsync uses what's called **fixed-size chunking (fsc)**. here's the algorithm in two phases:
+
+### phase 1: signature generation
+
+the sender takes the "basis" file (the old version) and splits it into fixed-size blocks. typically 512 bytes or something similar. for each block, it computes:
+
+1. a **weak checksum**, a rolling hash (usually an adler-32 variant) that's fast to compute and can be "rolled" (updated incrementally when bytes enter/exit the window)
+2. a **strong hash**, a cryptographic hash (historically MD4, modern implementations use blake3 or xxhash) that uniquely identifies the block
+
+these signatures get sent to the receiver.
+
+```rust title="signature.rs (conceptual)"
+pub struct BlockSig<S, W> {
+    pub index: usize,
+    pub weak: W,    // rolling checksum
+    pub strong: S,  // cryptographic hash
+}
+```
+
+### phase 2: delta computation
+
+the receiver has the "new" file and the signature table from the old file. now it needs to find which blocks from the old file still exist in the new file.
+
+this is where the rolling hash shines. instead of comparing every possible substring (which would be O(n²)), the receiver slides a window byte-by-byte through the new file:
+
+1. compute the weak checksum for the current window
+2. look it up in the signature table
+3. if there's a match, compute the strong hash to confirm (weak hashes collide)
+4. if confirmed, emit a "copy block X" instruction and jump forward
+5. if no match, emit one literal byte and slide the window by one
+
+```rust title="delta.rs (simplified)"
+while pos + block_size < new_data.len() {
+    let weak = rolling.digest();
+
+    if let Some(candidates) = lookup.get(&weak) {
+        let strong_digest = strong.hash(&new_data[pos..pos + block_size]);
+        if let Some(index) = find_match(candidates, strong_digest) {
+            ops.push(DeltaOp::Copy { index });
+            pos += block_size;  // jump forward!
+            continue;
+        }
+    }
+
+    // no match - slide by ONE byte
+    literal.push(new_data[pos]);
+    rolling.roll_out(new_data[pos], block_size);
+    rolling.roll_in(new_data[pos + block_size]);
+    pos += 1;
+}
+```
+
+the magic is in step 4. when you find a match, you skip an entire block. but when you don't match, you only advance by **one byte**.
+
+### the hidden cost
+
+that "slide by one byte" is the killer. in the worst case, two completely different files, you're doing O(n) iterations where n is the file size. and each iteration involves:
+
+- computing the rolling hash update (fast, but still work)
+- a hash table lookup (memory access, potential cache miss)
+- potentially computing a strong hash (expensive)
+
+this is why rsync is cpu-bound. the algorithm fundamentally requires touching every byte, even when nothing matches.
+
+## the adler-32 ceiling
+
+rsync's rolling checksum is a variant of adler-32. it's beautifully simple:
+
+```rust title="adler.rs"
+// feed an entire block
+for &byte in buf {
+    s1 = s1.wrapping_add(byte as u32);
+    s2 = s2.wrapping_add(s1);
+}
+
+// slide the window (O(1) update!)
+fn roll_out(&mut self, byte: u8, window_len: usize) {
+    self.s1 = self.s1.wrapping_sub(byte as u32 + CHAR_OFFSET);
+    self.s2 = self.s2.wrapping_sub(window_len as u32 * (byte as u32 + CHAR_OFFSET));
+}
+```
+
+the `s2 += s1` line creates a sequential dependency. you can't parallelize it. you can't vectorize it. you're stuck computing one byte at a time.
+
+in my profiling, i found that the sliding window loop takes **exactly one cpu cycle per iteration**. that's the hardware ceiling. you literally cannot go faster without changing the algorithm.
+
+![comparison showing the sliding window loop at 1 cycle per iteration](./imgs/comparison.png)
+
+this is where fsc hits a wall.
+
+## content-defined chunking: a different approach
+
+what if we didn't use fixed-size blocks? what if the chunk boundaries were determined by the content itself?
+
+this is **content-defined chunking (cdc)**, and it's the approach used by modern tools like `dsync` and deduplication systems.
+
+### how cdc works
+
+instead of splitting the file at byte 0, 512, 1024, etc., cdc finds boundaries by looking at the data. a common approach is:
+
+1. use a rolling hash (like gear hash) to scan through the file
+2. when the hash meets some criteria (e.g., `hash & mask == target`), mark a boundary
+3. repeat until the entire file is chunked
+
+the key insight. **if two files share content, that content will produce the same chunk boundaries**. even if bytes were inserted or deleted elsewhere, the matching regions will chunk identically.
+
+### why cdc changes everything
+
+in the delta phase, cdc doesn't need a byte-by-byte sliding window. you:
+
+1. re-chunk the new file using the same parameters
+2. look up each chunk's weak fingerprint directly
+3. confirm with the strong hash if needed
+
+no sliding. no O(n) worst case. chunk, lookup, done.
+
+```rust title="cdc_chunk.rs (conceptual)"
+pub struct CdcChunk<'a> {
+    pub data: &'a [u8],
+    pub weak_fp: u64,  // the gear hash at the boundary
+}
+```
+
+the `weak_fp` field is interesting. in fastcdc-style implementations, the gear hash that determines the boundary is reused as the weak fingerprint. no separate adler-32 pass needed.
+
+### the cdc tradeoff
+
+cdc isn't free. chunking itself has overhead. you're still scanning through the file. but the scan is predictable, vectorizable, and doesn't have the sequential dependency that kills fsc's sliding window.
+
+the real story is more nuanced than "cdc is stable". take ram cdc, for example. on sparse edits, it hits peak throughput. on random edits, it still drops to about 64% of peak. that's way better than fsc (which drops to 35%), but it's not magic. cdc avoids the o(n) byte-by-byte fallback that kills fsc, but when the new file looks nothing like the old one, you're still rescanning the whole thing.
+
+![throughput comparison chart showing fsc vs cdc relative falloff](./imgs/throughput.png)
+
+fsc drops to 35% of peak on random edits. cdc maintains 64%. still a huge gap.
+
+## the attack vectors
+
+so if we want to modernize rsync, where do we attack? the literature points to three integrated layers:
+
+### 1. simd acceleration
+
+modern cpus have vector instructions (sse, avx, neon) that can process multiple bytes simultaneously. the problem. rsync's adler-32 is fundamentally sequential.
+
+but cdc changes the game. some chunking algorithms (like ram cdc, which uses local byte extremums instead of hashes) are highly receptive to simd. a 2025 paper (vectorcdc) demonstrated **~30 GB/s** chunking throughput using avx-512 on hashless algorithms.
+
+even rolling hashes can be parallelized with clever tricks. ss-cdc (2019) and odess (2023) showed that "inherently sequential" rolling hashes can use vectorized sliding windows to process multiple positions simultaneously.
+
+### 2. multi-core parallelization
+
+rsync is single-threaded. but chunking? signature generation? block matching? these are embarrassingly parallel problems.
+
+split the file into regions, process each on a separate core, merge results. the challenge is doing this without introducing synchronization overhead that eats your gains.
+
+### 3. cache-friendly data structures
+
+the signature table is a hash map. every block match requires a lookup. on modern cpus, a cache miss is ~100x slower than a cache hit.
+
+the default approach, using a general-purpose hash map with its own internal hashing, means we're hashing already-hashed values. our weak digests are uniformly distributed integers. why hash them again?
+
+a custom hash map with a no-op hasher and cache-optimized layout could significantly reduce memory latency.
+
+## why this matters
+
+cloud storage providers. backup systems. data centers. anyone moving files over fast networks. they're all paying for cpu cycles that shouldn't be necessary.
+
+if rsync remains a cpu bottleneck, we're leaving bandwidth on the table. we're running more servers than we need. we're wasting energy.
+
+the techniques exist in isolation. simd chunking, parallel delta compression, cache-optimized lookups. but they've never been unified into a single, cohesive rsync implementation.
+
+that's the gap. that's the thesis.
+
+## what ferrisync is (and isn't)
+
+ferrisync is a rust implementation of rsync-style file synchronization, designed to explore how far hardware optimizations can push throughput.
+
+it's a research project. a thesis. a playground for trying things that might not work.
+
+the code is modular by design. swap out the weak hash, swap out the strong hash, swap out the chunking strategy. benchmark everything. find the bottlenecks.
+
+it's also a personal journey. i first tried this in 2024 and failed. i was too inexperienced, didn't know how to profile, didn't understand simd. i put it aside, frustrated but obsessed.
+
+now it's 2026. i've spent two years getting good at rust. i've taught rust to my classmates. i've built the skills to actually tackle this problem.
+
+ferrisync is what happens when you refuse to let a problem go.
+
+## what comes next
+
+this post is an introduction. the technical deep dives are coming:
+
+- the fsc implementation and the loop unrolling paradox
+- the cdc experiments: fastcdc, ram cdc, and beyond
+- simd acceleration: where it works and where it doesn't
+- the strong hash zoo: md4, blake3, museair, gxhash
+- benchmark methodology and reproducible results
+
+the thesis is ongoing. the code is evolving. but the question is clear:
+
+**can we make rsync fast enough to actually use our networks?**
+
+i think the answer is yes.
