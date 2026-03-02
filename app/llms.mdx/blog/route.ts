@@ -28,17 +28,18 @@ function formatDate(date: unknown): string {
 }
 
 export async function GET() {
-  // Get all non-scheduled posts, prefer English versions
-  const seenSlugs = new Set<string>();
-  const posts: Array<{
-    title: string;
-    slug: string;
-    date: string;
-    excerpt: string;
-    tags: string[];
-    url: string;
-    markdownUrl: string;
-  }> = [];
+  // Group posts by slug, prefer English over Portuguese
+  const slugMap = new Map<
+    string,
+    {
+      title: string;
+      slug: string;
+      date: string;
+      excerpt: string;
+      tags: string[];
+      lang: string;
+    }
+  >();
 
   for (const entry of blog) {
     const pathParts = entry.info.path.replace(/\.mdx?$/, "").split("/");
@@ -51,34 +52,28 @@ export async function GET() {
       continue;
     }
 
-    // Prefer English, but include Portuguese if no English version
-    if (lang === "en") {
-      seenSlugs.add(slug);
-      posts.push({
+    // Prefer English over Portuguese
+    const existing = slugMap.get(slug);
+    if (!existing || (existing.lang === "pt" && lang === "en")) {
+      slugMap.set(slug, {
         title: entry.title,
         slug,
         date: dateStr,
         excerpt: entry.excerpt,
         tags: entry.tags,
-        url: `https://guswid.com/blog/${slug}`,
-        markdownUrl: `https://guswid.com/blog/${slug}.mdx`,
-      });
-    } else if (lang === "pt" && !seenSlugs.has(slug)) {
-      seenSlugs.add(slug);
-      posts.push({
-        title: entry.title,
-        slug,
-        date: dateStr,
-        excerpt: entry.excerpt,
-        tags: entry.tags,
-        url: `https://guswid.com/blog/${slug}`,
-        markdownUrl: `https://guswid.com/blog/${slug}.mdx`,
+        lang,
       });
     }
   }
 
-  // Sort by date descending
-  posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  // Convert to array and sort by date descending
+  const posts = Array.from(slugMap.values())
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .map((post) => ({
+      ...post,
+      url: `https://guswid.com/blog/${post.slug}`,
+      markdownUrl: `https://guswid.com/blog/${post.slug}.mdx`,
+    }));
 
   const content = `# Gustavo Widman's Blog
 
