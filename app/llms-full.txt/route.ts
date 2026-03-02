@@ -10,18 +10,15 @@ function formatDate(date: unknown): string {
     return "";
   }
   if (typeof date === "string") {
-    // Already a string, check if it's in YYYY-MM-DD format
     if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return date;
     }
-    // Try to parse it
     const parsed = new Date(date);
     if (!Number.isNaN(parsed.getTime())) {
       return parsed.toISOString().split("T")[0];
     }
     return date;
   }
-  // Handle Date objects and objects with toISOString
   if (typeof date === "object" && date !== null) {
     const d = date as Date;
     if (typeof d.toISOString === "function") {
@@ -32,9 +29,8 @@ function formatDate(date: unknown): string {
 }
 
 export async function GET() {
-  // Get all non-scheduled posts, prefer English versions
-  const seenSlugs = new Set<string>();
-  const posts: string[] = [];
+  // Group posts by slug, prefer English over Portuguese
+  const slugMap = new Map<string, { entry: (typeof blog)[number]; lang: string; dateStr: string }>();
 
   for (const entry of blog) {
     const pathParts = entry.info.path.replace(/\.mdx?$/, "").split("/");
@@ -47,15 +43,19 @@ export async function GET() {
       continue;
     }
 
-    // Prefer English, but include Portuguese if no English version
-    if (lang === "en") {
-      seenSlugs.add(slug);
-      posts.push(await getLLMText(entry));
-    } else if (lang === "pt" && !seenSlugs.has(slug)) {
-      seenSlugs.add(slug);
-      posts.push(await getLLMText(entry));
+    // Prefer English over Portuguese
+    const existing = slugMap.get(slug);
+    if (!existing || (existing.lang === "pt" && lang === "en")) {
+      slugMap.set(slug, { entry, lang, dateStr });
     }
   }
+
+  // Sort by date descending and get markdown content
+  const sortedEntries = Array.from(slugMap.values())
+    .sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime())
+    .map((item) => getLLMText(item.entry));
+
+  const posts = await Promise.all(sortedEntries);
 
   const content = `# Gustavo Widman's Blog
 
