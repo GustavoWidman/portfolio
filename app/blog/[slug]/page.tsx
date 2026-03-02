@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { getAllBlogSlugs, getBlogPost } from "@/lib/source";
 import { isScheduled } from "@/lib/helpers";
 import { detectLanguage, getLanguageFromParam } from "@/lib/language-server";
+import { shouldServeMarkdown } from "@/lib/is-ai-agent";
 import BlogPostClient from "@/components/blog/BlogPostClient";
 import { BlogPostingJsonLd, BlogBreadcrumbJsonLd } from "@/components/shared/JsonLd";
 import { getMDXComponents } from "@/mdx-components";
-
 interface PageProps {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ lang?: string }>;
+  searchParams: Promise<{ lang?: string; format?: string; raw?: string }>;
 }
 
 export async function generateStaticParams() {
@@ -91,6 +92,15 @@ export default async function BlogPostPage({ params, searchParams }: PageProps) 
   const postDate = postEn?.date || postPt?.date;
   if (postDate && isScheduled(postDate)) {
     notFound();
+  }
+
+  // Check if we should serve markdown (AI agent or explicit request)
+  const headersList = await headers();
+  const userAgent = headersList.get("user-agent");
+  const acceptHeader = headersList.get("accept");
+
+  if (shouldServeMarkdown(userAgent, searchParamsObj.format, searchParamsObj.raw, acceptHeader)) {
+    redirect(`/blog/${slug}.mdx`);
   }
 
   const urlLang = await getLanguageFromParam(searchParamsObj.lang || null);

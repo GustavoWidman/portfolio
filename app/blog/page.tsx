@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { getBlogPostSummaries } from "@/lib/source";
 import { detectLanguage, getLanguageFromParam } from "@/lib/language-server";
+import { shouldServeMarkdown } from "@/lib/is-ai-agent";
 import BlogListingClient from "@/components/blog/BlogListingClient";
 import { BlogBreadcrumbJsonLd, BlogJsonLd } from "@/components/shared/JsonLd";
-
 const SITE_URL = "https://guswid.com";
 
 interface BlogPageProps {
-  searchParams: Promise<{ lang?: string }>;
+  searchParams: Promise<{ lang?: string; format?: string; raw?: string }>;
 }
 
 export async function generateMetadata({ searchParams }: BlogPageProps): Promise<Metadata> {
@@ -72,6 +74,16 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
   const params = await searchParams;
   const urlLang = await getLanguageFromParam(params.lang || null);
   const serverLang = urlLang || (await detectLanguage());
+
+  // Check if we should serve markdown (AI agent or explicit request)
+  const headersList = await headers();
+  const userAgent = headersList.get("user-agent");
+  const acceptHeader = headersList.get("accept");
+
+  if (shouldServeMarkdown(userAgent, params.format, params.raw, acceptHeader)) {
+    redirect("/blog.mdx");
+  }
+
   const posts = getBlogPostSummaries();
 
   return (

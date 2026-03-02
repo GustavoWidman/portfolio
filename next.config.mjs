@@ -26,6 +26,21 @@ const config = {
       "fumadocs-mdx",
     ],
   },
+  async rewrites() {
+    return [
+      // Rewrite /blog.mdx to blog index markdown
+      {
+        source: "/blog.mdx",
+        destination: "/llms.mdx/blog",
+      },
+      // Rewrite /blog/[slug].mdx to /llms.mdx/blog/[slug] for markdown access
+      // Note: The regex captures everything before .mdx
+      {
+        source: "/blog/:slug(.*).mdx",
+        destination: "/llms.mdx/blog/:slug",
+      },
+    ];
+  },
 };
 
 const withMDX = createMDX();

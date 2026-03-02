@@ -12,6 +12,9 @@ export const blog = defineCollections({
     excerpt: z.string(),
     tags: z.array(z.string()),
   }),
+  postprocess: {
+    includeProcessedMarkdown: true,
+  },
 });
 
 const addCodeMeta: ShikiTransformer = {
