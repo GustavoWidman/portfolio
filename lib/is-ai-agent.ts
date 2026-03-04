@@ -108,7 +108,7 @@ export function shouldServeMarkdown(
   userAgent: string | null | undefined,
   formatParam: string | null | undefined,
   rawParam: string | null | undefined,
-  acceptHeader: string | null | undefined
+  acceptHeader: string | null | undefined,
 ): boolean {
   // Check URL parameters
   if (formatParam === "markdown" || rawParam === "true") {
@@ -120,7 +120,11 @@ export function shouldServeMarkdown(
     const normalizedAccept = acceptHeader.toLowerCase();
     if (normalizedAccept.includes("text/markdown") || normalizedAccept.includes("text/plain")) {
       // Only serve markdown if it's explicitly requested (not as part of */*)
-      if (!normalizedAccept.includes("*/*") || normalizedAccept.startsWith("text/markdown") || normalizedAccept.startsWith("text/plain")) {
+      if (
+        !normalizedAccept.includes("*/*") ||
+        normalizedAccept.startsWith("text/markdown") ||
+        normalizedAccept.startsWith("text/plain")
+      ) {
         return true;
       }
     }

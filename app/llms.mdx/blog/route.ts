@@ -99,7 +99,7 @@ ${post.excerpt}
 
 [read full article](${post.markdownUrl})
 
----`
+---`,
   )
   .join("\n")}
 

@@ -30,7 +30,10 @@ function formatDate(date: unknown): string {
 
 export async function GET() {
   // Group posts by slug, prefer English over Portuguese
-  const slugMap = new Map<string, { entry: (typeof blog)[number]; lang: string; dateStr: string }>();
+  const slugMap = new Map<
+    string,
+    { entry: (typeof blog)[number]; lang: string; dateStr: string }
+  >();
 
   for (const entry of blog) {
     const pathParts = entry.info.path.replace(/\.mdx?$/, "").split("/");
