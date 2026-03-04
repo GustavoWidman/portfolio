@@ -1,0 +1,148 @@
+---
+title: fazendo o rust rodar sem sistema operacional
+date: 2026-03-04
+excerpt: quando uma tarefa simples da faculdade vira o inferno de escrever assembly pra trocar bits na cpu.
+tags: [rust, osdev, assembly, x86-64, bootloader]
+---
+
+# escrevendo um os 64-bit do zero para fugir da tarefa
+
+tudo começou com um trabalho comum pra minha aula de sistemas de computação: escrever um bootloader simples x86 em 32-bit que pudesse dar boot pelo multiboot do grub.
+
+meu professor passou [um guia](https://firelink-library.github.io/siscomp/bootloader/) e queria que a gente ligasse o bootloader a um programa em c que hospedaria um joguinho. mas eu odeio escrever c. perguntei se eu podia ligar ele num programa em rust em vez disso, puro rust. ele disse que sim. eu sabia que as funções do rust podiam ser facilmente exportadas pro assembly usando a keyword `extern "C"`, então quão difícil isso poderia ser?
+
+eu mal sabia que essa decisão inocente ia virar um poço sem fundo de registradores de cpu, filas de interrupção e hacks de alocador de memória.
+
+## a armadilha do 32-bit
+
+no momento em que sentei pra escrever o código, bati de frente num muro. fui pesquisar como a versão em c funcionava e vi que ela te joga direto em protected mode 32-bit. o problema? o rust não tem um target nativo pra bare-metal de 32 bits. ele suporta oficialmente o `x86_64-unknown-none` pra 64-bit, mas o `i686-unknown-none` não existe.
+
+### o dilema do target customizado
+
+a solução mais comum no stack overflow e nos fóruns de rust era basicamente criar um target de 32-bit na mão. você cria um arquivo de especificação `target.json` customizado e passa pro compilador.
+
+na época, isso parecia muito não-oficial. manter um target de compilador customizado só pra fazer um trabalho de faculdade me parecia colar com fita adesiva uma parede caindo.
+
+### escolhendo o caminho mais difícil
+
+eu decidi que depender de um hack de json não documentado não era o jeito certo de lidar com o problema. em vez disso, me desafiei a usar o target oficial e nativo `x86_64-unknown-none`. mas isso significava que eu não podia simplesmente sair escrevendo rust na mesma hora. eu tinha que entender como o assembly funcionava de verdade, tomar as rédeas do boot, e fazer a transição da cpu de 32-bit para o long mode de 64-bit antes mesmo de executar uma linha de rust.
+
+## invertendo os bits mágicos da cpu
+
+o primeiro fracasso real no assembly foi perceber que não dá pra só apertar um botão e entrar no modo 64-bit. a cpu exige que a paginação esteja ligada primeiro. e pra habilitar a paginação, você precisa de tabelas de página.
+
+### identity mapping de um gigabyte
+
+eu tive que criar a page map level 4 (pml4), a page directory pointer table (pdpt) e a page directory (pd). no fim, acabei fazendo um identity mapping do primeiro 1gib de memória usando huge pages de 2mib pra deixar as coisas mais fáceis.
+
+```asm title="boot.asm"
+; PDPT[0] -> PD
+    mov eax, pd
+    or eax, 0x03
+    mov [pdpt], eax
+
+; mapeia os primeiros 1gib usando páginas de 2mib
+    mov ecx, 0
+    mov eax, 0x83
+.map_pd:
+    mov [pd + ecx * 8], eax
+    add eax, 0x200000
+    inc ecx
+    cmp ecx, 512
+    jne .map_pd
+```
+
+![qemu quebrando com page fault](./imgs/page-fault.png)
+
+um print do qemu reiniciando em loop infinito porque minha configuração inicial das tabelas de página tava ligeiramente desalinhada.
+
+### os quatro registradores do apocalipse
+
+essa foi com certeza a parte mais difícil de todas. foi o que levou mais tempo pra debugar porque se você errar um único bit, a cpu dá um triple-fault e reinicia na hora, sem log de erro nenhum.
+
+pra entrar no long mode, você tem que carregar as tabelas de página no `cr3`, ativar a physical address extension (pae) no `cr4`, ligar o long mode no msr do efer, e finalmente habilitar a paginação no `cr0`. depois de um far jump pra uma nova global descriptor table (gdt), o pipeline da cpu limpa e a gente cai direto na `extern "C" fn main()`.
+
+```asm title="boot.asm"
+    lgdt [gdt.ptr]            ; carrega gdt
+    jmp 0x08:long_mode        ; far jump pra código 64-bit
+
+    bits 64
+long_mode:
+    xor ax, ax
+    mov ss, ax
+    mov ds, ax
+    mov es, ax
+
+    call main
+```
+
+`call main`. absolute cinema. não existe sensação no mundo que supere a de cair direto de um assembly puro e inseguro pro abraço quentinho do compilador do rust.
+
+![texto 'hello from rust kernel' numa tela vga](./imgs/vga-hello.png)
+
+um print do buffer vga do qemu imprimindo "hello from rust kernel", provando que a transição funcionou de verdade.
+
+## construindo o jogo do jeito certo
+
+assim que o ambiente de 64-bit tava funcionando, eu pude finalmente escrever um código rust purinho e idiomático. a tarefa da matéria era construir um joguinho, então eu fiz um clone interativo do jogo da velha. mas fazer isso do jeito "certo" num ambiente bare-metal exigiu umas escolhas arquiteturais interessantes.
+
+### alocando memória do nada
+
+você não pode usar estruturas de dados de tamanho dinâmico como `Vec` ou `String` no `no_std` do rust se você não tiver um heap allocator. em vez de escrever um bump allocator super básico, eu usei um arena allocator chamado `talck` atrelado a um array estático de 64kb.
+
+```rust title="main.rs"
+// arena heap de 64kb
+static mut ARENA: [u8; 65536] = [0; 65536];
+
+#[global_allocator]
+static ALLOCATOR: Talck<spin::Mutex<()>, ClaimOnOom> =
+    Talc::new(unsafe { ClaimOnOom::new(Span::from_array(core::ptr::addr_of!(ARENA).cast_mut())) })
+        .lock();
+```
+
+isso desbloqueou na hora a crate `alloc`. num ambiente `no_std`, o compilador sequer deixa você usar tipos de tamanho dinâmico como vetores ou strings sem um global allocator definido. fornecer essa arena estática fez o linker finalmente parar de gritar comigo.
+
+### eventos de teclado orientados a interrupções
+
+o jeito mais inexperiente de tratar input do teclado num loop de jogo é ficar perguntando toda hora na porta do teclado. "a tecla tá apertada? não. a tecla tá apertada? não." isso é um puta desperdício de ciclos de cpu.
+
+em vez disso, configurei as interrupções de hardware da cpu. quando uma tecla é pressionada, a cpu para o que tá fazendo, aciona uma interrupção e joga um evento `Play` pra dentro de um vetor `EVENT_QUEUE` que é thread-safe.
+
+```rust title="keyboard.rs"
+pub static ref EVENT_QUEUE: RwLock<Vec<Play>> = RwLock::new(Vec::new());
+
+pub fn handle_keyboard_interrupt(scancode: u8) {
+    let mut keyboard = KEYBOARD.lock();
+
+    if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
+        if key_event.state == pc_keyboard::KeyState::Down {
+            match key_event.code {
+                KeyCode::Key1 => (*EVENT_QUEUE.write()).push(Play::One),
+                // ...
+            }
+        }
+    }
+}
+```
+
+o loop principal do jogo então só dorme, acorda de vez em quando, esvazia a fila de eventos, atualiza o estado da partida e desenha no buffer vga. é o jeito inteligente de fazer, e a sensação é bem mais próxima de uma arquitetura moderna guiada a eventos do que um projetinho que fica em loop infinito gastando cpu de graça.
+
+## por que "based-kernel"?
+
+se você tá se perguntando o porquê do nome do repositório, é só olhar as estatísticas de linguagem lá no github. o projeto inteiro é colado com rust, assembly, nix e nushell.
+
+![estatísticas de linguagens do github mostrando somente as linguagens mais based do mundo](./imgs/based.png)
+
+uma stack absolutamente based.
+
+## o preço que eu paguei
+
+o pior tradeoff de todos foi a quantidade insana de fricção na hora de debugar o assembly. um bit deslocado pro lado errado nas page tables e a máquina só desliga na sua cara.
+
+olhando em retrospecto, se eu tivesse que fazer tudo de novo, eu provavelmente engoliria meu orgulho e usaria o `target.json` customizado pra 32-bit. isso teria deixado a integração vastamente mais simples e encolhido o código de assembly pra quase nada.
+
+## fechando a conta
+
+às vezes o jeito "certo" de se fazer uma coisa não é o jeito mais eficiente. fazer a transição de 32 pra 64 bits na mão me ensinou mais sobre arquitetura de cpu do que qualquer livro na vida, mas foi um exagero gigantesco pra uma tarefa da faculdade.
+
+o aviso é: se você só quer rodar o seu código em rust numa arquitetura bizarra, criar um target json customizado é totalmente tranquilo. mas se você quer sofrer um pouco e aprender exatamente como o long mode inicializa, escrever tudo na mão é uma experiência incrível. dá pra ver todo o código no repositório do [based-kernel](https://github.com/GustavoWidman/based-kernel).
