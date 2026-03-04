@@ -1,0 +1,117 @@
+---
+title: criando uma 'rinha de backend' super dimensionada com rust e sqlite
+date: 2026-03-05
+excerpt: como eu tirei ~2900 rps de uma pequena api em rust abandonando o postgres e levando o sqlite ao limite.
+tags: [rust, hpc, backend, database, optimization]
+---
+
+# extraindo 3000 requisições por segundo de um arquivo sqlite compartilhado
+
+esse repositório já é um pouco antigo—começou como um trabalho de casa quando meu professor pediu para passarmos no desafio da "rinha de backend 2024 q1". as regras eram simples: construir um backend para gerenciar transações financeiras com restrições específicas de cpu e memória. a meta base era 340 requisições por segundo (rps) sustentadas.
+
+como sempre, eu perguntei se podia fazer em rust. o que se seguiu foi uma enxurrada de testes que falharam, casos extremos estranhos e uma queda livre na loucura da otimização. aqui está a história de como alcancei quase 10x a meta com ~2900 rps e 0.5ms de latência p50.
+
+## a primeira morte: caddy fica sem memória
+
+a arquitetura inicial era de livro: um balanceador de carga na frente de duas instâncias da api em rust (usando actix-web), apoiadas por um banco de dados postgres. como sou muito fã do caddy, ele foi minha primeira escolha como proxy reverso.
+
+### otimizando para o nada
+
+sob carga pesada, o caddy começou a disparar erros de oom (falta de memória) e derrubava tudo. passei horas ajustando pools de workers e tamanhos de buffer. dei a ele o máximo de memória ram que as regras restritas do desafio permitiam, mas nunca era o suficiente. o uso de memória simplesmente não parava de subir durante as conexões simultâneas.
+
+### engolindo o orgulho e usando nginx
+
+no fim, tive que encarar a realidade. o caddy é ótimo pela ergonomia, mas quando cada megabyte de ram conta, não dá para negar que o nginx é muito mais otimizado para o throughput bruto. troquei o caddy por uma imagem nginx alpine super otimizada, aumentei o `worker_rlimit_nofile 65535` e coloquei os `keepalive_requests` no máximo. as falhas por falta de memória pararam na hora.
+
+![logs do docker compose mostrando o caddy morrendo por OOM](./imgs/caddy-oom.png)
+
+logs do docker compose mostrando o caddy devorando toda a ram e morrendo.
+
+## o dilema do banco de dados: fome de recursos
+
+com o balanceador de carga resolvido, o gargalo desceu na pilha. as instâncias da api estavam brigando por ciclos de cpu com o postgres.
+
+### postgres ganancioso
+
+passei um dia inteiro otimizando o postgres. mexi no keep-alive das conexões, construí um pool de conexões melhor na api em rust e coloquei flags especiais no postgres para o mínimo de uso de recursos com o máximo de rendimento. reajustei a distribuição de recursos entre os containers do docker, alocando quase tudo para o banco de dados só para mantê-lo funcionando.
+
+### o momento do "e se eu simplesmente"
+
+olhando para o `docker compose stats`, percebi a falha fundamental: o quarto container (postgres) estava comendo os recursos que poderiam ser gastos atendendo requisições. pensei, "eu não preciso _mesmo_ do postgres, né?"
+
+isso me levou a jogar o banco de dados fora e usar um arquivo sqlite embutido e montado como um volume compartilhado entre os dois containers da api.
+
+## abusando do sqlite com o modo wal
+
+a ideia era rodar duas instâncias simultâneas da api, ambas lendo e escrevendo no mesmíssimo arquivo `/shared/rinha.db` ao mesmo tempo.
+
+### montando um volume compartilhado
+
+configurei um volume compartilhado no `docker-compose.yml` e apontei a `DATABASE_URL` para ele. de repente, os recursos que antes eram engolidos pelo postgres ficaram livres para o balanceador de carga e para os workers em rust.
+
+### os pragmas que fizeram funcionar
+
+tecnicamente, o sqlite em modo wal permite leitores concorrentes e um escritor por vez, não escritores concorrentes. o `busy_timeout(5000)` que você configurou é exatamente o que faz isso funcionar—ele diz às threads em rust para esperarem tranquilamente se o arquivo estiver bloqueado pelo outro escritor, em vez de cuspir um erro de `database is locked` imediatamente.
+
+```rust title="main.rs"
+let pool = sqlx::sqlite::SqlitePoolOptions::new()
+    .max_connections(14)
+    .connect_with(
+        sqlx::sqlite::SqliteConnectOptions::new()
+            .filename(db_path)
+            .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)
+            .synchronous(sqlx::sqlite::SqliteSynchronous::Normal)
+            .busy_timeout(std::time::Duration::from_millis(5000))
+            .pragma("temp_store", "memory")
+            .pragma("mmap_size", "268435456"), // 256mb memory-mapped i/o
+    )
+    .await?;
+```
+
+![docker compose stats mostrando baixa utilização de memória após a troca para sqlite](./imgs/memory-consumption.gif)
+
+## quebrando a ferramenta de benchmark
+
+neste ponto, a api estava tão rápida que a infraestrutura de testes começou a quebrar.
+
+### gatling engasga nos arquivos abertos
+
+o desafio oficial da rinha usava o gatling para disparar as requisições. porém, minha api estava aguentando muito mais carga do que o gatling conseguia cuspir. a ferramenta engasgou e começou a lançar erros de `too many open files`, tornando o teste oficial inútil para descobrir o verdadeiro limite superior do sistema.
+
+### escrevendo um testador de carga customizado em rust
+
+para provar a verdadeira velocidade da api, eu praticamente construí meu próprio testador de carga do zero. usando a crate `rlt` e `reqwest`, orquestrei um perfil de carga que batia exatamente com o script do gatling.
+
+```rust title="main.rs"
+let (status, bytes, duration) = match self.counter % 34 {
+    n if n % 2 == 0 && n != 22 && n != 33 => {
+        tests::testar_debito(&self.url, client).await?
+    }
+    33 => tests::testar_extrato(&self.url, client).await?,
+    _ => tests::testar_debito(&self.url, client).await?,
+};
+```
+
+com o novo testador, finalmente cravei o sistema em ~2900 rps.
+
+![gif mostrando o testador de carga em rust voando pelas requisições](./imgs/final-benchmark.gif)
+
+uma gravação do terminal mostrando o testador de carga customizado em rust despachando requisições agressivamente sem derrubar conexões.
+
+![captura de tela dos resultados finais do benchmark mostrando ~2900 rps](./imgs/benchmark-results.png)
+
+a tabela final de resultados do testador de carga, mostrando claramente ~2900 requisições por segundo com uma latência p50 de 0.5ms.
+
+## as trocas para a produção
+
+embora essa configuração não viole tecnicamente nenhuma regra do desafio, ela é completamente inútil para um sistema distribuído real.
+
+como o sqlite requer um arquivo local, ambas as instâncias da api precisam viver na mesma máquina física. você não pode escalar isso horizontalmente em nós físicos diferentes. é uma gambiarra localizada de um único nó que troca a resiliência de rede por velocidade bruta.
+
+## o veredito final
+
+às vezes, a arquitetura mais rápida é a mais estúpida. cortar o pulo na rede e deixar dois binários em rust brigarem por um arquivo mapeado na memória é bem mais rápido do que otimizar um banco de dados relacional de verdade.
+
+vale notar que esse código tem uns 9 meses. hoje, com muito mais experiência em hpc, profiling de cpu e rust em geral, eu provavelmente construíria isso de um jeito totalmente diferente e arrancaria ainda mais performance.
+
+só não faça deploy disso em produção a menos que você esteja tranquilo com todo o seu banco de dados vivendo em um único volume do docker. se você quiser ver o código completo, ele está no repositório do [rinha-de-backend](https://github.com/GustavoWidman/rinha-de-backend)
