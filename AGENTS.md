@@ -24,10 +24,24 @@ bun run dev           # Start dev server at localhost:3000
 ### Build
 
 ```bash
-bun run build         # Generate OG images, build Next.js standalone
+bun run build         # Validate project data, generate OG images, build Next.js standalone
 bun run generate-og   # Generate Open Graph images only
+bun run validate      # Validate project data (runs automatically before build)
 nix build -L .        # Production build via Nix flake
 ```
+
+**Build Validation:**
+- The `prebuild` script validates project data before building
+- Validates blog post slugs (`blogPostSlug`) in `STATIC_PROJECTS`
+- Build will fail with descriptive errors if blog post directory doesn't exist for the specified slug
+- See `scripts/validate-project-data.ts` for implementation
+
+**Project Images:**
+- Project showcase images use static imports from blog post directories
+- Images are defined in `components/portfolio/Projects.tsx` in the `PROJECT_IMAGES` mapping
+- Mapping format: `{ "[project-id]": importedImage }`
+- Example: `"1": basedKernelVgaHello` where the image is imported from `../../blog/based-kernel/imgs/vga-hello.png`
+- Next.js automatically optimizes images and provides blur placeholders
 
 ### Production
 

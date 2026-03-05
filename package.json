@@ -1,6 +1,6 @@
 {
   "name": "portfolio",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,6 +8,7 @@
     "lint": "oxlint",
     "format": "oxfmt",
     "generate-og": "bun run scripts/generate-og.tsx",
+    "prebuild": "bun run scripts/validate-project-data.ts",
     "build": "bun run generate-og && next build",
     "start": "next start -p 3000",
     "preview": "bun run build && bun run start",

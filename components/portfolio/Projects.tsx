@@ -1,4 +1,10 @@
+"use client";
+
+import type { StaticImageData } from "next/image";
+import Image from "next/image";
+import Link from "next/link";
 import {
+  BookOpen,
   Brain,
   Container,
   Cpu,
@@ -12,9 +18,76 @@ import React from "react";
 import { DATA, STATIC_PROJECTS } from "@/lib/data/content";
 import type { Language } from "@/lib/types";
 
+import basedKernelVgaHello from "../../blog/based-kernel/imgs/vga-hello.png";
+import rnnRustKaggleRun from "../../blog/rnn-rust/imgs/rust-kaggle-run.png";
+import nixIntroTrinity from "../../blog/nix-intro/imgs/the-declarative-trinity.jpg";
+
+const PROJECT_IMAGES: Record<string, StaticImageData> = {
+  "1": basedKernelVgaHello,
+  "2": nixIntroTrinity,
+  "3": rnnRustKaggleRun,
+};
+
 interface ProjectsProps {
   lang: Language;
 }
+
+interface ProjectVisualProps {
+  project: (typeof STATIC_PROJECTS)[0];
+}
+
+const ProjectVisual: React.FC<ProjectVisualProps> = ({ project }) => {
+  const projectImage = PROJECT_IMAGES[project.id];
+
+  const getIcon = () => {
+    if (project.tags.includes("Machine Learning") || project.tags.includes("AI")) {
+      return <Brain className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />;
+    }
+    if (project.tags.includes("OS Dev") || project.tags.includes("Low Level")) {
+      return <Cpu className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />;
+    }
+    if (project.tags.includes("Nix")) {
+      return <Container className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />;
+    }
+    if (project.tags.includes("Go") || project.tags.includes("Systems")) {
+      return <Server className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />;
+    }
+    if (project.tags.includes("Security")) {
+      return <Shield className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />;
+    }
+    if (project.tags.includes("Rust")) {
+      return <Lock className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />;
+    }
+    return <TerminalIcon className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />;
+  };
+
+  return (
+    <div
+      className={`aspect-4/3 rounded-lg overflow-hidden relative transition-colors shadow-sm dark:shadow-none ${
+        projectImage
+          ? ""
+          : "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 group-hover:border-zinc-400 dark:group-hover:border-zinc-700"
+      }`}
+    >
+      {projectImage ? (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Image
+            src={projectImage}
+            alt={project.title}
+            width={projectImage.width}
+            height={projectImage.height}
+            className="max-w-full max-h-full w-auto h-auto rounded-lg"
+          />
+        </div>
+      ) : (
+        <>
+          <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(0,0,0,0.03)_25%,transparent_25%,transparent_50%,rgba(0,0,0,0.03)_50%,rgba(0,0,0,0.03)_75%,transparent_75%,transparent)] dark:bg-[linear-gradient(45deg,rgba(255,255,255,0.03)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.03)_50%,rgba(255,255,255,0.03)_75%,transparent_75%,transparent)] bg-size-[32px_32px] opacity-100 will-change-transform" />
+          <div className="absolute inset-0 flex items-center justify-center">{getIcon()}</div>
+        </>
+      )}
+    </div>
+  );
+};
 
 const Projects: React.FC<ProjectsProps> = ({ lang }) => {
   const t = DATA[lang];
@@ -69,63 +142,31 @@ const Projects: React.FC<ProjectsProps> = ({ lang }) => {
                       ))}
                     </div>
 
-                    {project.githubUrl && (
-                      <a
-                        href={project.githubUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 text-black dark:text-white border-b border-black dark:border-white pb-1 hover:text-zinc-600 dark:hover:text-zinc-400 hover:border-zinc-600 dark:hover:border-zinc-400 transition-colors"
-                      >
-                        <Github size={18} /> {t.projects.viewSource}
-                      </a>
-                    )}
+                    <div className="flex flex-wrap gap-4">
+                      {project.githubUrl && (
+                        <a
+                          href={project.githubUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 text-black dark:text-white border-b border-black dark:border-white pb-1 hover:text-zinc-600 dark:hover:text-zinc-400 hover:border-zinc-600 dark:hover:border-zinc-400 transition-colors"
+                        >
+                          <Github size={18} /> {t.projects.viewSource}
+                        </a>
+                      )}
+                      {project.blogPostSlug && (
+                        <Link
+                          href={`/blog/${project.blogPostSlug}`}
+                          className="inline-flex items-center gap-2 text-black dark:text-white border-b border-black dark:border-white pb-1 hover:text-zinc-600 dark:hover:text-zinc-400 hover:border-zinc-600 dark:hover:border-zinc-400 transition-colors"
+                        >
+                          <BookOpen size={18} /> {t.projects.readArticle}
+                        </Link>
+                      )}
+                    </div>
                   </div>
 
                   {/* Visual Side */}
                   <div className={`order-1 ${index % 2 === 0 ? "md:order-2" : "md:order-1"}`}>
-                    <div className="aspect-4/3 bg-white dark:bg-zinc-900 rounded-lg overflow-hidden relative border border-zinc-200 dark:border-zinc-800 group-hover:border-zinc-400 dark:group-hover:border-zinc-700 transition-colors shadow-sm dark:shadow-none">
-                      {/* Abstract geometric background */}
-                      <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(0,0,0,0.03)_25%,transparent_25%,transparent_50%,rgba(0,0,0,0.03)_50%,rgba(0,0,0,0.03)_75%,transparent_75%,transparent)] dark:bg-[linear-gradient(45deg,rgba(255,255,255,0.03)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.03)_50%,rgba(255,255,255,0.03)_75%,transparent_75%,transparent)] bg-size-[32px_32px] opacity-100 will-change-transform" />
-
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        {/* Smart Icon Logic */}
-                        {(() => {
-                          if (
-                            project.tags.includes("Machine Learning") ||
-                            project.tags.includes("AI")
-                          ) {
-                            return <Brain className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />;
-                          }
-                          if (
-                            project.tags.includes("OS Dev") ||
-                            project.tags.includes("Low Level")
-                          ) {
-                            return <Cpu className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />;
-                          }
-                          if (project.tags.includes("Nix")) {
-                            return (
-                              <Container className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />
-                            );
-                          }
-                          if (project.tags.includes("Go") || project.tags.includes("Systems")) {
-                            return (
-                              <Server className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />
-                            );
-                          }
-                          if (project.tags.includes("Security")) {
-                            return (
-                              <Shield className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />
-                            );
-                          }
-                          if (project.tags.includes("Rust")) {
-                            return <Lock className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />;
-                          }
-                          return (
-                            <TerminalIcon className="text-zinc-200 dark:text-zinc-800 w-32 h-32" />
-                          );
-                        })()}
-                      </div>
-                    </div>
+                    <ProjectVisual project={project} />
                   </div>
                 </div>
               </div>

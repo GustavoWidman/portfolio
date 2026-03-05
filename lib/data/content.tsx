@@ -143,6 +143,7 @@ export const DATA: Record<string, TranslationData> = {
     projects: {
       title: "04 / Selected Works",
       viewSource: "View Source",
+      readArticle: "Read Article",
       list: [
         {
           id: "1",
@@ -333,6 +334,7 @@ export const DATA: Record<string, TranslationData> = {
     projects: {
       title: "04 / Projetos Selecionados",
       viewSource: "Código",
+      readArticle: "Ler Artigo",
       list: [
         {
           id: "1",
@@ -398,6 +400,7 @@ export const STATIC_PROJECTS: Project[] = [
     description: "",
     tags: ["Rust", "OS Dev", "x86 Assembly", "No Std"],
     githubUrl: "https://github.com/GustavoWidman/based-kernel",
+    blogPostSlug: "based-kernel",
   },
   {
     id: "2",
@@ -405,6 +408,7 @@ export const STATIC_PROJECTS: Project[] = [
     description: "",
     tags: ["Nix", "NixOS", "DevOps", "Self-Hosting"],
     githubUrl: "https://github.com/GustavoWidman/nix",
+    blogPostSlug: "nix-intro",
   },
   {
     id: "3",
@@ -412,6 +416,7 @@ export const STATIC_PROJECTS: Project[] = [
     description: "",
     tags: ["Rust", "Machine Learning", "HPC", "Math"],
     githubUrl: "https://github.com/GustavoWidman/rnn-rust",
+    blogPostSlug: "rnn-rust",
   },
   {
     id: "4",

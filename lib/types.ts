@@ -8,7 +8,7 @@ export interface Project {
   description: string;
   tags: string[];
   githubUrl?: string;
-  imageUrl?: string;
+  blogPostSlug?: string;
 }
 
 export interface SkillCategory {
@@ -64,6 +64,7 @@ export interface TranslationData {
   projects: {
     title: string;
     viewSource: string;
+    readArticle: string;
     list: { id: string; title: string; description: string }[];
   };
   footer: {
