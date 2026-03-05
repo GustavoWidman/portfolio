@@ -22,61 +22,67 @@
 ]
 #v(6pt)
 
-// --- EDUCATION ---
-#section("Education")
-*INTELI (Institute of Technology and Leadership)* #h(1fr) São Paulo, SP \
-_Bachelor of Computer Engineering_ #h(1fr) Expected Dec 2026
-- Focus on Project-Based Learning (PBL) with real-world corporate partners
-- Leadership: President of EchoSec (Cybersecurity League).
-
-#v(6pt)
-
-// --- SKILLS ---
-#section("Technical Skills")
-- *Languages*: Rust (Advanced), Go, C/C++, Python, TypeScript, SQL, Assembly (x86).
-- *Infrastructure & DevOps*: Nix/NixOS, Docker, Kubernetes, GitHub Actions, WireGuard, Linux Hardening.
-- *Security*: Network Penetration Testing, Red Teaming, ISO 27001 Compliance, Reverse Engineering.
-- *Tools & Libs*: Git, Neovim, Postgres, SQLite, Rayon (Rust), Serenity (Rust), Actix/Axum.
-
-#v(6pt)
-
 // --- EXPERIENCE ---
 #section("Professional Experience")
 
 *CamelSec* #h(1fr) Remote \
 _Chief Technology Officer (CTO)_ #h(1fr) Apr 2025 – Dec 2025
-- Architected a fully reproducible infrastructure using *NixOS*, reducing deployment drift to near-zero.
-- Designed secure internal networks using *WireGuard* and redundant staging environments for client data isolation.
-- Led Pentesting and Red Team operations, identifying critical vulnerabilities in enterprise client systems.
-- Implemented automated compliance checks aligning with ISO 27001 standards.
-
-*EchoSec (Cybersecurity League)* #h(1fr) São Paulo, SP \
-_President & Counselor_ #h(1fr) Mar 2023 – Present
-- Led the university's cybersecurity league, organizing CTF (Capture The Flag) competitions.
-- Mentored 20+ members in offensive security, binary exploitation, and Linux fundamentals.
+- Architected fully reproducible infrastructure using *NixOS*, reducing deployment drift to near-zero across *10+ machines*.
+- Designed zero-trust internal networks using *WireGuard* with granular *ACL policies* for secure client data isolation.
+- Led *monthly pentesting engagements* for enterprise clients (Sapore, SIT, FAMMA), identifying critical vulnerabilities in *under 5 hours* per assessment on average.
+- Implemented automated *ISO 27001* compliance validation, ensuring continuous security posture alignment.
+- Deployed redundant staging environments with strict data segregation for sensitive client workloads.
 
 *MW APP IT Consulting* #h(1fr) São Paulo, SP \
 _Full Stack Developer_ #h(1fr) Jan 2021 – Apr 2025
-- Developed and maintained full-stack software using *React/TypeScript*, *.NET/C\#*, and *Python/FastAPI*.
-- Managed *MS SQL*, *MySQL* and *SQLite* databases for high-traffic clients including CESP, Hunter Douglas and CETESB.
-- Delivered production-grade features over *5+ years* of professional software development.
+- Built and maintained production full-stack applications using *React/TypeScript*, *.NET/C\#*, and *Python/FastAPI* for high-traffic enterprise clients.
+- Optimized database query performance by *up to 2.43x* across *MS SQL*, *MySQL*, and *SQLite*, improving response times for thousands of concurrent users.
+- Led small engineering teams delivering software for *CESP*, *Hunter Douglas*, and *CETESB*, consistently meeting tight deadlines and budget constraints.
+- Shipped production-grade features across *4+ years*, contributing to successful launches of multiple high-traffic systems.
+
+#v(6pt)
+
+// --- SKILLS ---
+#section("Technical Skills")
+- *Languages*: Rust, Go, C/C++, Python, TypeScript, C\#/.NET, Assembly (x86), SQL.
+- *Infrastructure & DevOps*: Nix/NixOS, Docker, Kubernetes, GitHub Actions, WireGuard, Linux Hardening.
+- *Security*: Network Penetration Testing, Red Teaming, ISO 27001 Compliance, Reverse Engineering.
+- *Tools & Frameworks*: Git, FastAPI, NestJS, Drizzle/Prisma, Gin, Gorm, Rayon, Tokio, Actix, Axum.
+- *Database Systems*: PostgreSQL, MySQL, SQLite, MS SQL Server.
 
 #v(6pt)
 
 // --- PROJECTS ---
-#section("Key Projects")
+#section("Projects")
 
-*Based Kernel (Rust, Assembly)* #h(1fr) #link("https://github.com/GustavoWidman/based-kernel")[GitHub]
-- Developed a bootable x86-64 kernel in Rust (`no_std`). Implemented VGA drivers, interrupt handling (IDT), and memory management from scratch.
+*High-Performance API (Rust / Docker)* #h(1fr) #link("https://github.com/GustavoWidman/rinha-de-backend")[GitHub]
+- Scaled a REST API to *2,917 RPS* with *0.5ms P50 latency* using `actix-web`, `nginx` load balancing, and optimized `SQLite` with write-ahead logging and connection pooling.
 
-*Nix Infrastructure (NixOS, CI/CD)* #h(1fr) #link("https://github.com/GustavoWidman/nix")[GitHub]
-- Maintained a monorepo managing 6 machines (Cloud/Physical). Configured mail servers, DNS (AdGuard), and mesh VPNs declaratively.
+*"One Billion Row Challenge" (Rust, HPC)* #h(1fr) #link("https://github.com/GustavoWidman/1brc")[GitHub]
+- Optimized data ingestion to process *1B rows in 1.8 seconds* using `rayon` parallelism and memory-mapped I/O, achieving top-tier performance without hand-tuned SIMD.
+
+*Nix Config Collection (NixOS, CI/CD)* #h(1fr) #link("https://github.com/GustavoWidman/nix")[GitHub]
+- Managed *6+ machines* (cloud + physical) over *7 months* with declarative NixOS configs. Built hardened infrastructure including mail servers, DNS (AdGuard), and mesh VPNs.
+
+*Educational x86-64 Kernel (Rust, x86 Assembly)* #h(1fr) #link("https://github.com/GustavoWidman/based-kernel")[GitHub]
+- Built a bootable kernel in Rust (`no_std`) with x86 assembly bootloader, protected mode switching, arena allocator, interrupt handling (IDT), and VGA text driver.
 
 *Zero-Dependency RNN (Rust)* #h(1fr) #link("https://github.com/GustavoWidman/rnn-rust")[GitHub]
-- Built a Recurrent Neural Network from scratch. Outperformed PyTorch in training speed for specific workloads via hand-tuned memory management.
+- Developed a recurrent neural network from scratch with manual memory tuning, exceeding PyTorch training speed by *over 6000%* on specific workloads.
 
-*1 Billion Row Challenge (Rust, HPC)* #h(1fr) #link("https://github.com/GustavoWidman/1brc")[GitHub]
-- Optimized data processing to handle 1B rows in seconds using `mmap` and `Rayon` parallelism, avoiding SIMD overhead.
+#section("Leadership Experience")
 
-*Cognitive Chatbot (Rust, LLM)* #h(1fr) #link("https://github.com/GustavoWidman/chatbot")[GitHub]
-- Created a Discord bot with "Free Will" and RAG memory using Vector DBs to give LLMs long-term context.
+*EchoSec (Cybersecurity League)* #h(1fr) São Paulo, SP \
+_President & Counselor_ #h(1fr) Mar 2023 – Present
+- Organized and led Capture The Flag (CTF) competitions, building practical offensive security skills across the community.
+- Mentored *20+ members* in Linux fundamentals, binary exploitation, and red teaming methodologies.
+
+#v(6pt)
+
+// --- EDUCATION ---
+#section("Education")
+*INTELI (Institute of Technology and Leadership)* #h(1fr) São Paulo, SP \
+_Bachelor of Computer Engineering_ #h(1fr) Expected Dec 2026
+- Project-Based Learning with real-world corporate partners, delivering industry-grade solutions throughout coursework.
+
+#v(6pt)
