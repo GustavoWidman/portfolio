@@ -1,0 +1,137 @@
+---
+title: teaching rocks to fix themselves with hamming codes
+date: 2026-03-09
+excerpt: i overengineered a university assignment in rust to understand how computers magically correct their own errors at the bit level.
+tags: [rust, networking, algorithms, bit-manipulation]
+---
+
+# dodging garbage collectors with error correction
+
+it started as a standard homework assignment for a computer networks class. the teacher asked us to implement a hamming code error correction protocol over UDP. the only real constraint? we had to use "any non-garbage collected language."
+
+being the Rust fanatic i am, i immediately asked if i could use Rust. he laughed and said yes. so, instead of just writing a simple script to get a passing grade, i overengineered the entire thing. i built a custom data link layer frame format, a custom bit vector implementation, and a CLI pipeline to simulate noise.
+
+here is how i built it, what went horribly wrong, and how hamming codes actually work.
+
+## the assignment that started it
+
+the goal was to build a sender that takes raw data, encodes it with extra redundant bits, and sends it to a receiver. the channel between them is noisy, meaning bits can randomly flip from 1 to 0 or vice versa. the receiver's job is to detect the flip, locate exactly which bit is wrong, and flip it back before reading the data.
+
+## the problem with raw bits
+
+when you send raw binary data over a wire, you have zero guarantees that the data arriving is the same data you sent.
+
+![why parity?](./imgs/why_parity.gif)
+
+this animation shows a single bit flipping in transit, ruining our entire day because the receiver has absolutely no idea which bit changed.
+
+### a naive approach
+
+the first naive approach to this problem is adding a simple parity bit at the end of your message. you just count all the 1s in your data, and add a final bit to make the total count even.
+
+if a bit flips during transmission, the receiver counts the 1s, sees an odd number, and knows the data is corrupted. but there is a massive problem: it can only tell you _that_ an error happened, not _where_ it happened. you still have to throw the whole packet away and ask for a retransmission.
+
+## the genius of overlapping groups
+
+richard hamming realized that if you use multiple parity bits, and have each one watch a specific overlapping group of data bits, you can triangulate the exact location of the error.
+
+![parity positions](./imgs/parity_positions.gif)
+
+this animation illustrates the golden rule of hamming codes: parity bits must sit at positions that are exact powers of 2 (1, 2, 4, 8, etc.).
+
+### checking the binary representation
+
+why powers of 2? because of how binary numbers work. if you look at the binary representation of every position index, you'll notice that powers of 2 only have a single bit set to 1.
+
+![overlapping groups](./imgs/overlapping_groups.gif)
+
+this animation breaks down the coverage rule: a parity bit covers any position where their binary representations share a 1 in the exact same column.
+
+this means position 5 (binary `101`) is watched by parity bit 1 (`001`) and parity bit 4 (`100`). it is an incredibly elegant mathematical trick.
+
+## indexing nightmares
+
+implementing this elegance in Rust, however, was a nightmare of my own making. Rust's standard library doesn't have a great way to manipulate individual bits easily out of the box, so i decided to roll my own `BitVec`.
+
+my first major failure happened right here. i decided to pack the bits into a `Vec<u8>` using big-endian bit ordering, meaning the first logical bit occupies the most significant bit (MSB) of the first byte.
+
+```rust title="bitvec.rs"
+pub fn toggle(&mut self, index: usize) -> Result<(), BitVecError> {
+    if index >= self.len { return Err(BitVecError::OutOfBounds); }
+    let byte_index = index / 8;
+    let bit_index = 7 - (index % 8);
+    self.data[byte_index] ^= 1 << bit_index;
+    Ok(())
+}
+```
+
+the math `7 - (index % 8)` looks simple now, but when i was writing the `push` and `set` methods, i constantly shifted bits in the wrong direction or overwrote adjacent bits. my tests were failing with completely mangled data for hours until i drew out the byte boundaries on paper.
+
+### the 0-indexed vs 1-indexed trap
+
+the second catastrophic failure was trying to map the hamming algorithm to Rust vectors.
+
+the entire hamming algorithm relies on a 1-indexed array. the power-of-two trick literally only works if the first element is at index 1. Rust vectors, like all sane programming structures, are 0-indexed.
+
+i initially tried to just subtract 1 everywhere in the algorithm. this resulted in absolute chaos. `(i + 1).is_power_of_two()` checks would run against the wrong indices, parity bits would be written into data slots, and the whole struct would panic on out-of-bounds errors. the fix was strictly separating the logical 1-indexed positions from the physical 0-indexed memory offsets in the code.
+
+## finding the needle in the haystack
+
+once the encoding was finally working, writing the decoding logic was basically magic.
+
+when the receiver gets the data, it recalculates all the parity bits. if a parity check fails, it writes down a 1. if it passes, it writes down a 0. reading those 1s and 0s backwards gives you a binary number called the "syndrome".
+
+![syndrome detection](./imgs/syndrome_detection.gif)
+
+this animation shows the decoder running the parity checks and generating a syndrome that points directly to the corrupted position.
+
+```rust title="hamming.rs"
+pub fn basic_compute_parity(codeword: &BitVec, parity_mask: usize) -> Result<bool, HammingError> {
+    let mut parity_sum = 0u32;
+    for i in 0..codeword.len() {
+        if ((i + 1) & parity_mask) != 0 {
+            if codeword.get(i).ok_or(HammingError::UnexpectedOutOfBounds)? {
+                parity_sum += 1;
+            }
+        }
+    }
+    Ok(parity_sum % 2 == 1)
+}
+```
+
+if the syndrome is `0`, the data is clean. if the syndrome is `5`, it means the bit at position 5 flipped.
+
+![error correction](./imgs/error_correction.gif)
+
+this final animation shows the payoff: once you know exactly where the error is, you just flip it back.
+
+## the gus protocol (great unused standard)
+
+to finish the assignment, i had to wrap this logic in a protocol. naturally, i named it the GUS protocol, a joke on my own name (Gustavo) that stands for "Great Unused Standard".
+
+### the frame wrapper
+
+the protocol adds a header with a magic string `"GUS"`, a version byte, and the length of the data.
+
+to actually prove the error correction works, i intentionally hardcoded a 50% chance to flip a random bit right before the packet is sent over the wire. every time you pipe data through this CLI, you are rolling the dice, and the receiver transparently cleans up the mess.
+
+## getting started with the repo
+
+you can clone the repo and test this pipeline yourself. it uses stdin/stdout to pipe the corrupted bytes between the sender and receiver.
+
+```bash title="terminal"
+# send the binary string "01101001", randomly corrupt it, and fix it on the other side
+./hamming_rust -t binary sender -d "01101001" | ./hamming_rust -t binary receiver
+```
+
+it will log out exactly what it sent, whether it had to correct an error, and the final decoded message.
+
+## the tradeoffs of fixing errors
+
+sometimes redundancy isn't worth the cost. this implementation uses a single error correcting (SEC) hamming code. it can find and fix exactly one bit error per block. if two bits flip in the same block, the syndrome will calculate completely wrong, point to an innocent third bit, flip it, and ruin your data even more.
+
+if you need to handle burst errors or massive payloads, you wouldn't use hamming codes. you'd use something like reed-solomon codes or just rely on tcp retransmissions.
+
+if you want the full visual treatment on the math behind this, the [3blue1brown lesson on hamming codes](https://www.3blue1brown.com/lessons/hamming-codes) is absolute cinema.
+
+but for learning how computers think about data integrity, this is as close to the metal as it gets. you can check out all the bit manipulation horror in the repo here: [hamming-rust](https://github.com/GustavoWidman/hamming-rust)

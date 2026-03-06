@@ -1,0 +1,137 @@
+---
+title: ensinando pedras a se consertarem com códigos de hamming
+date: 2026-03-09
+excerpt: eu criei uma solução exagerada para um trabalho de faculdade em rust para entender como computadores corrigem seus próprios erros no nível dos bits.
+tags: [rust, networking, algorithms, bit-manipulation]
+---
+
+# fugindo de garbage collectors com correção de erros
+
+começou como um trabalho de casa normal para uma aula de redes de computadores. o professor pediu para implementarmos um protocolo de correção de erros usando o código de hamming sobre UDP. a única restrição real? tínhamos que usar "qualquer linguagem sem garbage collector."
+
+sendo o fanático por Rust que eu sou, eu imediatamente perguntei se podia usar Rust. ele riu e disse que sim. então, em vez de apenas escrever um script simples para passar de ano, eu fiz uma engenharia absurdamente exagerada. eu construí um formato de frame de camada de enlace customizado, uma implementação própria de vetor de bits e uma pipeline de CLI para simular ruído.
+
+aqui está como eu construí, o que deu terrivelmente errado, e como os códigos de hamming realmente funcionam.
+
+## o trabalho que começou tudo
+
+o objetivo era construir um sender que pega dados brutos, os codifica com bits redundantes extras e os envia para um receiver. o canal entre eles tem ruído, o que significa que os bits podem aleatoriamente inverter de 1 para 0 ou vice-versa. o trabalho do receiver é detectar a inversão, localizar exatamente qual bit está errado e invertê-lo de volta antes de ler os dados.
+
+## o problema com bits crus
+
+quando você envia dados binários crus por um fio, você tem zero garantias de que os dados que chegam são os mesmos que você enviou.
+
+![why parity?](./imgs/why_parity.gif)
+
+esta animação mostra um único bit virando no trânsito, arruinando todo o nosso dia porque o receiver não tem a menor ideia de qual deles mudou.
+
+### uma abordagem ingênua
+
+a primeira abordagem ingênua para esse problema é adicionar um simples bit de paridade no final da sua mensagem. você simplesmente conta todos os 1s nos seus dados e adiciona um bit final para tornar a contagem total par.
+
+se um bit inverter durante a transmissão, o receiver conta os 1s, vê um número ímpar e sabe que os dados estão corrompidos. mas existe um problema massivo: isso só pode te dizer _que_ um erro aconteceu, não _onde_ aconteceu. você ainda tem que jogar o pacote inteiro fora e pedir uma retransmissão.
+
+## a genialidade dos grupos sobrepostos
+
+richard hamming percebeu que se você usar múltiplos bits de paridade, e fizer com que cada um observe um grupo sobreposto específico de bits de dados, você pode triangular a localização exata do erro.
+
+![parity positions](./imgs/parity_positions.gif)
+
+esta animação ilustra a regra de ouro dos códigos de hamming: os bits de paridade devem ficar em posições que são potências exatas de 2 (1, 2, 4, 8, etc.).
+
+### checando a representação binária
+
+por que potências de 2? por causa de como os números binários funcionam. se você olhar para a representação binária de cada índice de posição, vai notar que as potências de 2 têm apenas um único bit definido como 1.
+
+![overlapping groups](./imgs/overlapping_groups.gif)
+
+esta animação detalha a regra de cobertura: um bit de paridade cobre qualquer posição onde suas representações binárias compartilham um 1 na exata mesma coluna.
+
+isso significa que a posição 5 (binário `101`) é vigiada pelo bit de paridade 1 (`001`) e pelo bit de paridade 4 (`100`). é um truque matemático incrivelmente elegante.
+
+## pesadelos de indexação
+
+implementar essa elegância em Rust, no entanto, foi um pesadelo que eu mesmo criei. a biblioteca padrão do Rust não tem uma maneira excelente de manipular bits individuais facilmente de cara, então eu decidi criar meu próprio `BitVec`.
+
+minha primeira falha grave aconteceu bem aqui. eu decidi empacotar os bits em um `Vec<u8>` usando a ordem de bits big-endian, o que significa que o primeiro bit lógico ocupa o bit mais significativo (MSB) do primeiro byte.
+
+```rust title="bitvec.rs"
+pub fn toggle(&mut self, index: usize) -> Result<(), BitVecError> {
+    if index >= self.len { return Err(BitVecError::OutOfBounds); }
+    let byte_index = index / 8;
+    let bit_index = 7 - (index % 8);
+    self.data[byte_index] ^= 1 << bit_index;
+    Ok(())
+}
+```
+
+a matemática `7 - (index % 8)` parece simples agora, mas quando eu estava escrevendo os métodos `push` e `set`, eu constantemente deslocava bits na direção errada ou sobrescrevia bits adjacentes. meus testes falharam com dados completamente mastigados por horas até eu desenhar os limites dos bytes no papel.
+
+### a armadilha do index-0 vs index-1
+
+a segunda falha catastrófica foi tentar mapear o algoritmo de hamming para os vetores do Rust.
+
+todo o algoritmo de hamming depende de um array indexado em 1. o truque da potência de dois literalmente só funciona se o primeiro elemento estiver no índice 1. os vetores em Rust, como todas as estruturas de programação sãs, são indexados em 0.
+
+eu tentei inicialmente apenas subtrair 1 em todos os lugares no algoritmo. isso resultou em caos absoluto. as checagens `(i + 1).is_power_of_two()` rodavam contra os índices errados, bits de paridade eram escritos em slots de dados e a struct inteira entrava em pânico por erros de out-of-bounds. a correção foi separar estritamente as posições lógicas indexadas em 1 dos offsets de memória físicos indexados em 0 no código.
+
+## achando a agulha no palheiro
+
+uma vez que o encoding estava finalmente funcionando, escrever a lógica de decoding foi basicamente mágica.
+
+quando o receiver recebe os dados, ele recalcula todos os bits de paridade. se uma checagem de paridade falha, ele anota um 1. se passar, ele anota um 0. ler esses 1s e 0s de trás para frente te dá um número binário chamado de "síndrome".
+
+![syndrome detection](./imgs/syndrome_detection.gif)
+
+esta animação mostra o decoder rodando as checagens de paridade e gerando uma síndrome que aponta diretamente para a posição corrompida.
+
+```rust title="hamming.rs"
+pub fn basic_compute_parity(codeword: &BitVec, parity_mask: usize) -> Result<bool, HammingError> {
+    let mut parity_sum = 0u32;
+    for i in 0..codeword.len() {
+        if ((i + 1) & parity_mask) != 0 {
+            if codeword.get(i).ok_or(HammingError::UnexpectedOutOfBounds)? {
+                parity_sum += 1;
+            }
+        }
+    }
+    Ok(parity_sum % 2 == 1)
+}
+```
+
+se a síndrome for `0`, os dados estão limpos. se a síndrome for `5`, significa que o bit na posição 5 inverteu.
+
+![error correction](./imgs/error_correction.gif)
+
+esta animação final mostra a recompensa: uma vez que você sabe exatamente onde o erro está, você apenas o inverte de volta.
+
+## o protocolo gus (great unused standard)
+
+para terminar o trabalho, eu tive que envolver essa lógica em um protocolo. naturalmente, eu o nomeei de protocolo GUS, uma piada com meu próprio nome (Gustavo) que significa "Great Unused Standard".
+
+### o frame wrapper
+
+o protocolo adiciona um cabeçalho com uma string mágica `"GUS"`, um byte de versão e o tamanho dos dados.
+
+para provar que a correção de erros realmente funciona, eu propositalmente chumbei 50% de chance de inverter um bit aleatório logo antes do pacote ser enviado pelo fio. toda vez que você passa dados através dessa CLI, você está jogando os dados de RPG, e o receiver limpa a bagunça de forma transparente.
+
+## começando com o repositório
+
+você pode clonar o repositório e testar essa pipeline você mesmo. ela usa stdin/stdout para transportar os bytes corrompidos entre o sender e o receiver.
+
+```bash title="terminal"
+# envia a string binária "01101001", corrompe ela aleatoriamente e conserta do outro lado
+./hamming_rust -t binary sender -d "01101001" | ./hamming_rust -t binary receiver
+```
+
+ele vai logar exatamente o que enviou, se teve que corrigir um erro, e a mensagem final decodificada.
+
+## os prós e contras de consertar erros
+
+às vezes redundância não vale o custo. essa implementação usa um código de hamming de correção de erro único (SEC). ele consegue achar e consertar exatamente um bit de erro por bloco. se dois bits inverterem no mesmo bloco, a síndrome vai calcular completamente errado, apontar para um terceiro bit inocente, invertê-lo, e estragar seus dados ainda mais.
+
+se você precisa lidar com erros em rajada ou payloads massivos, você não usaria códigos de hamming. você usaria algo como códigos de reed-solomon ou apenas confiaria nas retransmissões do tcp.
+
+se você quiser o tratamento visual completo sobre a matemática por trás disso, a [aula do 3blue1brown sobre códigos de hamming](https://www.3blue1brown.com/lessons/hamming-codes) é cinema absoluto.
+
+mas para aprender como os computadores pensam sobre a integridade dos dados, isso é o mais perto do metal que se pode chegar. você pode checar todo o horror da manipulação de bits no repositório aqui: [hamming-rust](./imgs/https://github.com/GustavoWidman/hamming-rust)
