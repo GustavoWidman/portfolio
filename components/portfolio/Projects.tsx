@@ -18,7 +18,7 @@ import React from "react";
 import { DATA, STATIC_PROJECTS } from "@/lib/data/content";
 import type { Language } from "@/lib/types";
 
-import basedKernelVgaHello from "../../blog/based-kernel/imgs/vga-hello.png";
+import basedKernelVgaHello from "../../blog/based-kernel/imgs/vga-hello-uncropped.png";
 import rnnRustKaggleRun from "../../blog/rnn-rust/imgs/rust-kaggle-run.png";
 import nixIntroTrinity from "../../blog/nix-intro/imgs/the-declarative-trinity.jpg";
 
