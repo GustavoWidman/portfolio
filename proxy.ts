@@ -5,7 +5,7 @@ import { getLanguage } from "@/lib/language-server";
 
 const CURL_PATTERN = /^curl\//;
 
-export function middleware(request: NextRequest): NextResponse {
+export function proxy(request: NextRequest): NextResponse {
   const userAgent = request.headers.get("user-agent") || "";
 
   if (CURL_PATTERN.test(userAgent)) {
