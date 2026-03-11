@@ -8,7 +8,7 @@ const ANSI = {
   bold: "\x1b[1m",
   dim: "\x1b[2m",
   cyan: "\x1b[36m",
-  magenta: "\x1b[35m",
+  green: "\x1b[32m",
 } as const;
 
 const BOX = {
@@ -23,13 +23,13 @@ const BOX = {
 } as const;
 
 const LOGO_LINES = [
-  " _____         _ _ _ _   _  ",
-  "|   __|_ _ ___| | | |_|_| | ",
-  "|  |  | | |_ -| | | | | . | ",
-  "|_____|___|___|_____|_|___| ",
+  "  _____         _ _ _ _   _  ",
+  " |   __|_ _ ___| | | |_|_| | ",
+  " |  |  | | |_ -| | | | | . | ",
+  " |_____|___|___|_____|_|___| ",
 ];
 
-const LOGO_WIDTH = 33;
+const LOGO_WIDTH = 29;
 const ABOUT_OUTER = 30;
 const ABOUT_INNER = 28;
 const GAP = "  ";
@@ -109,7 +109,7 @@ export function buildCurlResponse(lang: Language): string {
 
     if (i < logoLines.length) {
       lines.push(
-        `${ANSI.magenta}${ANSI.bold}${logo}${ANSI.reset}${headerGap}${right}`,
+        `${ANSI.green}${ANSI.bold}${logo}${ANSI.reset}${headerGap}${right}`,
       );
     } else {
       lines.push(`${logo}${headerGap}${right}`);
@@ -126,7 +126,7 @@ export function buildCurlResponse(lang: Language): string {
   const aboutHeaderText = content.aboutHeader;
   const aboutTopFill = ABOUT_INNER - 1 - aboutHeaderText.length;
   const aboutTop =
-    `${ANSI.magenta}${BOX.topLeft}${BOX.horizontal}${ANSI.bold}${aboutHeaderText}${ANSI.reset}${ANSI.magenta}${BOX.horizontal.repeat(aboutTopFill)}${BOX.topRight}${ANSI.reset}`;
+    `${ANSI.green}${BOX.topLeft}${BOX.horizontal}${ANSI.bold}${aboutHeaderText}${ANSI.reset}${ANSI.green}${BOX.horizontal.repeat(aboutTopFill)}${BOX.topRight}${ANSI.reset}`;
 
   // Socials box top border: ╭─Socials───┬──────...╮ (56 total)
   // Structure: ╭(1) + [11 label chars] + ┬(1) + [42 value chars] + ╮(1) = 56
@@ -135,18 +135,18 @@ export function buildCurlResponse(lang: Language): string {
   const socialsHeaderFill =
     SOCIALS_LABEL_COL - 1 - socialsHeaderText.length;
   const socialsTop =
-    `${ANSI.magenta}${BOX.topLeft}${BOX.horizontal}${ANSI.bold}${socialsHeaderText}${ANSI.reset}${ANSI.magenta}${BOX.horizontal.repeat(socialsHeaderFill)}${BOX.topTee}${BOX.horizontal.repeat(SOCIALS_VALUE_COL)}${BOX.topRight}${ANSI.reset}`;
+    `${ANSI.green}${BOX.topLeft}${BOX.horizontal}${ANSI.bold}${socialsHeaderText}${ANSI.reset}${ANSI.green}${BOX.horizontal.repeat(socialsHeaderFill)}${BOX.topTee}${BOX.horizontal.repeat(SOCIALS_VALUE_COL)}${BOX.topRight}${ANSI.reset}`;
 
   lines.push(`${aboutTop}${GAP}${socialsTop}`);
 
   // Content rows for the boxes
   const aboutLines = content.aboutText;
-  const socialLabels = ["GitHub", "LinkedIn", "Email", "Site"];
+  const socialLabels = ["GitHub", "LinkedIn", "Site", "Email"];
   const socialValues = [
     content.github,
     content.linkedin,
-    content.email,
     content.site,
+    content.email,
   ];
 
   // Body rows: 1 empty top + max(about lines, social links) + 1 empty bottom
@@ -163,7 +163,7 @@ export function buildCurlResponse(lang: Language): string {
       aboutContent = padLine(text, ABOUT_INNER);
     }
     const aboutRow =
-      `${ANSI.magenta}${BOX.vertical}${ANSI.reset}${aboutContent}${ANSI.magenta}${BOX.vertical}${ANSI.reset}`;
+      `${ANSI.green}${BOX.vertical}${ANSI.reset}${aboutContent}${ANSI.green}${BOX.vertical}${ANSI.reset}`;
 
     // Socials box row
     let socialsLabel: string;
@@ -185,16 +185,16 @@ export function buildCurlResponse(lang: Language): string {
       }
     }
     const socialsRow =
-      `${ANSI.magenta}${BOX.vertical}${ANSI.reset}${socialsLabel}${ANSI.magenta}${BOX.vertical}${ANSI.reset}${socialsValue}${ANSI.magenta}${BOX.vertical}${ANSI.reset}`;
+      `${ANSI.green}${BOX.vertical}${ANSI.reset}${socialsLabel}${ANSI.green}${BOX.vertical}${ANSI.reset}${socialsValue}${ANSI.green}${BOX.vertical}${ANSI.reset}`;
 
     lines.push(`${aboutRow}${GAP}${socialsRow}`);
   }
 
   // Bottom borders
   const aboutBottom =
-    `${ANSI.magenta}${BOX.bottomLeft}${BOX.horizontal.repeat(ABOUT_OUTER - 2)}${BOX.bottomRight}${ANSI.reset}`;
+    `${ANSI.green}${BOX.bottomLeft}${BOX.horizontal.repeat(ABOUT_OUTER - 2)}${BOX.bottomRight}${ANSI.reset}`;
   const socialsBottom =
-    `${ANSI.magenta}${BOX.bottomLeft}${BOX.horizontal.repeat(SOCIALS_LABEL_COL)}${BOX.bottomTee}${BOX.horizontal.repeat(SOCIALS_VALUE_COL)}${BOX.bottomRight}${ANSI.reset}`;
+    `${ANSI.green}${BOX.bottomLeft}${BOX.horizontal.repeat(SOCIALS_LABEL_COL)}${BOX.bottomTee}${BOX.horizontal.repeat(SOCIALS_VALUE_COL)}${BOX.bottomRight}${ANSI.reset}`;
 
   lines.push(`${aboutBottom}${GAP}${socialsBottom}`);
 
@@ -203,7 +203,7 @@ export function buildCurlResponse(lang: Language): string {
   // ── Blog posts section ──
   lines.push(`  ${ANSI.bold}${content.blogHeader}${ANSI.reset}`);
   lines.push(
-    `  ${ANSI.magenta}${BOX.horizontal.repeat(BLOG_RULE_WIDTH)}${ANSI.reset}`,
+    `  ${ANSI.green}${BOX.horizontal.repeat(BLOG_RULE_WIDTH)}${ANSI.reset}`,
   );
 
   const posts = getBlogEntries(lang);
@@ -211,5 +211,5 @@ export function buildCurlResponse(lang: Language): string {
     lines.push(`  ${ANSI.dim}${post.date}${ANSI.reset}  ${post.title}`);
   }
 
-  return lines.join("\n") + "\n";
+  return lines.join("\n") + "\n\n";
 }
