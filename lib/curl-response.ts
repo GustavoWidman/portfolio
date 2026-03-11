@@ -22,13 +22,16 @@ const BOX = {
 
 const WIDTH = 66;
 
-function repeat(char: string, count: number): string {
-  return char.repeat(count);
+function visibleLength(str: string): number {
+  // oxlint-disable-next-line no-control-regex
+  const ansiPattern = /\x1b\[[0-9;]*m/g;
+  return str.replace(ansiPattern, "").length;
 }
 
 function padLine(text: string, width: number): string {
-  const padding = width - text.length;
-  return text + repeat(" ", Math.max(0, padding));
+  const visible = visibleLength(text);
+  const padding = width - visible;
+  return text + " ".repeat(Math.max(0, padding));
 }
 
 export function buildCurlResponse(lang: Language): string {
@@ -40,7 +43,7 @@ export function buildCurlResponse(lang: Language): string {
   lines.push(
     ANSI.blue +
       BOX.topLeft +
-      repeat(BOX.horizontal, innerWidth) +
+      BOX.horizontal.repeat(innerWidth) +
       BOX.topRight +
       ANSI.reset
   );
@@ -91,7 +94,7 @@ export function buildCurlResponse(lang: Language): string {
   lines.push(
     ANSI.blue +
       BOX.leftTee +
-      repeat(BOX.horizontal, innerWidth) +
+      BOX.horizontal.repeat(innerWidth) +
       BOX.rightTee +
       ANSI.reset
   );
@@ -119,7 +122,7 @@ export function buildCurlResponse(lang: Language): string {
   lines.push(
     ANSI.blue +
       BOX.bottomLeft +
-      repeat(BOX.horizontal, innerWidth) +
+      BOX.horizontal.repeat(innerWidth) +
       BOX.bottomRight +
       ANSI.reset
   );
