@@ -156,6 +156,7 @@ const Projects: React.FC<ProjectsProps> = ({ lang }) => {
                       {project.blogPostSlug && (
                         <Link
                           href={`/blog/${project.blogPostSlug}`}
+                          prefetch={true}
                           className="inline-flex items-center gap-2 text-black dark:text-white border-b border-black dark:border-white pb-1 hover:text-zinc-600 dark:hover:text-zinc-400 hover:border-zinc-600 dark:hover:border-zinc-400 transition-colors"
                         >
                           <BookOpen size={18} /> {t.projects.readArticle}
