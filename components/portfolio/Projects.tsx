@@ -34,9 +34,10 @@ interface ProjectsProps {
 
 interface ProjectVisualProps {
   project: (typeof STATIC_PROJECTS)[0];
+  priority?: boolean;
 }
 
-const ProjectVisual: React.FC<ProjectVisualProps> = ({ project }) => {
+const ProjectVisual: React.FC<ProjectVisualProps> = ({ project, priority = false }) => {
   const projectImage = PROJECT_IMAGES[project.id];
 
   const getIcon = () => {
@@ -76,6 +77,7 @@ const ProjectVisual: React.FC<ProjectVisualProps> = ({ project }) => {
             alt={project.title}
             width={projectImage.width}
             height={projectImage.height}
+            priority={priority}
             className="max-w-full max-h-full w-auto h-auto rounded-lg"
           />
         </div>
@@ -167,7 +169,7 @@ const Projects: React.FC<ProjectsProps> = ({ lang }) => {
 
                   {/* Visual Side */}
                   <div className={`order-1 ${index % 2 === 0 ? "md:order-2" : "md:order-1"}`}>
-                    <ProjectVisual project={project} />
+                    <ProjectVisual project={project} priority={index === 0} />
                   </div>
                 </div>
               </div>
