@@ -73,11 +73,11 @@ export default function BlogPostClient({
       <div className="blog-post-grid">
         {/* Sidebar TOC (Desktop) */}
         <aside className="blog-post-sidebar">
-          <div className="sticky top-32">
+          <div className="sticky top-32 max-h-[calc(100vh-9rem)] flex flex-col">
             <BlogTOC toc={post.toc} lang={lang} variant="desktop" />
 
             {/* Quick Actions */}
-            <div className="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
+            <div className="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
               <button
                 type="button"
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}

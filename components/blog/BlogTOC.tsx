@@ -33,8 +33,8 @@ export function BlogTOC({ toc, lang, variant }: BlogTOCProps) {
 
   return (
     <TOCProvider toc={tocItems}>
-      <div className="flex flex-col gap-3">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-900 dark:text-white pl-4">
+      <div className="flex flex-col gap-3 min-h-0">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-900 dark:text-white pl-4 shrink-0">
           {lang === "en" ? "On this page" : "Nesta pagina"}
         </h3>
         <TOCScrollArea className="relative">
