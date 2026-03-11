@@ -95,6 +95,7 @@ const Navbar: React.FC<NavbarProps> = ({
               <Link
                 key={key}
                 href={isSubdomain ? "/" : "/blog"}
+                prefetch={true}
                 onClick={() => setIsMenuOpen(false)}
                 className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
               >
@@ -199,6 +200,7 @@ const Navbar: React.FC<NavbarProps> = ({
                     <Link
                       key={key}
                       href={isSubdomain ? "/" : "/blog"}
+                      prefetch={true}
                       className="hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest text-xs"
                     >
                       {label}
