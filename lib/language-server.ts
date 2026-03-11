@@ -5,10 +5,10 @@ const COOKIE_NAME = "portfolio_lang";
 const INTRO_COOKIE = "portfolio_intro_last_seen";
 const INTRO_COOLDOWN_MS = 2 * 60 * 60 * 1000;
 
-export async function detectLanguage(): Promise<Language> {
-  const cookieStore = await cookies();
-  const headersList = await headers();
-
+export function getLanguage(
+  cookieStore: { get: (name: string) => { value: string } | undefined },
+  headersList: { get: (name: string) => string | null }
+): Language {
   const cookieLang = cookieStore.get(COOKIE_NAME)?.value;
   if (cookieLang === "en" || cookieLang === "pt") {
     return cookieLang;
@@ -21,6 +21,12 @@ export async function detectLanguage(): Promise<Language> {
   }
 
   return "en";
+}
+
+export async function detectLanguage(): Promise<Language> {
+  const cookieStore = await cookies();
+  const headersList = await headers();
+  return getLanguage(cookieStore, headersList);
 }
 
 function parseAcceptLanguage(header: string): string | null {
