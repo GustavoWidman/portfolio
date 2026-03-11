@@ -199,6 +199,15 @@ export const DATA: Record<string, TranslationData> = {
       viewProjects: "View Projects",
       readBlog: "Read Blog",
     },
+    curl: {
+      name: "Gustavo Widman",
+      title: "Backend & Systems Engineer",
+      skills: "Rust • Go • TypeScript • Linux • Nix",
+      github: "github.com/r3dlust",
+      linkedin: "linkedin.com/in/gwidman",
+      email: "gustavowidman@gmail.com",
+      site: "r3dlust.com",
+    },
   },
   pt: {
     nav: {
@@ -389,6 +398,15 @@ export const DATA: Record<string, TranslationData> = {
       backHome: "Voltar ao Início",
       viewProjects: "Ver Projetos",
       readBlog: "Ler Blog",
+    },
+    curl: {
+      name: "Gustavo Widman",
+      title: "Engenheiro de Backend & Sistemas",
+      skills: "Rust • Go • TypeScript • Linux • Nix",
+      github: "github.com/r3dlust",
+      linkedin: "linkedin.com/in/gwidman",
+      email: "gustavowidman@gmail.com",
+      site: "r3dlust.com",
     },
   },
 };

@@ -82,4 +82,13 @@ export interface TranslationData {
     viewProjects: string;
     readBlog: string;
   };
+  curl: {
+    name: string;
+    title: string;
+    skills: string;
+    github: string;
+    linkedin: string;
+    email: string;
+    site: string;
+  };
 }
