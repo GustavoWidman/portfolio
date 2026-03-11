@@ -4,7 +4,7 @@ import { ArrowLeft, Calendar, Clock, Tag as TagIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { normalizeToTimezoneMidnight } from "@/lib/helpers";
 import { BlogTOC } from "./BlogTOC";
 import type { BlogPost } from "@/lib/source";
@@ -30,9 +30,18 @@ export default function BlogPostClient({
   const { lang } = useLanguage(serverLang);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isSubdomain, setIsSubdomain] = useState(false);
+  const sidebarSpacerRef = useRef<HTMLDivElement>(null);
+  const [sidebarStyle, setSidebarStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
 
   const post = lang === "en" ? enPost || ptPost : ptPost || enPost;
   const content = lang === "en" ? enContent || ptContent : ptContent || enContent;
+
+  const updateSidebarPosition = useCallback(() => {
+    if (sidebarSpacerRef.current) {
+      const rect = sidebarSpacerRef.current.getBoundingClientRect();
+      setSidebarStyle({ left: rect.left, width: rect.width });
+    }
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -42,8 +51,13 @@ export default function BlogPostClient({
       setShowScrollTop(window.scrollY > 400);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    window.addEventListener("resize", updateSidebarPosition);
+    updateSidebarPosition();
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updateSidebarPosition);
+    };
+  }, [updateSidebarPosition]);
 
   if (!post || !content) {
     notFound();
@@ -54,9 +68,10 @@ export default function BlogPostClient({
 
   return (
     <div className="min-h-screen pt-24 pb-12 px-6 max-w-6xl mx-auto">
+      {/* Back to blog (mobile only — desktop version is in the sticky sidebar) */}
       <Link
         href={blogHref}
-        className="group inline-flex items-center text-sm text-zinc-500 hover:text-emerald-500 mb-8 transition-colors"
+        className="blog-post-mobile-toc group inline-flex items-center text-sm text-zinc-500 hover:text-emerald-500 mb-8 transition-colors"
       >
         <ArrowLeft
           size={16}
@@ -71,9 +86,25 @@ export default function BlogPostClient({
       </div>
 
       <div className="blog-post-grid">
-        {/* Sidebar TOC (Desktop) */}
-        <aside className="blog-post-sidebar">
-          <div className="sticky top-32 max-h-[calc(100vh-9rem)] flex flex-col">
+        {/* Spacer to reserve grid column width for the fixed sidebar */}
+        <div ref={sidebarSpacerRef} className="blog-post-sidebar" aria-hidden />
+
+        {/* Fixed Sidebar TOC (Desktop) */}
+        {sidebarStyle.width > 0 && (
+          <aside
+            className="blog-post-sidebar-fixed"
+            style={{ left: sidebarStyle.left, width: sidebarStyle.width }}
+          >
+            <Link
+              href={blogHref}
+              className="group inline-flex items-center text-sm text-zinc-500 hover:text-emerald-500 mb-6 transition-colors shrink-0"
+            >
+              <ArrowLeft
+                size={16}
+                className="mr-2 transition-all group-hover:drop-shadow-[0_0_6px_rgba(16,185,129,0.6)] group-hover:-translate-x-0.5"
+              />
+              {lang === "en" ? "Back to blog" : "Voltar ao blog"}
+            </Link>
             <BlogTOC toc={post.toc} lang={lang} variant="desktop" />
 
             {/* Quick Actions */}
@@ -92,8 +123,8 @@ export default function BlogPostClient({
                 {lang === "en" ? "Scroll to top" : "Voltar ao topo"}
               </button>
             </div>
-          </div>
-        </aside>
+          </aside>
+        )}
 
         {/* Main Content */}
         <article className="min-w-0">

@@ -260,6 +260,10 @@ figure.shiki code {
   display: none;
 }
 
+.blog-post-sidebar-fixed {
+  display: none;
+}
+
 .blog-post-mobile-toc {
   display: block;
 }
@@ -271,6 +275,15 @@ figure.shiki code {
   }
   .blog-post-sidebar {
     display: block;
+  }
+  .blog-post-sidebar-fixed {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 6rem;
+    max-height: calc(100vh - 8rem);
+    overscroll-behavior: contain;
+    z-index: 10;
   }
   .blog-post-mobile-toc {
     display: none;

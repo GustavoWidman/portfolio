@@ -37,7 +37,7 @@ export function BlogTOC({ toc, lang, variant }: BlogTOCProps) {
         <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-900 dark:text-white pl-4 shrink-0">
           {lang === "en" ? "On this page" : "Nesta pagina"}
         </h3>
-        <TOCScrollArea className="relative">
+        <TOCScrollArea className="relative overscroll-contain">
           <TOCItems />
         </TOCScrollArea>
       </div>
