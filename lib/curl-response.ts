@@ -33,7 +33,7 @@ const LOGO_WIDTH = 33;
 const ABOUT_OUTER = 30;
 const ABOUT_INNER = 28;
 const GAP = "  ";
-const _SOCIALS_OUTER = 56;
+// Total socials outer width: 1 (╭) + LABEL_COL + 1 (┬) + VALUE_COL + 1 (╮) = 56
 const SOCIALS_LABEL_COL = 11;
 const SOCIALS_VALUE_COL = 42;
 const BLOG_RULE_WIDTH = 80;
@@ -50,7 +50,7 @@ function padLine(text: string, width: number): string {
   return text + " ".repeat(Math.max(0, padding));
 }
 
-function padRight(text: string, width: number): string {
+function padPlain(text: string, width: number): string {
   return text + " ".repeat(Math.max(0, width - text.length));
 }
 
@@ -65,27 +65,21 @@ function getBlogEntries(lang: Language): BlogEntry[] {
       const pathParts = entry.info.path.replace(/\.mdx?$/, "").split("/");
       const entryLang = pathParts[pathParts.length - 1] as "en" | "pt";
 
-      let date: string;
-      if (!entry.date) {
-        date = "";
-      } else if (typeof entry.date === "string") {
+      let date = "";
+      if (entry.date) {
         if (/^\d{4}-\d{2}-\d{2}$/.test(entry.date)) {
           date = entry.date;
         } else {
           const parsed = new Date(entry.date);
           date = Number.isNaN(parsed.getTime())
-            ? String(entry.date)
+            ? entry.date
             : parsed.toISOString().split("T")[0];
         }
-      } else if (entry.date instanceof Date) {
-        date = entry.date.toISOString().split("T")[0];
-      } else {
-        date = String(entry.date);
       }
 
       return { title: entry.title, date, lang: entryLang };
     })
-    .filter((e) => e.lang === lang && !isScheduled(e.date))
+    .filter((e) => e.lang === lang && e.date !== "" && !isScheduled(e.date))
     .sort((a, b) => (a.date > b.date ? -1 : a.date < b.date ? 1 : 0))
     .map(({ title, date }) => ({ title, date }));
 }
@@ -95,7 +89,7 @@ export function buildCurlResponse(lang: Language): string {
   const lines: string[] = [];
 
   // ── Header: logo + info panel ──
-  const logoLines = LOGO_LINES.map((l) => padRight(l, LOGO_WIDTH));
+  const logoLines = LOGO_LINES.map((l) => padPlain(l, LOGO_WIDTH));
   const emptyLogo = " ".repeat(LOGO_WIDTH);
 
   const headerRight = [
@@ -108,9 +102,10 @@ export function buildCurlResponse(lang: Language): string {
 
   const headerGap = "         ";
 
-  for (let i = 0; i < 5; i++) {
+  const headerRows = Math.max(logoLines.length, headerRight.length);
+  for (let i = 0; i < headerRows; i++) {
     const logo = i < logoLines.length ? logoLines[i] : emptyLogo;
-    const right = headerRight[i];
+    const right = i < headerRight.length ? headerRight[i] : "";
 
     if (i < logoLines.length) {
       lines.push(
@@ -154,8 +149,8 @@ export function buildCurlResponse(lang: Language): string {
     content.site,
   ];
 
-  // Total body rows: 1 empty + 4 content + 1 empty = 6
-  const bodyRows = 6;
+  // Body rows: 1 empty top + max(about lines, social links) + 1 empty bottom
+  const bodyRows = Math.max(aboutLines.length, socialLabels.length) + 2;
 
   for (let i = 0; i < bodyRows; i++) {
     // About box row
@@ -216,5 +211,5 @@ export function buildCurlResponse(lang: Language): string {
     lines.push(`  ${ANSI.dim}${post.date}${ANSI.reset}  ${post.title}`);
   }
 
-  return lines.join("\n");
+  return lines.join("\n") + "\n";
 }
