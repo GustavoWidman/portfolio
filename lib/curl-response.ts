@@ -1,4 +1,6 @@
+import { blog } from "fumadocs-mdx:collections/server";
 import { DATA } from "@/lib/data/content";
+import { isScheduled } from "@/lib/helpers";
 import type { Language } from "@/lib/types";
 
 const ANSI = {
@@ -6,21 +8,35 @@ const ANSI = {
   bold: "\x1b[1m",
   dim: "\x1b[2m",
   cyan: "\x1b[36m",
-  blue: "\x1b[34m",
+  magenta: "\x1b[35m",
 } as const;
 
 const BOX = {
-  topLeft: "┌",
-  topRight: "┐",
-  bottomLeft: "└",
-  bottomRight: "┘",
-  horizontal: "─",
-  vertical: "│",
-  leftTee: "├",
-  rightTee: "┤",
+  topLeft: "\u256d",
+  topRight: "\u256e",
+  bottomLeft: "\u2570",
+  bottomRight: "\u256f",
+  horizontal: "\u2500",
+  vertical: "\u2502",
+  topTee: "\u252c",
+  bottomTee: "\u2534",
 } as const;
 
-const WIDTH = 66;
+const LOGO_LINES = [
+  " _____         _ _ _ _   _  ",
+  "|   __|_ _ ___| | | |_|_| | ",
+  "|  |  | | |_ -| | | | | . | ",
+  "|_____|___|___|_____|_|___| ",
+];
+
+const LOGO_WIDTH = 33;
+const ABOUT_OUTER = 30;
+const ABOUT_INNER = 28;
+const GAP = "  ";
+const _SOCIALS_OUTER = 56;
+const SOCIALS_LABEL_COL = 11;
+const SOCIALS_VALUE_COL = 42;
+const BLOG_RULE_WIDTH = 80;
 
 function visibleLength(str: string): number {
   // oxlint-disable-next-line no-control-regex
@@ -34,98 +50,171 @@ function padLine(text: string, width: number): string {
   return text + " ".repeat(Math.max(0, padding));
 }
 
+function padRight(text: string, width: number): string {
+  return text + " ".repeat(Math.max(0, width - text.length));
+}
+
+interface BlogEntry {
+  title: string;
+  date: string;
+}
+
+function getBlogEntries(lang: Language): BlogEntry[] {
+  return blog
+    .map((entry) => {
+      const pathParts = entry.info.path.replace(/\.mdx?$/, "").split("/");
+      const entryLang = pathParts[pathParts.length - 1] as "en" | "pt";
+
+      let date: string;
+      if (!entry.date) {
+        date = "";
+      } else if (typeof entry.date === "string") {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(entry.date)) {
+          date = entry.date;
+        } else {
+          const parsed = new Date(entry.date);
+          date = Number.isNaN(parsed.getTime())
+            ? String(entry.date)
+            : parsed.toISOString().split("T")[0];
+        }
+      } else if (entry.date instanceof Date) {
+        date = entry.date.toISOString().split("T")[0];
+      } else {
+        date = String(entry.date);
+      }
+
+      return { title: entry.title, date, lang: entryLang };
+    })
+    .filter((e) => e.lang === lang && !isScheduled(e.date))
+    .sort((a, b) => (a.date > b.date ? -1 : a.date < b.date ? 1 : 0))
+    .map(({ title, date }) => ({ title, date }));
+}
+
 export function buildCurlResponse(lang: Language): string {
   const content = DATA[lang].curl;
   const lines: string[] = [];
 
-  const innerWidth = WIDTH - 2;
+  // ── Header: logo + info panel ──
+  const logoLines = LOGO_LINES.map((l) => padRight(l, LOGO_WIDTH));
+  const emptyLogo = " ".repeat(LOGO_WIDTH);
 
-  lines.push(
-    ANSI.blue +
-      BOX.topLeft +
-      BOX.horizontal.repeat(innerWidth) +
-      BOX.topRight +
-      ANSI.reset
-  );
+  const headerRight = [
+    `${ANSI.bold}${content.name}${ANSI.reset}`,
+    `${content.title}`,
+    "",
+    `${ANSI.dim}${content.sites}${ANSI.reset}`,
+    `${ANSI.dim}${content.source}${ANSI.reset}`,
+  ];
 
-  const nameLine = `  ${ANSI.bold}${ANSI.cyan}${content.name}${ANSI.reset}`;
-  lines.push(
-    ANSI.blue +
-      BOX.vertical +
-      ANSI.reset +
-      padLine(nameLine, innerWidth) +
-      ANSI.blue +
-      BOX.vertical +
-      ANSI.reset
-  );
+  const headerGap = "         ";
 
-  const titleLine = `  ${ANSI.cyan}${content.title}${ANSI.reset}`;
-  lines.push(
-    ANSI.blue +
-      BOX.vertical +
-      ANSI.reset +
-      padLine(titleLine, innerWidth) +
-      ANSI.blue +
-      BOX.vertical +
-      ANSI.reset
-  );
+  for (let i = 0; i < 5; i++) {
+    const logo = i < logoLines.length ? logoLines[i] : emptyLogo;
+    const right = headerRight[i];
 
-  lines.push(
-    ANSI.blue +
-      BOX.vertical +
-      ANSI.reset +
-      padLine("", innerWidth) +
-      ANSI.blue +
-      BOX.vertical +
-      ANSI.reset
-  );
+    if (i < logoLines.length) {
+      lines.push(
+        `${ANSI.magenta}${ANSI.bold}${logo}${ANSI.reset}${headerGap}${right}`,
+      );
+    } else {
+      lines.push(`${logo}${headerGap}${right}`);
+    }
+  }
 
-  const skillsLine = `  ${content.skills}`;
-  lines.push(
-    ANSI.blue +
-      BOX.vertical +
-      ANSI.reset +
-      padLine(skillsLine, innerWidth) +
-      ANSI.blue +
-      BOX.vertical +
-      ANSI.reset
-  );
+  lines.push("");
 
-  lines.push(
-    ANSI.blue +
-      BOX.leftTee +
-      BOX.horizontal.repeat(innerWidth) +
-      BOX.rightTee +
-      ANSI.reset
-  );
+  // ── Side-by-side boxes: About + Socials ──
 
-  const links = [
+  // About box top border: ╭─About──────────────────────╮ (30 total)
+  // Structure: ╭(1) + ─(1) + text + fill_dashes + ╮(1) = 30
+  // Inner = 28 = 1 dash + text + fill  →  fill = 28 - 1 - text.length
+  const aboutHeaderText = content.aboutHeader;
+  const aboutTopFill = ABOUT_INNER - 1 - aboutHeaderText.length;
+  const aboutTop =
+    `${ANSI.magenta}${BOX.topLeft}${BOX.horizontal}${ANSI.bold}${aboutHeaderText}${ANSI.reset}${ANSI.magenta}${BOX.horizontal.repeat(aboutTopFill)}${BOX.topRight}${ANSI.reset}`;
+
+  // Socials box top border: ╭─Socials───┬──────...╮ (56 total)
+  // Structure: ╭(1) + [11 label chars] + ┬(1) + [42 value chars] + ╮(1) = 56
+  // Label chars = ─(1) + text + fill  →  fill = 11 - 1 - text.length
+  const socialsHeaderText = content.socialsHeader;
+  const socialsHeaderFill =
+    SOCIALS_LABEL_COL - 1 - socialsHeaderText.length;
+  const socialsTop =
+    `${ANSI.magenta}${BOX.topLeft}${BOX.horizontal}${ANSI.bold}${socialsHeaderText}${ANSI.reset}${ANSI.magenta}${BOX.horizontal.repeat(socialsHeaderFill)}${BOX.topTee}${BOX.horizontal.repeat(SOCIALS_VALUE_COL)}${BOX.topRight}${ANSI.reset}`;
+
+  lines.push(`${aboutTop}${GAP}${socialsTop}`);
+
+  // Content rows for the boxes
+  const aboutLines = content.aboutText;
+  const socialLabels = ["GitHub", "LinkedIn", "Email", "Site"];
+  const socialValues = [
     content.github,
     content.linkedin,
     content.email,
     content.site,
   ];
 
-  for (const link of links) {
-    const linkLine = `  ${ANSI.dim}${link}${ANSI.reset}`;
-    lines.push(
-      ANSI.blue +
-        BOX.vertical +
-        ANSI.reset +
-        padLine(linkLine, innerWidth) +
-        ANSI.blue +
-        BOX.vertical +
-        ANSI.reset
-    );
+  // Total body rows: 1 empty + 4 content + 1 empty = 6
+  const bodyRows = 6;
+
+  for (let i = 0; i < bodyRows; i++) {
+    // About box row
+    let aboutContent: string;
+    if (i === 0 || i === bodyRows - 1) {
+      aboutContent = " ".repeat(ABOUT_INNER);
+    } else {
+      const textIdx = i - 1;
+      const text = textIdx < aboutLines.length ? `  ${aboutLines[textIdx]}` : "";
+      aboutContent = padLine(text, ABOUT_INNER);
+    }
+    const aboutRow =
+      `${ANSI.magenta}${BOX.vertical}${ANSI.reset}${aboutContent}${ANSI.magenta}${BOX.vertical}${ANSI.reset}`;
+
+    // Socials box row
+    let socialsLabel: string;
+    let socialsValue: string;
+    if (i === 0 || i === bodyRows - 1) {
+      socialsLabel = " ".repeat(SOCIALS_LABEL_COL);
+      socialsValue = " ".repeat(SOCIALS_VALUE_COL);
+    } else {
+      const idx = i - 1;
+      if (idx < socialLabels.length) {
+        socialsLabel = padLine(`  ${socialLabels[idx]}`, SOCIALS_LABEL_COL);
+        socialsValue = padLine(
+          `  ${ANSI.cyan}${socialValues[idx]}${ANSI.reset}`,
+          SOCIALS_VALUE_COL,
+        );
+      } else {
+        socialsLabel = " ".repeat(SOCIALS_LABEL_COL);
+        socialsValue = " ".repeat(SOCIALS_VALUE_COL);
+      }
+    }
+    const socialsRow =
+      `${ANSI.magenta}${BOX.vertical}${ANSI.reset}${socialsLabel}${ANSI.magenta}${BOX.vertical}${ANSI.reset}${socialsValue}${ANSI.magenta}${BOX.vertical}${ANSI.reset}`;
+
+    lines.push(`${aboutRow}${GAP}${socialsRow}`);
   }
 
+  // Bottom borders
+  const aboutBottom =
+    `${ANSI.magenta}${BOX.bottomLeft}${BOX.horizontal.repeat(ABOUT_OUTER - 2)}${BOX.bottomRight}${ANSI.reset}`;
+  const socialsBottom =
+    `${ANSI.magenta}${BOX.bottomLeft}${BOX.horizontal.repeat(SOCIALS_LABEL_COL)}${BOX.bottomTee}${BOX.horizontal.repeat(SOCIALS_VALUE_COL)}${BOX.bottomRight}${ANSI.reset}`;
+
+  lines.push(`${aboutBottom}${GAP}${socialsBottom}`);
+
+  lines.push("");
+
+  // ── Blog posts section ──
+  lines.push(`  ${ANSI.bold}${content.blogHeader}${ANSI.reset}`);
   lines.push(
-    ANSI.blue +
-      BOX.bottomLeft +
-      BOX.horizontal.repeat(innerWidth) +
-      BOX.bottomRight +
-      ANSI.reset
+    `  ${ANSI.magenta}${BOX.horizontal.repeat(BLOG_RULE_WIDTH)}${ANSI.reset}`,
   );
+
+  const posts = getBlogEntries(lang);
+  for (const post of posts) {
+    lines.push(`  ${ANSI.dim}${post.date}${ANSI.reset}  ${post.title}`);
+  }
 
   return lines.join("\n");
 }
