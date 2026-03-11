@@ -85,10 +85,15 @@ export interface TranslationData {
   curl: {
     name: string;
     title: string;
-    skills: string;
+    sites: string;
+    source: string;
+    aboutHeader: string;
+    aboutText: string[];
+    socialsHeader: string;
     github: string;
     linkedin: string;
     email: string;
     site: string;
+    blogHeader: string;
   };
 }
