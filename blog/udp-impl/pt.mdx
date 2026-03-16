@@ -1,0 +1,249 @@
+---
+title: udp feito na mão em rust
+date: 2026-03-16
+excerpt: a faculdade mandou "implementar udp do zero." eu perguntei "posso usar rust?" e escalou a partir daí.
+tags: [rust, redes, udp, raw-sockets, programação-de-sistemas, faculdade]
+---
+
+# quando um trabalho de faculdade vira uma toca de coelho de raw sockets
+
+começou como um trabalho simples de faculdade: implementar UDP do zero. o professor falou de boa, como se fosse coisa de fim de semana. e sinceramente, pra maioria do pessoal usando C, provavelmente foi.
+
+mas eu não sou a maioria. levantei a mão e perguntei, meio na brincadeira: "posso fazer em Rust?"
+
+ele riu e disse que sim.
+
+eu não sabia no que tava me metendo.
+
+## o trabalho (e por que eu não consegui fazer o simples)
+
+a tarefa era direta: construir algo que envie e receba pacotes UDP sem depender da abstração de socket UDP do sistema operacional. usar raw sockets, montar os headers na mão, calcular o checksum, e provar que funciona.
+
+a maioria dos meus colegas escreveu ~200 linhas de C, entregou e foi embora. eu escrevi um projeto modular em Rust com CLI, traits customizadas, logging colorido e macros utilitárias. porque claro que eu fiz isso.
+
+a essa altura meus colegas já me conheciam como "o cara que usa Rust e overengineers tudo," então isso já era esperado.
+
+### a estrutura do projeto
+
+![a estrutura de módulos do projeto aberta no editor, mostrando `cli`, `common`, `proto` (com `headers` aninhado) e `utils`.](./imgs/project-tree.png)
+
+pra algo que é essencialmente "enviar bytes por um socket," isso é objetivamente demais. mas eu tava usando isso como desculpa pra praticar modularização em Rust. hierarquias de módulos, visibilidade com `pub(crate)`, serialização baseada em traits. o tipo de coisa que importa quando se escreve código de sistemas de verdade.
+
+### o sistema de traits
+
+duas traits guiam tudo:
+
+```rust title="traits.rs"
+pub trait FromBytes {
+    fn from_bytes(bytes: &[u8]) -> Result<Self>
+    where
+        Self: Sized;
+}
+
+pub trait ToBytes {
+    fn to_bytes(&self) -> Result<Vec<u8>>;
+}
+```
+
+toda estrutura de protocolo (o header UDP, o pseudo-header, o pacote completo) implementa ambas. isso tornou serialização e desserialização consistentes em toda a codebase. é exagero pra um trabalho de faculdade? com certeza. facilitou o debugging? também com certeza.
+
+## raw sockets: onde o macOS para de ser seu amigo
+
+### L2 vs L3: uma distinção que importa
+
+o negócio sobre raw sockets que a maioria dos tutoriais ignora é que existem dois tipos:
+
+- **raw sockets L3 (camada de rede)**: você constrói o header IP e tudo acima. o kernel cuida da camada de enlace.
+- **raw sockets L2 (camada de enlace)**: você constrói _tudo_, incluindo o header Ethernet. controle total, responsabilidade total.
+
+pra esse projeto, fui de L3. criar um socket `SOCK_RAW` com `IPPROTO_UDP`, montar o header UDP e o payload, e deixar o kernel lidar com IP e Ethernet. simples o bastante na teoria.
+
+### o problema do `IP_HDRINCL`
+
+só que macOS não é Linux. macOS é, como um excelente [artigo do hackaday](https://hackaday.com/2024/09/21/when-raw-network-sockets-arent-raw-raw-sockets-in-macos-and-linux/) coloca, basicamente FreeBSD com maquiagem brilhante.
+
+no Linux, a man page `raw(7)` deixa claro: `IP_HDRINCL` é habilitado por padrão para sockets `IPPROTO_RAW`. ou seja, o kernel espera que você forneça o header IP, e ele cuida do resto.
+
+macOS? como FreeBSD, `IP_HDRINCL` _não_ é habilitado por padrão. o comportamento é sutilmente diferente, e "sutilmente diferente" em programação de sistemas significa "você vai perder três horas antes de ler a man page."
+
+### a saga do `sin_len` e `sin_family`
+
+depois tem a struct `sockaddr_in`. no Linux, `sin_family` é um `u16`. no macOS/BSD, é um `u8`, e tem um campo extra `sin_len` que o Linux nem tem.
+
+```rust title="socket.rs"
+#[cfg(target_os = "macos")]
+sin_len: libc::c_uchar,
+
+#[cfg(target_os = "linux")]
+sin_family: u16,
+#[cfg(target_os = "macos")]
+sin_family: u8,
+```
+
+compilação condicional me salvou aqui. mas o negócio é: eu originalmente escrevi isso no Linux. quando tentei compilar no meu M3 Max, simplesmente... não compilou. o compilador do Rust se recusou a buildar porque `sin_len` estava faltando na inicialização da struct.
+
+em C, esse tipo de coisa compila de boa e explode em runtime. você pega um segfault ou, pior, dados silenciosamente corrompidos. em Rust, o compilador pega isso antes de você sequer rodar. sem valores misteriosos de `errno`, sem ficar encarando o wireshark tentando entender por que seus pacotes estão estranhos. só uma mensagem de erro clara dizendo exatamente qual campo está faltando.
+
+![saída do `cargo build` no macOS mostrando um erro de compilação pelo campo `sin_len` faltando na inicialização da struct `sockaddr_in`.](./imgs/missing-sin-len.png)
+
+esse é um daqueles momentos em que você agradece o Rust. um programador C poderia ter gastado horas debugando um problema de runtime que só aparece no macOS. eu gastei 30 segundos lendo um erro de compilação e adicionando duas linhas de `#[cfg]`.
+
+ah, e você precisa de `sudo` pra criar raw sockets no macOS. então sim, eu tava rodando meu trabalho de faculdade como root. senti que era incrivelmente não-oficial.
+
+## o checksum: meu nêmesis
+
+### RFC 1071 e o pseudo-header
+
+o checksum UDP é calculado sobre um "pseudo-header." é uma estrutura fictícia que nem existe no pacote, usada puramente pro cálculo do checksum. ela inclui os endereços IP de origem e destino, o número do protocolo (17 pra UDP) e o tamanho do UDP.
+
+a ideia é que o checksum cubra os dados UDP mais contexto da camada IP, pra que se um pacote for entregue no endereço errado, o checksum detecte. inteligente. também tedioso de implementar do zero.
+
+```rust title="pseudo.rs"
+pub struct UDPPseudoHeader {
+    src_addr: [u8; 4],  // 32 bits
+    dst_addr: [u8; 4],  // 32 bits
+    zeros: u8,          // 8 bits
+    protocol: u8,       // sempre 17 para UDP
+    udp_length: u16,    // tamanho do header UDP + dados
+}
+```
+
+### o algoritmo (que me enlouqueceu)
+
+o checksum em si segue a RFC 1071: concatenar o pseudo-header, o header UDP (com campo de checksum zerado) e o payload. padear pra tamanho par. somar todas as palavras de 16 bits. dobrar os carries. tirar o complemento de um.
+
+```rust title="packet.rs"
+// combinar octetos adjacentes em inteiros de 16 bits
+for i in (0..checksum_data.len()).step_by(2) {
+    let word = ((checksum_data[i] as u32) << 8) + checksum_data[i + 1] as u32;
+    sum += word;
+}
+
+// somar bits de carry
+while (sum >> 16) > 0 {
+    sum = (sum & 0xFFFF) + (sum >> 16);
+}
+
+// complemento de 1
+let checksum = !(sum as u16);
+```
+
+parece simples quando se escreve assim. não era simples. minha primeira implementação foi uma tradução ingênua da RFC, e produziu checksums que eram... errados. simplesmente errados. não errados a ponto de crashar, mas "o wireshark mostra um valor diferente do que eu tô calculando" errados.
+
+### o arco de debugging por força bruta com wireshark
+
+aqui as coisas ficaram criativas. eu não conseguia descobrir o que estava errado só lendo a RFC. esses documentos são precisos mas definitivamente não são calmantes pro olho com TDAH. uma resposta do stackoverflow com "faça X pra resolver Y" é muito mais fácil de processar do que uma especificação dos anos 80 escrita em CAIXA ALTA.
+
+então abri o wireshark, mandei pacotes com `nc -u`, e comparei os checksums esperados byte por byte contra o que minha implementação produzia. basicamente forçando meu caminho pra corretude olhando hex dumps até os números baterem.
+
+![captura lado a lado do wireshark mostrando um pacote `nc -u` com checksum correto vs. um pacote da implementação com checksum diferente.](./imgs/wireshark-comparison.png)
+
+### o bug que sobreviveu um ano
+
+quando voltei recentemente pra revisar esse código, mais de um ano depois de escrevê-lo, descobri que o checksum _ainda estava errado_. não dramaticamente errado, mas errado de um jeito que a maioria dos sistemas tolera silenciosamente.
+
+o bug:
+
+```rust title="packet.rs"
+// ANTES (quebrado): payload contado duas vezes
+checksum_data.extend_from_slice(&self.to_bytes()?);  // header + payload
+checksum_data.extend_from_slice(&self.payload);       // payload DE NOVO
+
+// DEPOIS (corrigido): só usar to_bytes() uma vez
+checksum_data.extend_from_slice(&self.to_bytes()?);  // header + payload, pronto
+```
+
+`to_bytes()` no pacote já serializa tanto o header quanto o payload. o código original chamava `to_bytes()` _e depois_ adicionava o payload de novo separadamente. o checksum estava sendo calculado sobre pseudo-header + header + payload + payload. contagem dupla. a correção foi literalmente... remover a linha extra.
+
+"funcionava" porque muitas implementações UDP não verificam estritamente checksums de entrada, especialmente em localhost. `nc -u` aceitava os pacotes numa boa. o checksum no wireshark provavelmente mostrava divergência, mas eu ou não notei ou descartei como quirk de visualização.
+
+às vezes bugs sobrevivem não porque são difíceis de achar, mas porque o sistema é tolerante demais pra puni-los.
+
+![captura do wireshark após corrigir o bug do payload duplo, mostrando que o checksum agora bate com o valor esperado.](./imgs/fixed-checksum.png)
+
+## a CLI (porque por que não)
+
+### clap e subcomandos
+
+usei `clap` com macros derive pra construir uma CLI com dois subcomandos: `listener` e `sender`.
+
+```rust title="cli/mod.rs"
+#[derive(Subcommand)]
+pub enum Subcommands {
+    Listener(ListenerArgs),
+    Sender(SenderArgs),
+}
+```
+
+o listener faz bind num endereço e fica em loop pra sempre, imprimindo payloads UDP recebidos. o sender lê do stdin e manda cada linha como pacote UDP. dá pra fazer pipe.
+
+### logging customizado
+
+o sistema de logging é provavelmente a parte mais exagerada. implementação customizada de `CologStyle` com prefixos que indicam o modo, timestamps com microssegundos e log levels com cores.
+
+```
+[2025-03-15 14:23:01.123456] [INF] [SENDER] sending packet to 127.0.0.1:5000
+```
+
+era necessário? não. facilitou o debugging quando pacotes estavam voando pra todo lado? sim. e ficou bonito no terminal, o que sinceramente importa mais do que as pessoas admitem.
+
+### macros utilitárias
+
+```rust title="macros.rs"
+// macro de conveniência para SocketAddrV4
+ipv4!("127.0.0.1:8080")
+
+// macro de timing que retorna (resultado, duração)
+let (result, elapsed) = timeit!(socket.send(&dst, payload));
+```
+
+pequenas coisas de qualidade de vida. a macro `timeit!` foi bem útil pra medir latência de envio durante testes.
+
+## fazendo funcionar com `nc -u`
+
+o teste real de se essa implementação estava correta: ela consegue conversar com `nc -u`?
+
+a resposta é sim. dá pra rodar o sender, apontar pra um listener `nc -u`, e as mensagens chegam corretamente. dá pra rodar o listener, mandar do `nc -u`, e os pacotes são parseados e exibidos corretamente. interoperabilidade com uma ferramenta padrão era o objetivo, e funcionou.
+
+```bash
+# terminal 1: listener padrão com nc
+nc -u -l 5000
+
+# terminal 2: sender customizado (requer sudo no macOS)
+sudo cargo run -- sender --bind 127.0.0.1:4000 --addr 127.0.0.1:5000
+```
+
+digita uma mensagem no terminal 2, aparece no terminal 1. simples. satisfatório. valeu as horas de debug.
+
+![duas janelas de terminal lado a lado: o sender UDP customizado na esquerda, `nc -u -l` na direita, mostrando mensagens sendo enviadas e recebidas corretamente.](./imgs/nc-demo.png)
+
+## o que aprendi (e o que faria diferente)
+
+### endianness não é opcional
+
+todo campo multi-byte precisa de conversão explícita pra big-endian (network byte order). `.to_be_bytes()` e `.from_be_bytes()` são seus melhores amigos. esquece um e passe uma hora se perguntando por que os números das portas estão errados.
+
+### raw sockets são minas terrestres específicas por plataforma
+
+não assuma comportamento de Linux no macOS. não assuma comportamento de macOS no Linux. leia as man pages da _sua_ plataforma. as diferenças são pequenas mas vão absolutamente arruinar sua tarde.
+
+### documentos RFC valem a leitura (eventualmente)
+
+são densos e antigos e escritos num estilo que assume que você já sabe tudo. mas eles são _a_ fonte da verdade. quando o stackoverflow te abandona, a RFC é onde você termina.
+
+### checksums são mais difíceis do que parecem
+
+uma soma em complemento de um parece trivial. não é. o pseudo-header adiciona complexidade. ordenação de bytes adiciona complexidade. padding adiciona complexidade. e como eu provei, dá pra acertar _quase_ tudo e funcionar por meses sem perceber o bug.
+
+## considerações finais
+
+isso começou como um trabalho de faculdade e terminou como uma lição em programação de sistemas, compatibilidade cross-platform, e a experiência humilhante de errar um checksum por mais de um ano.
+
+foi overengineered? sim. aprendi mais com isso do que com qualquer capítulo de livro sobre UDP? também sim. às vezes a coisa mais educativa que você pode fazer é pegar uma spec simples e implementar do jeito difícil. não porque é eficiente, mas porque cada erro te ensina algo que `socket.send()` esconde por trás da sua abstração.
+
+o código ainda funciona. o checksum agora está realmente correto. e eu ainda uso wireshark mais do que qualquer pessoa sã deveria.
+
+![o projeto completo aberto num editor, mostrando a estrutura de módulos e a implementação do checksum corrigida.](./imgs/project-overview.png)
+
+
+confere o repositório [aqui](https://github.com/GustavoWidman/udp-impl).
