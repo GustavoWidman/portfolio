@@ -74,20 +74,22 @@ function getBlogPosts(): BlogPost[] {
 }
 
 export function getBlogPostSummaries(): BlogPostSummary[] {
-  return blog.map((entry) => {
-    const { slug, lang } = parseEntryPath(entry.info.path);
-    const date = formatDateValue(entry.date);
+  return blog
+    .map((entry) => {
+      const { slug, lang } = parseEntryPath(entry.info.path);
+      const date = formatDateValue(entry.date);
 
-    return {
-      slug,
-      lang,
-      title: entry.title,
-      date,
-      excerpt: entry.excerpt,
-      tags: entry.tags,
-      scheduled: isScheduled(date),
-    };
-  });
+      return {
+        slug,
+        lang,
+        title: entry.title,
+        date,
+        excerpt: entry.excerpt,
+        tags: entry.tags,
+        scheduled: isScheduled(date),
+      };
+    })
+    .sort((a, b) => (a.date > b.date ? -1 : a.date < b.date ? 1 : 0));
 }
 
 export function getBlogPost(slug: string, lang: "en" | "pt"): BlogPost | undefined {
