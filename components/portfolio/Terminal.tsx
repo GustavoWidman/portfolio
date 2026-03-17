@@ -89,6 +89,9 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
   const [input, setInput] = React.useState("");
   const contentRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const commandHistoryRef = useRef<string[]>([]);
+  const historyIndexRef = useRef<number>(0);
+  const savedInputRef = useRef<string>("");
   const router = useRouter();
 
   useEffect(() => {
@@ -122,6 +125,13 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
 
   const handleCommand = useCallback(
     (cmd: string) => {
+      const trimmed = cmd.trim();
+      if (trimmed !== "" && commandHistoryRef.current.at(-1) !== trimmed) {
+        commandHistoryRef.current.push(trimmed);
+      }
+      historyIndexRef.current = commandHistoryRef.current.length;
+      savedInputRef.current = "";
+
       const existingTexts = state.lines.map((l) => l.text);
       const newTexts = [...existingTexts, `widman@nixos:~$ ${cmd}`];
       const lowerCmd = cmd.toLowerCase().trim();
@@ -271,6 +281,30 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
       if (e.key === "Enter") {
         e.preventDefault();
         handleCommand(input);
+        return;
+      }
+
+      const history = commandHistoryRef.current;
+
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (history.length === 0) return;
+        if (historyIndexRef.current === history.length) {
+          savedInputRef.current = input;
+        }
+        const newIndex = Math.max(0, historyIndexRef.current - 1);
+        historyIndexRef.current = newIndex;
+        setInput(history[newIndex]);
+        return;
+      }
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (history.length === 0) return;
+        const newIndex = Math.min(history.length, historyIndexRef.current + 1);
+        historyIndexRef.current = newIndex;
+        setInput(newIndex === history.length ? savedInputRef.current : history[newIndex]);
+        return;
       }
     },
     [input, handleCommand],
