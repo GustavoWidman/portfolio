@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronRight } from "lucide-react";
-import { TOCItems } from "fumadocs-ui/components/toc/clerk";
+import { TOCItems, TOCItem } from "fumadocs-ui/components/toc/clerk";
 import { TOCProvider, TOCScrollArea } from "fumadocs-ui/components/toc";
 
 interface TOCItem {
@@ -38,7 +38,11 @@ export function BlogTOC({ toc, lang, variant }: BlogTOCProps) {
           {lang === "en" ? "On this page" : "Nesta pagina"}
         </h3>
         <TOCScrollArea className="relative overscroll-contain">
-          <TOCItems />
+          <TOCItems>
+            {tocItems.map((item) => (
+              <TOCItem key={item.url} item={item} />
+            ))}
+          </TOCItems>
         </TOCScrollArea>
       </div>
     </TOCProvider>
