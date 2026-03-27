@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronRight } from "lucide-react";
 import { TOCItems } from "fumadocs-ui/components/toc/clerk";
-import { TOCProvider, TOCScrollArea } from "fumadocs-ui/components/toc/index";
+import { TOCProvider, TOCScrollArea } from "fumadocs-ui/components/toc";
 
 interface TOCItem {
   id: string;
