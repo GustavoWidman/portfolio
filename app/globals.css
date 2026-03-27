@@ -101,10 +101,6 @@
 }
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-
   body {
     @apply overflow-x-hidden transition-colors duration-300;
     scrollbar-gutter: stable;

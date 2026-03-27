@@ -112,7 +112,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${jetbrainsMono.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="font-sans">
         <PersonJsonLd />
         <WebsiteJsonLd />
