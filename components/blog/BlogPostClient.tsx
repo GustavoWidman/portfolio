@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, Calendar, Clock, Tag as TagIcon } from "lucide-react";
-import Link from "next/link";
+import PrefetchLink from "@/components/PrefetchLink";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -69,7 +69,7 @@ export default function BlogPostClient({
   return (
     <div className="min-h-screen pt-24 pb-12 px-6 max-w-6xl mx-auto">
       {/* Back to blog (mobile only — desktop version is in the sticky sidebar) */}
-      <Link
+      <PrefetchLink
         href={blogHref}
         className="blog-post-mobile-toc group inline-flex items-center text-sm text-zinc-500 hover:text-emerald-500 mb-8 transition-colors"
       >
@@ -78,9 +78,7 @@ export default function BlogPostClient({
           className="mr-2 transition-all group-hover:drop-shadow-[0_0_6px_rgba(16,185,129,0.6)] group-hover:-translate-x-0.5"
         />
         {lang === "en" ? "Back to blog" : "Voltar ao blog"}
-      </Link>
-
-      {/* Mobile TOC */}
+      </PrefetchLink>
       <div className="blog-post-mobile-toc mb-8">
         <BlogTOC toc={post.toc} lang={lang} variant="mobile" />
       </div>
@@ -95,7 +93,7 @@ export default function BlogPostClient({
             className="blog-post-sidebar-fixed"
             style={{ left: sidebarStyle.left, width: sidebarStyle.width }}
           >
-            <Link
+            <PrefetchLink
               href={blogHref}
               className="group inline-flex items-center text-sm text-zinc-500 hover:text-emerald-500 mb-6 transition-colors shrink-0"
             >
@@ -104,7 +102,7 @@ export default function BlogPostClient({
                 className="mr-2 transition-all group-hover:drop-shadow-[0_0_6px_rgba(16,185,129,0.6)] group-hover:-translate-x-0.5"
               />
               {lang === "en" ? "Back to blog" : "Voltar ao blog"}
-            </Link>
+            </PrefetchLink>
             <BlogTOC toc={post.toc} lang={lang} variant="desktop" />
 
             {/* Quick Actions */}

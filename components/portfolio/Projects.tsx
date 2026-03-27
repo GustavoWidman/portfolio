@@ -2,7 +2,7 @@
 
 import type { StaticImageData } from "next/image";
 import Image from "next/image";
-import Link from "next/link";
+import PrefetchLink from "@/components/PrefetchLink";
 import {
   BookOpen,
   Brain,
@@ -156,13 +156,12 @@ const Projects: React.FC<ProjectsProps> = ({ lang }) => {
                         </a>
                       )}
                       {project.blogPostSlug && (
-                        <Link
+                        <PrefetchLink
                           href={`/blog/${project.blogPostSlug}`}
-                          prefetch={true}
                           className="inline-flex items-center gap-2 text-black dark:text-white border-b border-black dark:border-white pb-1 hover:text-zinc-600 dark:hover:text-zinc-400 hover:border-zinc-600 dark:hover:border-zinc-400 transition-colors"
                         >
                           <BookOpen size={18} /> {t.projects.readArticle}
-                        </Link>
+                        </PrefetchLink>
                       )}
                     </div>
                   </div>

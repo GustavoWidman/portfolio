@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import PrefetchLink from "@/components/PrefetchLink";
 import { normalizeToTimezoneMidnight } from "@/lib/helpers";
 import type { BlogPostSummary } from "@/lib/source";
 import { useLanguage } from "@/lib/useLanguage";
@@ -64,7 +64,7 @@ export default function BlogListingClient({ posts, serverLang = "en" }: BlogList
             }
 
             return (
-              <Link
+              <PrefetchLink
                 key={`${post.slug}-${post.lang}`}
                 href={getPostHref(post.slug)}
                 className="group flex flex-col p-6 bg-white dark:bg-black/70 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 transition-all hover:shadow-lg dark:hover:shadow-emerald-900/10"
@@ -100,7 +100,7 @@ export default function BlogListingClient({ posts, serverLang = "en" }: BlogList
                     </span>
                   ))}
                 </div>
-              </Link>
+              </PrefetchLink>
             );
           })}
         </div>

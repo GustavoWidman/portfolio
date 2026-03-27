@@ -1,7 +1,7 @@
 "use client";
 
 import { BookOpen, FolderCode, Home } from "lucide-react";
-import Link from "next/link";
+import PrefetchLink from "@/components/PrefetchLink";
 import { useEffect, useState } from "react";
 import { DATA } from "@/lib/data/content";
 import type { Language } from "@/lib/types";
@@ -42,24 +42,24 @@ export default function NotFoundClient({ lang }: NotFoundClientProps) {
             {t.description}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
+            <PrefetchLink
               href={isSubdomain ? getMainDomainUrl("") : "/"}
               className="whitespace-nowrap bg-black dark:bg-white text-white dark:text-black px-6 py-3 rounded-full font-medium hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
             >
               <Home size={16} /> {t.backHome}
-            </Link>
-            <Link
+            </PrefetchLink>
+            <PrefetchLink
               href={isSubdomain ? getMainDomainUrl("work") : "/#work"}
               className="whitespace-nowrap px-6 py-3 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-full font-medium hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-colors flex items-center justify-center gap-2"
             >
               <FolderCode size={16} /> {t.viewProjects}
-            </Link>
-            <Link
+            </PrefetchLink>
+            <PrefetchLink
               href={isSubdomain ? "/" : "/blog"}
               className="whitespace-nowrap px-6 py-3 border border-zinc-300 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-full font-medium hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-colors flex items-center justify-center gap-2"
             >
               <BookOpen size={16} /> {t.readBlog}
-            </Link>
+            </PrefetchLink>
           </div>
         </div>
       </div>

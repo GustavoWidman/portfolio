@@ -1,7 +1,7 @@
 "use client";
 
 import { FileText, Menu, Moon, Sun, X } from "lucide-react";
-import Link from "next/link";
+import PrefetchLink from "@/components/PrefetchLink";
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useThemeTransition } from "@/lib/useThemeTransition";
@@ -74,20 +74,20 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
 
       <div className="min-h-full flex flex-col items-center justify-center w-full p-4 pt-24 pb-20">
         <div className="flex flex-col items-center gap-8 mb-12 w-full px-4">
-          <Link
+          <PrefetchLink
             href={isSubdomain ? getMainDomainUrl("") : "/"}
             onClick={() => setIsMenuOpen(false)}
             className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
           >
             Portfolio
-          </Link>
-          <Link
+          </PrefetchLink>
+          <PrefetchLink
             href={isSubdomain ? "/" : "/blog"}
             onClick={() => setIsMenuOpen(false)}
             className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
           >
             {isSubdomain ? "Home" : "Blog"}
-          </Link>
+          </PrefetchLink>
 
           {/* Mobile Resume Button */}
           <ResumeButton align="center" position="bottom">
@@ -157,13 +157,13 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
                 WW
               </a>
             ) : (
-              <Link
+              <PrefetchLink
                 href="/"
                 className="font-mono text-xl font-bold tracking-tighter hover:opacity-70 transition-opacity cursor-pointer flex items-center gap-1 text-black dark:text-white z-50 relative"
                 aria-label="Gustavo Widman - Go to home"
               >
                 WW
-              </Link>
+              </PrefetchLink>
             )}
 
             <div className="hidden md:flex items-center gap-6">
@@ -176,12 +176,12 @@ const BlogNavbar: React.FC<BlogNavbarProps> = ({ lang, setLang, isSubdomain = fa
               <div className="flex items-center gap-4">
                 <div className="h-8 w-px bg-zinc-200 dark:bg-zinc-800" />
                 <div className="flex items-center gap-4">
-                  <Link
+                  <PrefetchLink
                     href={isSubdomain ? getMainDomainUrl("") : "/"}
                     className="text-xs font-bold uppercase tracking-widest text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
                   >
                     Portfolio
-                  </Link>
+                  </PrefetchLink>
                   <div className="h-8 w-px bg-zinc-200 dark:bg-zinc-800" />
 
                   <ResumeButton align="center" position="bottom">

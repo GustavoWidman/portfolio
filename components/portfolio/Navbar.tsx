@@ -1,7 +1,7 @@
 "use client";
 
 import { FileText, Menu, Moon, Sun, X } from "lucide-react";
-import Link from "next/link";
+import PrefetchLink from "@/components/PrefetchLink";
 import { usePathname } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
@@ -92,15 +92,14 @@ const Navbar: React.FC<NavbarProps> = ({
         <div className="flex flex-col items-center gap-8 mb-12 w-full px-4">
           {Object.entries(t.nav).map(([key, label]) =>
             key === "blog" ? (
-              <Link
+              <PrefetchLink
                 key={key}
                 href={isSubdomain ? "/" : "/blog"}
-                prefetch={true}
                 onClick={() => setIsMenuOpen(false)}
                 className="text-2xl font-bold text-black dark:text-white hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors uppercase tracking-widest"
               >
                 {label}
-              </Link>
+              </PrefetchLink>
             ) : isSubdomain ? (
               <a
                 key={key}
@@ -182,14 +181,14 @@ const Navbar: React.FC<NavbarProps> = ({
                 WW
               </a>
             ) : (
-              <Link
+              <PrefetchLink
                 href="/"
                 className="font-mono text-xl font-bold tracking-tighter hover:opacity-70 transition-opacity cursor-pointer flex items-center gap-1 text-black dark:text-white z-50 relative"
                 onClick={() => window.scrollTo(0, 0)}
                 aria-label="Gustavo Widman - Go to home"
               >
                 WW
-              </Link>
+              </PrefetchLink>
             )}
 
             {/* Desktop Navigation */}
@@ -197,14 +196,13 @@ const Navbar: React.FC<NavbarProps> = ({
               <div className="flex gap-8 text-sm font-medium text-zinc-600 dark:text-zinc-400">
                 {Object.entries(t.nav).map(([key, label]) =>
                   key === "blog" ? (
-                    <Link
+                    <PrefetchLink
                       key={key}
                       href={isSubdomain ? "/" : "/blog"}
-                      prefetch={true}
                       className="hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest text-xs"
                     >
                       {label}
-                    </Link>
+                    </PrefetchLink>
                   ) : isSubdomain ? (
                     <a
                       key={key}
