@@ -1,0 +1,179 @@
+---
+title: um bilhão de linhas depois
+date: 2026-03-30
+excerpt: como um trabalho de faculdade virou um buraco de performance
+tags: [rust, performance, simd, otimização, 1brc]
+---
+
+# um bilhão de linhas, zero intrínsecos de plataforma
+
+há cerca de um ano, meu professor de algoritmos passou um desafio: ler medições de temperatura de estações meteorológicas, calcular mínimo/máximo/média por estação, imprimir em ordem alfabética. daí ele mencionou que eram um bilhão de linhas.
+
+passei algumas semanas pensando no que o problema realmente exigia. o resultado roda em menos de 1.5 segundos no meu M3 Max, sem intrínsecos de plataforma.
+
+## o problema
+
+o [one billion row challenge](https://github.com/gunnarmorling/1brc) começou como um desafio em java em 2024. as regras: um arquivo de texto, 1 bilhão de linhas, cada uma no formato `<nome_da_estação>;<temperatura>`. calcule mínimo/média/máximo por estação, imprima em ordem alfabética.
+
+é um problema de map-reduce com dataset fixo e conhecido: ~413 nomes únicos de estações, temperaturas entre -99.9 e 99.9 com uma casa decimal.
+
+### o dataset
+
+o arquivo tem cerca de 13GB sem compressão. o repositório inclui um gerador:
+
+```bash title="terminal"
+cargo run --example generate 1000000000
+```
+
+### o que saber o dataset de antemão libera
+
+sempre são ~413 estações e o arquivo divide de forma limpa. não são suposições que você faria em uma ferramenta de propósito geral, mas aqui são ganhos de graça.
+
+## pra rodar
+
+```bash title="terminal"
+git clone https://github.com/GustavoWidman/1brc
+cd 1brc
+cargo run --release
+```
+
+o `.cargo/config.toml` define `target-cpu=native` globalmente. compile e faça benchmark na mesma máquina.
+
+## contornando o kernel com memmap2
+
+a primeira questão foi como ler o arquivo. `BufReader` copia buffers do kernel para o espaço do processo em cada leitura. `memmap2` elimina isso: o arquivo é mapeado diretamente no espaço de endereços do processo, o SO faz a paginação por demanda.
+
+```rust title="file.rs"
+pub fn open(path: &str) -> anyhow::Result<Self> {
+    let file = std::fs::File::options().read(true).open(path)?;
+    Ok(Self {
+        mmap: Arc::new(unsafe {
+            memmap2::MmapOptions::new().huge(None).map(&file)?
+        }),
+    })
+}
+```
+
+o hint `huge(None)` solicita transparent huge pages onde disponível, reduzindo pressão na TLB em leituras sequenciais grandes.
+
+## nunca parsear um float que você não precisa
+
+temperaturas como `-12.3` sempre aparecem com uma casa decimal. não tem motivo pra tocar em `f64`. armazene como `i16` vezes 10 e divida por 10 só na saída. aritmética inteira é mais rápida e `i16` ocupa metade do espaço de `f32`.
+
+```rust title="file.rs"
+fn parse_fake_float(mut bytes: &[u8]) -> i16 {
+    let negative = unsafe { *bytes.get_unchecked(0) } == b'-';
+    if negative {
+        bytes = &unsafe { bytes.get_unchecked(1..) };
+    }
+    let mut val = 0i16;
+    for &byte in bytes {
+        if byte == b'.' { continue; }
+        val = val * 10 + (byte - b'0') as i16;
+    }
+    if negative { -val } else { val }
+}
+```
+
+a struct de medição é `min: i16`, `max: i16`, `sum: i64`, `count: usize`. `i64` na soma previne overflow em um bilhão de adições. a divisão por 10 acontece uma vez, no `into()`.
+
+### cabendo no cache
+
+24 bytes por entrada de medição, pré-alocada para `STATIONS_IN_DATASET * 2 = 826` slots. a tabela inteira cabe em alguns cache lines durante a fase de merge.
+
+## chunking paralelo com rayon
+
+o arquivo se divide em chunks iguais, um por worker. o detalhe é o alinhamento: você não pode cortar em um offset arbitrário sem dividir uma linha, então cada fronteira de chunk avança até a próxima quebra de linha:
+
+```rust title="file.rs"
+fn chunk_file(&self) -> Vec<&[u8]> {
+    let chunk_size = total_size / NUM_WORKERS;
+    let mut start = 0;
+
+    while start < total_size {
+        let mut end = (start + chunk_size).min(total_size);
+        if end < total_size {
+            while end < total_size && buffer[end] != b'\n' {
+                end += 1;
+            }
+            end += 1;
+        }
+        chunks.push(&buffer[start..end]);
+        start = end;
+    }
+}
+```
+
+`NUM_WORKERS` está fixo em 14, a contagem de cores do M3 Max. cada chunk roda em sua própria thread via rayon e produz um hashmap local. mescla no final:
+
+```rust title="file.rs"
+let measurements = chunks
+    .into_par_iter()
+    .map(|chunk| Self::parse_buffer(chunk))
+    .reduce(
+        || HashMap::new(),
+        |mut left, right| { left.merge(right); left },
+    );
+```
+
+### o merge
+
+`merge` itera o mapa menor e dobra cada entrada no acumulador. todas as chaves são nomes de estações limitados a ~413, então o mapa mesclado nunca redimensiona.
+
+## o hashmap
+
+`hashbrown` com `ahash`, pré-dimensionado para `STATIONS_IN_DATASET * 2`:
+
+```rust title="hashmap.rs"
+pub fn new() -> Self {
+    Self {
+        inner: InnerHashMap::with_capacity_and_hasher(
+            STATIONS_IN_DATASET * 2,
+            ahash::RandomState::new(),
+        ),
+    }
+}
+```
+
+`hashbrown` redimensiona quando o fator de carga chega em 0.875. com 826 slots para 413 chaves, o mapa nunca realoca em um bilhão de inserções.
+
+### memchr para o loop quente
+
+encontrar o ponto e vírgula em cada linha é a operação mais quente. `memchr` resolve em duas linhas. AVX2 no x86, NEON no arm, nenhum código específico de arquitetura do meu lado:
+
+```rust title="file.rs"
+let comma_separator = memchr::memchr(b';', &buffer).unwrap();
+let end = memchr::memchr(b'\n', &buffer[comma_separator..]).unwrap();
+```
+
+## onde chegamos
+
+no meu M3 Max (14 cores), cache quente: **~1.4 segundos**.
+
+![execução no m3 max em 1.415s com cache quente, 14 workers](./imgs/original-numbers.png)
+
+sem intrínsecos de plataforma, sem caminho quente unsafe. só as abstrações certas fazendo o trabalho.
+
+## um agente autônomo tenta melhorar
+
+perto do final do primeiro ano do projeto, um amigo estava testando uma versão inicial de um agente de código autônomo que está construindo, um projeto que ainda não foi lançado. ele apontou para esse repositório com um prompt de "melhore isso" e deixou rodar.
+
+o agente voltou afirmando ter ido de 18.2 segundos para 1.66 segundos, um speedup de 110x. a mensagem do commit era confiante. as mudanças eram 100% intrínsecos x86_64, completamente incompatíveis com meu M3 Max. rodava, mas em fallbacks escalares.
+
+um PR de follow-up adicionou suporte adequado a aarch64. esse aí rodou nativo de verdade.
+
+![execução no m3 max após o pr aarch64 em 1.240s, 14 workers](./imgs/post-colton.png)
+
+resultado: 1.415s para 1.240s. 0.2 segundos sobre a versão generalista, só depois de dois PRs e precisando de intrínsecos específicos de plataforma pra chegar lá. o agente ainda não é público, mas estou de olho. a afirmação original de "110x" vive no histórico do git.
+
+## onde quebra
+
+`NUM_WORKERS = 14` está fixo. rodar em outra máquina não adapta.
+
+o hashmap é pré-dimensionado para 413 estações conhecidas. outro dataset com mais chaves únicas causa realocação.
+
+entrada malformada produz saída errada, sem panic, sem erro.
+
+essa é uma implementação de benchmark, não uma ferramenta de propósito geral. só funciona porque sei exatamente como é a entrada.
+
+código aqui: [github.com/GustavoWidman/1brc](https://github.com/GustavoWidman/1brc)
