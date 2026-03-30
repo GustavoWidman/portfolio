@@ -264,6 +264,10 @@ figure.shiki code {
   display: block;
 }
 
+.blog-post-mobile-back-link {
+  display: inline-flex;
+}
+
 @media (min-width: 1024px) {
   .blog-post-grid {
     grid-template-columns: 1fr 3fr;
@@ -282,6 +286,9 @@ figure.shiki code {
     z-index: 10;
   }
   .blog-post-mobile-toc {
+    display: none;
+  }
+  .blog-post-mobile-back-link {
     display: none;
   }
 }

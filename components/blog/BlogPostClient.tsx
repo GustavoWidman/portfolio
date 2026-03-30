@@ -71,7 +71,7 @@ export default function BlogPostClient({
       {/* Back to blog (mobile only — desktop version is in the sticky sidebar) */}
       <PrefetchLink
         href={blogHref}
-        className="blog-post-mobile-toc group inline-flex items-center text-sm text-zinc-500 hover:text-emerald-500 mb-8 transition-colors"
+        className="blog-post-mobile-back-link blog-post-mobile-toc group inline-flex items-center text-sm text-zinc-500 hover:text-emerald-500 mb-8 transition-colors"
       >
         <ArrowLeft
           size={16}
