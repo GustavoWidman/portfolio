@@ -1,0 +1,357 @@
+---
+title: http do zero, em cima de um tcp feito a mao, em rust
+date: 2026-04-06
+excerpt: eu tinha uma stack tcp funcionando. o proximo passo logico era parsear http na mao. foi assim que rolou.
+tags: [rust, networking, http, tcp, tun, systems-programming, cross-platform]
+---
+
+# construindo http/1.1 sobre uma stack tcp que eu mesmo escrevi
+
+eu terminei o [tcp-impl](https://blog.guswid.com/tcp-impl?lang=pt) e tinha uma maquina de estados TCP funcionando sobre um dispositivo TUN. three-way handshake, transferencia de dados, fechamento gracioso. o happy path inteiro.
+
+naturalmente, olhei pra aquilo e pensei: "e se eu parsear HTTP em cima disso?"
+
+essa e a historia do http-impl: um cliente e servidor HTTP/1.1 feito do zero, sem nenhuma dependencia HTTP externa, rodando em cima da minha stack TCP customizada. levou umas duas horas pra ter a primeira versao funcionando e mais algumas horas cacando bugs que, em retrospecto, eram completamente previsiveis.
+
+## a ideia
+
+o tcp-impl te da um `TcpConnection` que le e escreve bytes sobre uma interface TUN. e tudo que o HTTP precisa. o protocolo e baseado em texto (na maior parte), bem documentado (RFC 7230/7231), e velho o suficiente pra ter bastante material de referencia.
+
+o plano era simples:
+
+1. parsear request lines, headers e bodies a partir de bytes crus
+2. montar um servidor com roteamento de requests pra handlers
+3. montar um cliente que constroi e envia requests
+4. fazer tudo isso sem puxar hyper, reqwest, ou qualquer outra crate HTTP
+
+a unica dependencia pra logica de protocolo e o tcp-impl em si. todo o resto (clap pro CLI, colored pra saida colorida, env_logger) e so infraestrutura.
+
+![a pagina inicial do http-impl renderizada num navegador real, servida pelo servidor feito do zero](./imgs/browser-landing.png)
+a pagina inicial, servida pelo http-impl via kernel TCP. sem nginx, sem hyper, sem framework. so bytes parseados na mao.
+
+## parseando http na mao
+
+### o parser de requests
+
+uma request HTTP/1.1 fica assim no fio:
+
+```
+GET /path HTTP/1.1\r\n
+Host: localhost\r\n
+Content-Length: 11\r\n
+\r\n
+hello world
+```
+
+request line, depois headers (cada um terminando com `\r\n`), depois uma linha em branco, e talvez um body. parsear isso e basicamente split de strings, mas tem edge cases suficientes pra te manter honesto.
+
+```rust title="request.rs"
+pub fn parse(buf: &[u8]) -> ParseResult {
+    // achar o fim da request line
+    let req_line_end = match find_subsequence(buf, b"\r\n") {
+        Some(pos) => pos,
+        None => return ParseResult::Partial,
+    };
+
+    // parsear: METHOD SP URI SP HTTP-Version
+    let mut parts = req_line.splitn(3, ' ');
+    let method_str = parts.next()?;
+    let uri = parts.next()?;
+    let version = parts.next()?;
+
+    // ... parsear headers, depois body baseado em Content-Length ou chunked
+}
+```
+
+o parser retorna um de tres estados: `Complete(request, bytes_consumidos)`, `Partial` (precisa mais dados), ou `Error`. esse modelo de tres estados foi a decisao certa. quando voce ta lendo de um dispositivo TUN que entrega dados em pedacos do tamanho de pacotes IP, voce quase sempre recebe `Partial` na primeira leitura.
+
+### chunked transfer encoding
+
+eu quase pulei isso. ai percebi que metade da internet usa.
+
+chunked encoding manda o body como uma serie de chunks prefixados pelo tamanho em hexadecimal, terminados por um chunk de tamanho zero:
+
+```
+5\r\n
+hello\r\n
+6\r\n
+ world\r\n
+0\r\n
+\r\n
+```
+
+o parser caminha por cada chunk, le o tamanho em hex, pega aquela quantidade de bytes, e repete ate chegar no `0\r\n`. extensoes de chunk (o conteudo depois de um ponto-e-virgula na linha de tamanho) sao parseadas mas ignoradas, o que e valido segundo a RFC 7230.
+
+```rust title="request.rs"
+let size_str = size_line
+    .iter()
+    .position(|&b| b == b';')
+    .map_or(size_str, |pos| &size_str[..pos]);
+
+let chunk_size = usize::from_str_radix(size_str.trim(), 16)?;
+```
+
+### o builder de responses
+
+responses usam um pattern de builder. nada mirabolante, mas deixa o codigo de roteamento legivel:
+
+```rust title="response.rs"
+Response::new(StatusCode::Ok)
+    .header("Content-Type", "application/json")
+    .body(json_bytes)
+```
+
+toda response recebe automaticamente `Content-Length`, `Connection: keep-alive`, e um header `Server`. headers customizados pulam esses tres pra evitar duplicatas.
+
+## o servidor
+
+o servidor tem um modelo de roteamento simples: registra handlers por metodo e caminho, depois despacha requests que chegam.
+
+```rust title="server.rs"
+let mut server = Server::new();
+server.route(Method::Get, "/json", |_| {
+    Response::ok_json("{\"message\": \"hello from http-impl\"}")
+});
+server.any("/echo", |req| {
+    Response::new(StatusCode::Ok)
+        .header("Content-Type", req.headers.get("Content-Type").unwrap_or("application/octet-stream"))
+        .body(req.body.clone())
+});
+```
+
+tambem tem servico de arquivos estaticos com deteccao de MIME type e protecao contra directory traversal (checando `..` nos caminhos). suporta os tipos comuns: html, css, js, json, imagens, svg.
+
+### rotas embutidas
+
+o servidor vem com alguns endpoints de demonstracao:
+
+- `GET /` retorna uma pagina HTML com links pra todo o resto
+- `GET /json` retorna um objeto JSON
+- `GET /headers` ecoa seus request headers como JSON
+- `GET /methods` lista todos os metodos HTTP suportados
+- `* /echo` ecoa de volta qualquer body que voce mandar, com qualquer metodo
+
+existem parcialmente pra testes e parcialmente porque um servidor que nao retorna nada e inutil pra debug.
+
+## o bug do dispositivo TUN (primeira rodada)
+
+aqui as coisas ficaram interessantes. o servidor funcionou via kernel TCP de primeira. via TUN, ele aceitava uma conexao e depois ficava mudo.
+
+### o que aconteceu
+
+o codigo original criava um novo `TunDevice` dentro de `handle_connection`:
+
+```rust
+// o bug: isso cria tun1, mas o trafego vai pra tun0
+fn handle_connection(&self, conn: &mut TcpConnection) {
+    let mut tun = TunDevice::new(&self.tun_ip.to_string()).unwrap();
+    // le/escreve em tun1... mas o kernel manda pacotes pra tun0
+}
+```
+
+o `TcpListener` ja tinha criado um dispositivo TUN (tun0) e aceitado a conexao nele. mas `handle_connection` criava um segundo dispositivo TUN (tun1). a tabela de roteamento do kernel ainda apontava pra tun0, entao todos os pacotes de entrada iam pra la. tun1 nunca via nada.
+
+a conexao se estabelecia (o handshake acontecia no tun0 dentro do listener), e depois morria imediatamente porque o handler estava lendo da interface errada.
+
+### a correcao
+
+passar o dispositivo TUN do listener pro handler:
+
+```rust title="server.rs"
+let mut tun = TunDevice::new(&tun_ip.to_string())?;
+
+while !shutdown.load(Ordering::Relaxed) {
+    let mut listener = TcpListener::new(tun, tun_ip, port);
+    let mut conn = listener.accept(shutdown.clone())?;
+
+    // recuperar o MESMO tun do listener
+    tun = listener.into_tun();
+
+    self.handle_connection(&mut conn, &mut tun, &shutdown)?;
+    // tun continua vivo, volta pro loop pra proxima conexao
+}
+```
+
+`TcpListener::new` e leve; so envolve o TUN existente numa struct sem nenhuma system call. `into_tun()` consome o listener e devolve o dispositivo TUN. assim, um unico TUN vive durante toda a vida do servidor, e toda conexao le/escreve na mesma interface.
+
+![log do servidor mostrando conexoes aceitas e respostas enviadas](./imgs/server-log.png)
+o log do servidor depois de corrigir o ciclo de vida do TUN: conexoes aceitas, requests despachados, respostas enviadas.
+
+## o bug do dispositivo TUN (segunda rodada): a pausa de 10 segundos
+
+depois de corrigir o reuso do TUN, o servidor funcionava, mas com um porem: tinha um intervalo de 10 segundos entre responder a uma request e conseguir aceitar a proxima.
+
+### o loop de polling infernal
+
+o `read_into_buffer` original foi projetado pra keep-alive. depois de enviar uma resposta, ele esperava por mais dados na mesma conexao, esperando requests pipelined:
+
+```rust
+// 200 tentativas * 50ms = 10 segundos esperando por nada
+let max_attempts = 200;
+for _ in 0..max_attempts {
+    match conn.read(tun)? {
+        Some(data) => { buffer.extend_from_slice(&data); return Ok(true); }
+        None => { std::thread::sleep(Duration::from_millis(50)); continue; }
+    }
+}
+```
+
+em modo kernel TCP, isso estaria ok. o SO cuida da multiplexacao, e voce pode ter varias conexoes abertas ao mesmo tempo. mas o modo TUN e fundamentalmente single-threaded: um dispositivo TUN, uma conexao por vez. enquanto ficamos sentados nesse loop esperando uma segunda request que nunca vai chegar, nenhuma nova conexao pode ser aceita.
+
+### a correcao
+
+matar o keep-alive no modo TUN por completo. processar exatamente uma troca request-response por conexao, e depois fechar:
+
+```rust title="server.rs"
+// modo TUN: uma request, uma response, fecha.
+let got_data = self.read_into_buffer(conn, tun, &mut buffer, shutdown)?;
+// ... parsear e responder ...
+// fechar imediatamente, sem loop de keep-alive
+if conn.state == TcpState::Established || conn.state == TcpState::CloseWait {
+    if let Some(TcpAction::Send(hdr, payload)) = conn.close() {
+        // enviar FIN
+    }
+}
+```
+
+o timeout de polling tambem foi reduzido de 10 segundos (200 _ 50ms) pra 1 segundo (20 _ 50ms), que e mais do que suficiente pra dados chegando por uma interface TUN local.
+
+## transporte duplo: TUN vs kernel TCP
+
+depois dos bugs do TUN, adicionei kernel TCP como um modo de transporte de primeira classe. nao como fallback, mas como uma alternativa propria com suas vantagens.
+
+### modo kernel TCP
+
+```rust title="server.rs"
+pub fn listen_kernel_tcp(self: Arc<Self>, port: u16, shutdown: Arc<AtomicBool>) {
+    let listener = StdTcpListener::bind(("0.0.0.0", port))?;
+    listener.set_nonblocking(true)?;
+
+    while !shutdown.load(Ordering::Relaxed) {
+        match listener.accept() {
+            Ok((stream, addr)) => {
+                let server = Arc::clone(&self);
+                std::thread::spawn(move || {
+                    server.handle_kernel_tcp_connection(stream, &shutdown)?;
+                });
+            }
+            Err(ref e) if e.kind() == ErrorKind::WouldBlock => {
+                std::thread::sleep(Duration::from_millis(10));
+            }
+            // ...
+        }
+    }
+}
+```
+
+cada conexao aceita ganha sua propria thread. o servidor e envolvido em `Arc<Self>` pra ser compartilhado com seguranca. o modo kernel TCP suporta keep-alive completo, entao multiplas requests podem fluir sobre uma unica conexao sem a restricao de serializacao do TUN.
+
+### por que os dois modos existem
+
+o modo TUN e o proposito do projeto: HTTP rodando sobre uma stack TCP que eu escrevi, rodando sobre uma interface de rede virtual. prova que a stack inteira funciona ponta a ponta.
+
+o modo kernel TCP existe por razoes praticas:
+
+- testar sem privilegios de root (TUN precisa de sudo)
+- conexoes concorrentes (thread-por-conexao)
+- testes de interoperabilidade com clientes HTTP reais (curl, navegadores)
+- rodar a suite de testes de integracao em CI
+
+o CLI facilita a troca:
+
+```bash
+# modo tun (precisa de sudo)
+sudo ./target/release/http-impl server --tun-ip 10.0.0.2 --port 8080
+
+# modo kernel tcp (sem sudo)
+./target/release/http-impl server --kernel-tcp --port 8080
+```
+
+## o cliente
+
+o cliente e mais simples que o servidor. ele parseia uma URL, abre uma conexao TCP (TUN ou kernel), envia uma request serializada, e le a resposta.
+
+```rust title="client.rs"
+pub fn send_request_kernel_tcp(
+    url: &str, method: Method, headers: &[(String, String)], body: Option<&str>
+) -> std::io::Result<ClientResponse> {
+    let (host, port, path) = parse_url(url)?;
+    let addr = resolve_host(&host, port)?;
+    let mut stream = TcpStream::connect(addr)?;
+
+    let request = build_request(method, &path, &host, headers, body);
+    stream.write_all(&request.serialize())?;
+
+    // ler resposta...
+}
+```
+
+uma coisa que me pegou: o header `Host` precisa do hostname original, nao do IP resolvido. inicialmente usei o endereco IP, que funciona pra maioria dos servidores, mas ta errado segundo a RFC 7230. se voce ta acessando um servidor com virtual hosting, o header Host e como ele sabe qual site voce quer.
+
+![curl acessando os endpoints do servidor: json, echo, head e methods](./imgs/curl-demo.png)
+curl contra o servidor rodando, mostrando respostas de json, echo, head e methods.
+
+## a arquitetura
+
+depois de uma rodada de modularizacao, a estrutura do projeto espelha o tcp-impl:
+
+```
+src/
+├── lib.rs                  # raiz da biblioteca com re-exports
+├── server.rs               # servidor http (tun + kernel tcp)
+├── client.rs               # cliente http
+├── bin/http-impl/
+│   ├── main.rs             # entry point do cli
+│   └── cli.rs              # parsing de argumentos com clap
+└── proto/
+    ├── mod.rs              # exports do modulo de protocolo
+    ├── request.rs          # parsing + serializacao de requests
+    ├── response.rs         # builder + parsing de responses
+    ├── headers.rs          # colecao de headers (case-insensitive)
+    ├── method.rs           # GET, POST, PUT, DELETE, etc.
+    └── status.rs           # 200 OK, 404 Not Found, etc.
+```
+
+o binario e um wrapper CLI fino. toda a logica HTTP vive na crate de biblioteca, entao voce poderia usar http-impl como dependencia em outro projeto se quisesse (nao que devesse em producao, mas poderia).
+
+### o que a biblioteca exporta
+
+```rust title="lib.rs"
+pub use proto::request::{ParseResult, Request};
+pub use proto::response::Response;
+pub use proto::headers::Headers;
+pub use proto::method::Method;
+pub use proto::status::StatusCode;
+pub use server::Server;
+```
+
+re-exports no nivel raiz pra que consumidores nao precisem navegar a hierarquia de modulos. mesmo pattern do tcp-impl.
+
+## o que falta (de proposito)
+
+isso e HTTP/1.1 happy path. coisas que eu deliberadamente pulei:
+
+- **TLS**: sem HTTPS. adicionar rustls seria direto mas foge do ponto.
+- **HTTP/2**: framing binario, HPACK, multiplexacao. um projeto completamente diferente.
+- **pipelining**: a spec permite, mas na pratica nem navegadores usam.
+- **100 Continue**: o servidor nao envia codigos de status intermediarios.
+- **trailers**: trailers de chunked encoding sao parseados mas descartados.
+- **range requests**: sem suporte a conteudo parcial.
+- **compressao**: sem gzip/deflate/brotli. os bytes saem como estao.
+
+o objetivo era entender como HTTP funciona no nivel do fio, nao substituir o nginx.
+
+## o que eu aprendi
+
+construir HTTP em cima de uma stack TCP que voce mesmo escreveu te da uma perspectiva que nao da pra ter so lendo RFCs. voce sente cada fronteira de abstracao, porque voce construiu cada fronteira de abstracao.
+
+os bugs do dispositivo TUN foram a parte mais educativa. o primeiro (criar um novo TUN por conexao) foi um problema de ciclo de vida de recurso que nunca aconteceria com sockets do kernel, porque o SO gerencia isso pra voce. o segundo (polling de keep-alive bloqueando novas conexoes) foi um problema de modelo de concorrencia: TUN e inerentemente serial, e fingir o contrario desperdicava 10 segundos por request.
+
+![saida do cargo test mostrando 60 testes unitarios e 24 testes de integracao passando](./imgs/tests-passing.png)
+84 testes, todos verdes.
+
+a progressao do [udp-impl](https://blog.guswid.com/udp-impl?lang=pt) pro [tcp-impl](https://blog.guswid.com/tcp-impl?lang=pt) pro http-impl foi um corte vertical pela stack de rede. cada camada adiciona complexidade, mas cada camada tambem torna a debaixo mais concreta. eu entendo TCP melhor agora porque vi como ele se parece da perspectiva do HTTP.
+
+valeu a pena construir HTTP do zero? sim. eu usaria isso em producao? jamais. e essa e a resposta certa pra um projeto assim.
+
+o codigo ta no [github.com/GustavoWidman/http-impl](https://github.com/GustavoWidman/http-impl).
