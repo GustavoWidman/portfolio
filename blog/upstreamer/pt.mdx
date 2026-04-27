@@ -1,0 +1,309 @@
+---
+title: 'construindo um reverse proxy em rust: a versão "feita direito"'
+date: 2026-04-27
+excerpt: o que começou como um projeto de fim de semana virou um reverse proxy que bate nginx, haproxy, caddy e apache em throughput e tail latency.
+tags: [rust, networking, hyper, kubernetes, systems-programming, reverse-proxy, load-balancing]
+---
+
+# construindo um reverse proxy em rust
+
+upstreamer começou como um projeto de fim de semana pra construir um reverse proxy em rust do zero. a primeira versão foi rápida e suja: um arquivo só, backend hardcoded, nenhum tratamento de erro além de `unwrap()`. essa é a versão quando você faz direito.
+
+o projeto se chama [upstreamer](https://github.com/GustavoWidman/upstreamer). é um reverse proxy em rust, com service discovery via kubernetes e reload de config sem downtime. não é um toy. é algo que você poderia rodar de verdade.
+
+## a primeira versão
+
+a primeira versão era direta: um reverse proxy que encaminha requisições pra um backend. net/http do go, um arquivo, uma hora de trabalho.
+
+o que eu entreguei foi um arquivo só com um `match` no header host, um backend hardcoded, e nenhum tratamento de erro além de `unwrap()`. funcionou, mas não era algo que eu tinha orgulho. edge cases ficaram me incomodando: e se o backend cai? e se você precisa adicionar uma rota sem reiniciar? e rate limiting? eu tinha respostas mas não tinha código.
+
+no fim de semana comecei a esboçar como seria a versão de verdade, dessa vez em rust.
+
+![saída do upstreamer --validate mostrando validação de config: endereço de escuta, porta de métricas, definição de rota com round-robin, config de rate limit, e thresholds de health check ativo/passivo](./imgs/upstreamer-config.svg)
+
+## no que deu
+
+o escopo cresceu rápido. isso é o que o upstreamer faz agora:
+
+- roteia requisições por host (glob matching) e path (prefixo)
+- três algoritmos de load balancing: round-robin, weighted-latency (ewma), weighted-metrics
+- rate limiting por ip com token bucket
+- discovery de upstreams no kubernetes via watch de services
+- hot reload de config sem derrubar conexões
+- métricas prometheus em porta separada
+- health checking ativo e passivo
+- páginas de erro customizadas
+
+o que ele não faz: tls, websocket, streaming de request body. são omissões deliberadas do v1. cada uma adiciona complexidade significativa e eu queria acertar o core primeiro.
+
+## arquitetura
+
+```
+client → tcplistener → spawn por conexão
+  → parse request → match rota → check rate limit
+  → select origin (lb) → proxy to origin → record latency/metrics
+  → respond to client
+```
+
+o loop principal é direto. as partes interessantes são como o estado é compartilhado e como mudanças de config se propagam sem parar o mundo.
+
+![logs de startup do upstreamer: v0.2.0 starting on 127.0.0.1:19080 com métricas em :19090, 1 rota com round-robin, health server listening, proxy server listening, config file watcher engaged, primeira requisição em 369.4µs](./imgs/upstreamer-startup.png)
+
+### estado compartilhado com arcswap
+
+`AppState` guarda a config e o router atrás de `ArcSwap`. leituras lock-free. o hot path nunca bloqueia esperando uma atualização de config. quando a config muda, construímos um novo `Router`, validamos, e trocamos o ponteiro atomicamente. requisições em andamento continuam usando o router antigo até terminarem. sem mutex, sem complexidade de rcu, só um swap de ponteiro atômico.
+
+estado dos origins (latências ewma, contagens de falha, status de health) fica em um `DashMap`, indexado pela url do origin. cada origin tem seu próprio `OriginState` com `AtomicU64` pra latência e `AtomicBool` pra health. o load balancer lê esses valores com `Ordering::Relaxed`. não precisamos de consistência estrita pra estimativa de latência, só detecção de tendência.
+
+fiquei na dúvida entre `RwLock` vs `ArcSwap` pro router. `RwLock` seria mais simples mas readers competiriam entre si na lock word mesmo com `RwLock::read()`. `ArcSwap` evita isso completamente. cada reader pega seu próprio snapshot. o trade-off é que o router inteiro é clonado em cada swap, mas mudanças de config são raras (minutos/horas) e leituras são constantes (milhares por segundo). a escolha certa ficou óbvia quando eu enquadrei assim.
+
+## load balancing
+
+a trait é simples:
+
+```rust
+pub trait LoadBalancer: Send + Sync {
+    fn select_origin<'a>(
+        &self,
+        candidates: &'a [OriginEndpoint],
+        origin_states: &DashMap<String, OriginState>,
+    ) -> Option<&'a OriginEndpoint>;
+}
+```
+
+**round-robin** usa um contador `AtomicU64`, pulando origins unhealthy. duas linhas de lógica, difícil errar.
+
+**weighted-latency** rastreia latência ewma por origin com α = 0.1:
+
+```
+new_latency = 0.1 × sample + 0.9 × old_latency
+```
+
+peso é `1 / (latency_ns + 1)`. o `+ 1` evita divisão por zero e dá proporcionalmente mais tráfego pras origins de baixa latência. seleção é weighted random: constrói distribuição cumulativa, escolhe um ponto aleatório, acha o bucket.
+
+o update ewma passou por duas versões. a primeira usava um CAS loop com `f64`:
+
+```rust
+loop {
+    let old = self.ewma_latency_ns.load(Ordering::Relaxed);
+    let new = (alpha * sample_ns as f64 + (1.0 - alpha) * old as f64) as u64;
+    if self.ewma_latency_ns.compare_exchange_weak(old, new, Ordering::Relaxed, Ordering::Relaxed).is_ok() {
+        break;
+    }
+}
+```
+
+isso funcionava mas parecia errado, um CAS loop de floating-point num `u64` atômico, com cast que podia perder precisão. a versão inteira é mais limpa:
+
+```rust
+let new = (sample_ns + 9 * old) / 10;
+```
+
+mesmo α = 0.1, sem floating point, sem perda de precisão, e o compilador consegue raciocinar melhor sobre isso. não é mais correto. a versão f64 teria funcionado na prática. mas é mais simples de entender e de profile. `perf` mostrou `pow` em 0.3% da cpu com a versão f64. a versão inteira nem aparece.
+
+**weighted-metrics** era pra incluir pod pressure do kubernetes (via metrics-server). o plumbing está lá mas a integração com metrics-server é stub pro v1, então cai de volta pro comportamento de latency-weighted.
+
+## rate limiting
+
+construí um token bucket do zero em vez de usar a crate `governor`. a matemática é simples: rastreia `tokens` (f64), `max_tokens`, `refill_rate`, e timestamp `last_refill`. a cada requisição:
+
+1. calcula tempo decorrido desde o último refill
+2. adiciona `elapsed × refill_rate` tokens, cap em `max_tokens`
+3. se `tokens >= 1.0`, consome um e permite a requisição
+
+buckets ficam num `DashMap` indexado por ip. buckets stale (sem requisições por n segundos) são removidos por uma task periódica de cleanup. o método `check()` usa a entry api pra consumo sem toctou, uma decisão atômica por requisição.
+
+```rust
+match self.buckets.entry(ip) {
+    Entry::Occupied(mut e) => e.get_mut().try_consume(),
+    Entry::Vacant(e) => {
+        let mut bucket = TokenBucket::new(self.rate, self.burst);
+        let ok = bucket.try_consume();
+        e.insert(bucket);
+        ok
+    }
+}
+```
+
+isso é melhor que `governor`? não. governor usa gcra, que é mais preciso e lida melhor com dinâmicas de burst. mas construir era o ponto. entender porque gcra existe requer entender o que token buckets erram, e você não consegue isso importando uma crate.
+
+## discovery no kubernetes
+
+o upstreamer faz watch de objetos `v1::Service` num namespace configurado com label selector. services com a annotation `upstreamer/pool` são mapeados pra urls de origin usando `clusterip:port`. quando o watch stream dispara, ele reconstrói o router mesclando origins do k8s nos pools configurados estaticamente, depois faz swap via arcswap.
+
+por que services e não endpointslices? endpointslices dão ips individuais dos pods, que é mais granular. mas pra um reverse proxy, a abstração de service é a camada certa. você quer que o tráfego passe pelo cluster ip do service pra que o kube-proxy cuide da distribuição entre pods. usar endpointslices significaria que o proxy tá fazendo load balancing entre pods, duplicando o trabalho do kube-proxy. se você tá rodando em um cluster, deixa o cluster fazer o trabalho dele.
+
+o watch usa `kube_runtime::watcher` com `WatchStreamExt::applied_objects()` pra obter um stream do estado atual. sem caching de informer. só reconstruímos o router em cada evento.
+
+## config hot-reload
+
+a crate `notify` observa o arquivo de config com debounce de 500ms. na mudança:
+
+1. recarrega e parseia o toml
+2. valida (rotas têm pools, pools têm origins, urls são válidas)
+3. constrói novo router
+4. limpa rate limiters stale por rota
+5. faz swap de config e router via arcswap
+
+se validação falha, a config antiga permanece ativa. config ruim nunca crasha o proxy.
+
+uma limitação do v1 que não me agrada: o rate limiter global não é hot-swappable porque o estado do `RateLimiter` (buckets ativos) seria perdido no swap. limiters por rota são recriados, mas o global mantém a config antiga até restart. resolver isso requer migrar estado de buckets entre limiters, viável, mas fiquei sem paciência e shippei sem. trade-off honesto.
+
+## profiling
+
+é aqui que ficou interessante. e frustrante.
+
+### a saga do pipeline de profiling
+
+comecei com `samply`, o backend do firefox profiler pra rust. a ideia era flame graphs limpos com resolução de símbolos. a realidade foi uma corrente de problemas.
+
+primeiro, `perf_event_paranoid` estava em 3 na minha máquina nixos. samply precisa de `≤ 1` pra coletar hardware performance counters. um `echo 1 | sudo tee /proc/sys/kernel/perf_event_paranoid` depois, samply rodava, mas mostrava endereços hex em todo lugar. debug symbols estavam compilados (`CARGO_PROFILE_RELEASE_DEBUG=true`), mas position-independent executables combinados com aslr fizeram samply não conseguir resolver endereços pra nomes de função.
+
+passei um tempo tentando contornar. building como position-dependent, desabilitando aslr, ajustando flags do samply. nada funcionou direito. a solução acabou sendo largar samply e usar `perf record` direto:
+
+```bash
+perf record -g -p $PID -- sleep 15
+perf report --stdio
+```
+
+`perf` lidou com a resolução PIE + ASLR corretamente onde samply não conseguiu. não tão bonito quanto a web ui do samply, mas os dados estavam corretos e legíveis.
+
+### jemalloc
+
+profiling inicial mostrou ~6% do tempo de cpu em `malloc` + `_int_malloc` + `cfree` da glibc, principalmente de alocações por requisição (labels de métricas, header maps, body boxing). trocar pra jemalloc via `tikv-jemallocator` com a feature `unprefixed_malloc_on_supported_platforms` reduziu ~3-5% do overhead. as thread-local caches do jemalloc evitam a contenção que o arena allocator da glibc sofre sob carga concorrente.
+
+no nixos, `tikv-jemalloc-sys` precisa de `make` e `cc` no build, que não estão no path padrão. o fix é buildar com `nix shell nixpkgs#gcc nixpkgs#gnumake -c cargo build --release`. é um passo extra mas vale a pena pela performance de alocação.
+
+### os números de verdade
+
+setup do benchmark: upstreamer fazendo proxy pra um backend hyper minimalista (keep-alive, resposta estática "ok"), ambos em localhost, com `oha` gerando carga a 50 conexões concorrentes, 500.000 requisições por target. mesma máquina (14 cores, macos), mesmo backend, mesmo load generator. a única variável é o proxy no meio.
+
+```
+target           RPS       p50     p99    p99.9  p99.99  slowest
+backend (direct) 154,998   0.32ms  0.41ms 0.95ms 3.39ms  3.57ms
+upstreamer        76,663   0.64ms  0.79ms 1.83ms 3.81ms  5.38ms
+haproxy           70,503   0.70ms  0.92ms 1.95ms 5.21ms  8.24ms
+nginx (auto)      69,477   0.70ms  1.01ms 2.15ms 7.25ms  9.14ms
+nginx (1 worker)  68,637   0.76ms  0.86ms 2.05ms 4.78ms  4.97ms
+caddy             66,195   0.72ms  1.66ms 2.53ms 6.97ms  11.94ms
+apache            57,518   0.85ms  1.38ms 2.53ms 7.21ms  7.32ms
+```
+
+![tabela de comparação de benchmarks: upstreamer com 76.663 RPS vs haproxy 70.503, nginx auto 69.477, nginx 1w 68.637, caddy 66.195, apache 57.518. backend direct com 154.998 RPS como baseline](./imgs/benchmark-comparison.png)
+
+![saída do benchmark oha: upstreamer com 76.663 RPS, p50 0.64ms, p99 0.79ms, p99.99 3.81ms, 50 conexões concorrentes, 100% de sucesso](./imgs/oha-benchmark.png)
+
+upstreamer fica em primeiro lugar em throughput. 76.663 RPS, 8.7% na frente do haproxy, 10% na frente do nginx auto. bate nginx single-worker por 12%, apache por 33%, e caddy por 2.4x.
+
+mas throughput não é a parte interessante. a parte interessante é a cauda.
+
+**upstreamer tem a melhor latência no pior caso entre todos os proxies testados.** p99.99 de 3.81ms e slowest request de 5.38ms. p99.99 do haproxy é 5.21ms. do nginx auto é 7.25ms. do caddy é 6.97ms. até o backend em si tem tail latency comparável (3.39ms p99.99) — o proxy quase não adiciona nada à cauda.
+
+chegar lá foi um processo.
+
+### caçando a cauda de 40ms
+
+o primeiro benchmark mostrou p99.99 de 41ms, uma distribuição bimodal onde 99.9% das requisições eram rápidas (abaixo de 3ms) mas uma fração minúscula batia exatamente 42ms. o número 42ms era a pista.
+
+**tentativa 1: tuning de decay do jemalloc.** setei `dirty_decay_ms:0` pra forçar cleanup imediato de páginas, achando que jemalloc estava segurando dirty pages e periodicamente recuperando. sem efeito.
+
+**tentativa 2: coleta de métricas.** a thread de self-metrics lê `/proc/self/statm`, `/proc/self/fd`, e `/proc/self/stat` a cada 5 segundos. são file reads bloqueantes em tokio worker threads. movi pra uma thread de OS dedicada via `std::thread::spawn`. sem efeito.
+
+**tentativa 3: cpu pinning.** `taskset -c 0-3` pra prevenir migração de thread entre cores. a teoria era que cache misses de migração de cpu causavam os spikes. sem efeito.
+
+**tentativa 4: eliminar arcswap.** `state.config.load()` em cada requisição fazia um atomic ref count increment e decrement pra config de passive health check. substituí por campos `AtomicBool` + `AtomicU32` cacheados em `AppState`, atualizados no config reload. p99.9 melhorou de 3.2ms pra 2.8ms. a cauda ficou em 41ms.
+
+**tentativa 5: remover alocação de string por requisição.** o histograma de métricas usava `origin_url.clone()` como label, uma heap allocation em cada requisição. remover o label por-origin eliminou a alocação. p99 melhorou um pouco. a cauda ficou em 41ms.
+
+**tentativa 6: TCP_NODELAY no accept.** o número 42ms era suspeitosamente próximo ao timer de tcp delayed ack do linux (40ms). a clássica interação nagle + delayed ack: quando o proxy envia uma resposta pro cliente, o kernel bufferiza esperando um ack. o cliente atrasa o ack em até 40ms (por rfc 1122). durante essa janela, o proxy não pode enviar a próxima resposta naquela conexão.
+
+adicionar `stream.set_nodelay(true)?` depois do accept eliminou os outliers de 42ms completamente. p99.99 foi de 41ms pra 4.15ms, uma melhora de 10x na única métrica que mais importa pra um proxy.
+
+o fix foi uma linha. achar levou seis tentativas. isso é trabalho de performance. o bottleneck nunca é onde você acha que é.
+
+### a otimização do load balancer
+
+a trait inicial do load balancer usava `async_trait` e retornava uma `OriginEndpoint` owned:
+
+```rust
+#[async_trait]
+pub trait LoadBalancer: Send + Sync {
+    async fn select_origin(
+        &self,
+        candidates: &[OriginEndpoint],
+        origin_states: &DashMap<String, OriginState>,
+    ) -> Option<OriginEndpoint>;
+}
+```
+
+cada chamada fazia boxing de future e clonava o endpoint. o fix foi tornar a trait síncrona e retornar uma referência:
+
+```rust
+pub trait LoadBalancer: Send + Sync {
+    fn select_origin<'a>(
+        &self,
+        candidates: &'a [OriginEndpoint],
+        origin_states: &DashMap<String, OriginState>,
+    ) -> Option<&'a OriginEndpoint>;
+}
+```
+
+sem boxing, sem clone, sem future. o load balancer não faz io. é computação pura em dados em memória. tornar async foi cargo-culting, e a assinatura da trait era a evidência.
+
+### breakdown do perf
+
+`perf record` com 18k samples confirmou que o hot path é limpo:
+
+```
+~10%   kernel (epoll, read/write syscalls)
+ 5.5%  bpf + nftables + conntrack (firewall nixos por pacote)
+ 3.0%  jemalloc allocation (metrics labels, header maps)
+ 0.8%  tokio scheduler
+ 0.6%  handle_request (nosso código)
+ 0.5%  hyper client::send_request
+ 0.5%  hyper server::connection::poll
+```
+
+o request handler do proxy é 0.6% da cpu. o overhead dominante é o networking stack do kernel (programas bpf, chains nftables, e processamento conntrack em cada pacote). como o proxy dobra o número de pacotes (client→proxy→backend, backend→proxy→client), o custo do firewall é significativo. nenhum hotspot único em userspace.
+
+![flame graph do perf record mostrando o profile de cpu do proxy: syscalls do kernel dominam a base, com memmove, tokio scheduler, e hyper connection handling como os frames de userspace visíveis. nenhuma função hot isolada se destaca](./imgs/flamegraph.svg)
+
+### por que o upstreamer ganha
+
+a liderança de throughput vem do work-stealing runtime do tokio escalando bem entre cores: accept paralelo, scheduling concorrente de tasks, e arc atomics eficientes pra estado compartilhado. nginx auto iguala o número de cores mas ainda roda epoll loops por processo com coordenação cross-process pra estado compartilhado.
+
+a margem de tail latency é ainda maior. p99.99 do upstreamer de 3.81ms é 27% melhor que o haproxy (5.21ms) e 47% melhor que o nginx auto (7.25ms). o proxy quase não adiciona nada à tail latency do próprio backend (3.39ms p99.99).
+
+## body handling
+
+response bodies fazem stream pelo proxy sem coleta intermediária. o body de resposta do backend mapeia direto na resposta pro cliente com só uma conversão de tipo de erro. request bodies pra GET, HEAD, e DELETE são pulados inteiramente. pra POST/PUT/PATCH, o request body ainda é coletado em `BytesMut` com `extend_from_slice` em cada chunk, depois `freeze()` e encaminhado. isso funciona bem pra payloads de api típicos. pra uploads grandes, fazer stream do request body também evitaria a alocação, mas o tipo de body `Full<Bytes>` do hyper client requer bytes coletados.
+
+## testes end-to-end
+
+a suite de testes usa behave, um framework bdd em python. cada cenário sobe mock http backends (python's `BaseHTTPRequestHandler` em uma thread), gera um arquivo de config toml, e spawn o upstreamer como subprocesso. requisições vão pelo proxy e asserções verificam roteamento, distribuição de load balancing, rate limiting, e failover de health.
+
+```gherkin
+scenario: distribute requests evenly across 3 backends
+  given 3 backends running on ports 19301, 19302, 19303
+  and upstreamer is configured with round-robin across all 3 backends
+  when i send 30 requests to the proxy
+  then each backend should have received approximately 10 requests
+```
+
+um problema não óbvio: conflitos de porta entre cenários. o connection pool do upstreamer segura conexões tcp em `TIME_WAIT` depois que o processo sai, o que bloqueia o próximo cenário de bind na mesma porta. o fix foi usar ranges de portas únicos por feature file e matar o upstreamer com `SIGKILL` pra cleanup mais rápido.
+
+a suite cobre 19 cenários em seis feature files: distribuição round-robin, roteamento por host e path, rate limiting por ip e por rota, failover de passive health, balanceamento weighted-latency, e config hot-reload.
+
+## o que eu faria diferente
+
+o request body ainda precisa de coleta completa pra métodos com body. trocar o request outbound pra um body type streaming completaria o path de zero-collection pra uploads, mas a api do hyper client torna isso mais trabalhoso que o lado de resposta.
+
+o discovery do kubernetes podia ser mais rico. fazer watch de endpointslices em vez de services daria visibilidade de pod individual, que importa em clusters heterogêneos onde pods individuais têm capacidades diferentes. o trade-off é complexidade. você estaria duplicando o kube-proxy.
+
+## em retrospecto
+
+a primeira versão levou uma hora. o upstreamer levou duas semanas de noites. a distância entre as duas não é sobre tempo. é sobre as perguntas que você faz quando não tá com pressa. "o que acontece quando o backend cai?" levou ao health checking. "como adiciono uma rota sem reiniciar?" levou ao arcswap e hot reload. "qual é o overhead real?" levou ao profiling e ao fix de alocação por requisição.
+
+cada feature foi impulsionada por uma pergunta que a primeira versão não conseguia responder. essa provavelmente é a coisa mais útil que tirei da experiência. não o código, mas a prática de seguir "e se?" até acabarem as respostas fáceis.
+
+código aqui: [upstreamer](https://github.com/GustavoWidman/upstreamer)
