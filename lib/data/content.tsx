@@ -6,7 +6,7 @@ import { SiC, SiDocker, SiGithubactions, SiNixos, SiPython, SiWireguard } from "
 import { TbBrandGolang } from "react-icons/tb";
 import type { Experience, Project, SkillCategory, TranslationData } from "@/lib/types";
 
-export const IS_OPEN_TO_WORK = true;
+export const IS_OPEN_TO_WORK = false;
 
 export const DATA: Record<string, TranslationData> = {
   en: {
@@ -40,7 +40,7 @@ export const DATA: Record<string, TranslationData> = {
         <>
           I am a Computer Engineering student at{" "}
           <span className="text-black dark:text-white font-semibold">INTELI</span> and a{" "}
-          <span className="text-black dark:text-white font-semibold">Software Developer</span>
+          <span className="text-black dark:text-white font-semibold">Rust Software Developer at Azion</span>
         </>
       ),
       p2: (
@@ -84,6 +84,19 @@ export const DATA: Record<string, TranslationData> = {
       title: "03 / Professional Experience",
       present: "Present",
       jobs: [
+        {
+          company: "Azion",
+          positions: [
+            {
+              role: "Software Engineer II (Rust)",
+              description: [
+                "Developing high-performance computing solutions utilizing Rust for edge computing applications.",
+                "Collaborating with the application & security team to enhance CDN performance and reliability.",
+                "Engaging in distributed computing projects to optimise system efficiency and scalability.",
+              ],
+            },
+          ],
+        },
         {
           company: "CamelSec",
           positions: [
@@ -250,7 +263,7 @@ export const DATA: Record<string, TranslationData> = {
         <>
           Sou estudante de Engenharia da Computação no{" "}
           <span className="text-black dark:text-white font-semibold">INTELI</span> e{" "}
-          <span className="text-black dark:text-white font-semibold">CTO na CamelSec</span>.
+          <span className="text-black dark:text-white font-semibold">Software Engineer na Azion</span>.
         </>
       ),
       p2: (
@@ -294,6 +307,19 @@ export const DATA: Record<string, TranslationData> = {
       title: "03 / Experiência Profissional",
       present: "Atualmente",
       jobs: [
+        {
+          company: "Azion",
+          positions: [
+            {
+              role: "Software Engineer II (Rust)",
+              description: [
+                "Desenvolvendo soluções de computação de alto desempenho utilizando Rust para aplicações de computação em borda.",
+                "Colaborando com a equipe de aplicação e segurança para melhorar o desempenho e a confiabilidade da CDN.",
+                "Participando de projetos de computação distribuída para otimizar a eficiência e escalabilidade do sistema.",
+              ],
+            },
+          ],
+        },
         {
           company: "CamelSec",
           positions: [
@@ -480,6 +506,34 @@ export const STATIC_PROJECTS: Project[] = [
 ];
 
 export const STATIC_EXPERIENCE: Experience[] = [
+  {
+    id: "azion",
+    company: "Azion",
+    logo: (
+      <Image
+        src="/icons/azion_logo.jpg"
+        alt="Azion Logo"
+        fill
+        sizes="48px"
+        className="object-cover rounded"
+      />
+    ),
+    positions: [
+      {
+        role: "Software Engineer II (Rust)",
+        startDate: "2026-04-22",
+        endDate: undefined,
+        description: [],
+        techStack: [
+          "Rust",
+          "Edge Computing",
+          "CDN",
+          "Distributed Systems",
+          "High Performance",
+        ],
+      },
+    ],
+  },
   {
     id: "camelsec",
     company: "CamelSec",
