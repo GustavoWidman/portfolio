@@ -1,4 +1,5 @@
 import { RootProvider } from "fumadocs-ui/provider/next";
+import type { Metadata } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
 import { PersonJsonLd, WebsiteJsonLd } from "@/components/shared/JsonLd";
@@ -33,28 +34,28 @@ const jetbrainsMono = localFont({
 
 const SITE_URL = "https://guswid.com";
 
-export const metadata = {
+export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Gustavo Widman | Backend Engineer & Systems Programmer",
+    default: "Gustavo Widman | Systems Programmer",
     template: "%s | Gustavo Widman",
   },
   description:
-    "Backend Engineer specializing in systems programming, NixOS infrastructure, and cybersecurity. Explore my projects, experience, and technical blog.",
+    "Systems programmer focused on Rust, HPC, low-level software, reproducible infrastructure, and cybersecurity. Explore projects, experience, and technical writing.",
   keywords: [
     "guswid",
     "gustavo widman",
     "r3dlust",
     "portfolio",
-    "backend engineer",
+    "systems programmer",
     "systems programming",
-    "NixOS",
-    "cybersecurity",
-    "rust",
-    "python",
-    "golang",
-    "reverse engineering",
+    "hpc",
     "low level programming",
+    "rust",
+    "nixos",
+    "infrastructure",
+    "cybersecurity",
+    "performance engineering",
     "software engineer",
   ],
   authors: [{ name: "Gustavo Widman", url: SITE_URL }],
@@ -72,9 +73,9 @@ export const metadata = {
     locale: "en_US",
     alternateLocale: ["pt_BR"],
     siteName: "Gustavo Widman",
-    title: "Gustavo Widman | Backend Engineer & Systems Programmer",
+    title: "Gustavo Widman | Systems Programmer",
     description:
-      "Backend Engineer specializing in systems programming, NixOS infrastructure, and cybersecurity.",
+      "Systems programmer focused on Rust, HPC, low-level software, reproducible infrastructure, and cybersecurity.",
     url: SITE_URL,
     images: [
       {
@@ -89,9 +90,9 @@ export const metadata = {
     card: "summary_large_image",
     site: "@guswid",
     creator: "@guswid",
-    title: "Gustavo Widman | Backend Engineer & Systems Programmer",
+    title: "Gustavo Widman | Systems Programmer",
     description:
-      "Backend Engineer specializing in systems programming, NixOS infrastructure, and cybersecurity.",
+      "Systems programmer focused on Rust, HPC, low-level software, reproducible infrastructure, and cybersecurity.",
     images: ["/og/portfolio-en.png"],
   },
   robots: {

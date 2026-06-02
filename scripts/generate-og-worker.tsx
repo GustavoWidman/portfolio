@@ -162,12 +162,12 @@ function OGLayout({ children }: { children: React.ReactNode }) {
 }
 
 function PortfolioOG({ lang }: { lang: "en" | "pt" }) {
-  const title = lang === "en" ? "Backend & Low Level Engineer" : "Engenheiro Backend & Low Level";
+  const title = lang === "en" ? "Systems Programmer" : "Programador de Sistemas";
   const subtitle =
     lang === "en"
-      ? "Systems Programming, NixOS, and Cybersecurity."
-      : "Programacao de Sistemas, NixOS e Ciberseguranca.";
-  const tags = lang === "en" ? ["Rust", "NixOS", "Systems"] : ["Rust", "NixOS", "Sistemas"];
+      ? "Rust, HPC, low-level software, NixOS, and security."
+      : "Rust, HPC, software de baixo nivel, NixOS e seguranca.";
+  const tags = lang === "en" ? ["Rust", "HPC", "Systems"] : ["Rust", "HPC", "Sistemas"];
 
   return (
     <OGLayout>

@@ -205,37 +205,40 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
         case "whoami":
           newTexts.push(
             "Gustavo Widman.",
-            "Backend Engineer.",
-            "Specialist in Systems Programming, NixOS Infrastructure,",
-            "and Cybersecurity (Red Teaming).",
+            "Systems programmer.",
+            "Focused on low-level software, HPC, NixOS infrastructure,",
+            "and cybersecurity work.",
           );
           break;
         case "exp":
           newTexts.push(
             "--- Professional Experience ---",
+            "Software Engineer II (Rust) @ Azion (April 2026 - Present)",
+            " > Building Rust systems for edge workloads",
+            " > Working on CDN performance and distributed systems",
+            "",
             "CTO @ CamelSec (August 2025 - December 2025)",
-            " > Orchestrating NixOS-based infrastructure",
-            " > Leading Pentesting & Red Team operations",
+            " > Built NixOS infrastructure and internal tooling",
+            " > Led pentesting and red team operations",
             "",
             "EchoSec (2023-Present)",
             " > Counselor / President / Member",
             "",
             "MW APP IT Consulting (2021-2025)",
-            " > Full-Stack Developer",
-            " > Managed client projects with Python, ",
-            " > React, Vue, MSSQL, C# and more...",
+            " > Client delivery across Python, Node.js, C#, React",
+            " > Data layers in MSSQL, MySQL, and SQLite",
           );
           break;
         case "stack":
           newTexts.push(
-            "--- Systems & Low Level ---",
-            "Rust, C, Assembly (x86), Kernel Dev",
+            "--- Systems, HPC & Low Level ---",
+            "Rust, C/C++, x86 Assembly, Kernel Dev, mmap, parallelism",
             "",
-            "--- DevOps & Cloud ---",
+            "--- Infrastructure & Operations ---",
             "NixOS, Docker, K8s, WireGuard, CI/CD",
             "",
-            "--- High Level ---",
-            "Go, Python, Java, TypeScript",
+            "--- Security & Service Layers ---",
+            "Go, Python, Java, TypeScript, pentesting",
           );
           break;
         case "ls":

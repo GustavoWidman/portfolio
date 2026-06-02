@@ -14,19 +14,19 @@ export function PersonJsonLd() {
         alternateName: ["guswid", "r3dlust"],
         url: SITE_URL,
         image: `${SITE_URL}/og/portfolio-en.png`,
-        jobTitle: "Backend Engineer",
+        jobTitle: "Systems Programmer",
         description:
-          "Backend Engineer specializing in systems programming, NixOS infrastructure, and cybersecurity.",
+          "Systems programmer focused on Rust, HPC, low-level software, reproducible infrastructure, and cybersecurity.",
         sameAs: ["https://github.com/GustavoWidman", "https://www.linkedin.com/in/gustavo-widman"],
         knowsAbout: [
           "Systems Programming",
+          "High-Performance Computing",
           "Rust",
-          "Python",
-          "Go",
           "NixOS",
+          "Infrastructure Engineering",
           "Cybersecurity",
           "Reverse Engineering",
-          "Backend Development",
+          "Distributed Systems",
         ],
       }}
     />
@@ -45,7 +45,7 @@ export function WebsiteJsonLd() {
         alternateName: ["guswid blog", "r3dlust portfolio"],
         url: SITE_URL,
         description:
-          "Personal portfolio and blog of Gustavo Widman - Backend Engineer specializing in systems programming, NixOS infrastructure, and cybersecurity.",
+          "Personal portfolio and blog of Gustavo Widman, a systems programmer focused on Rust, HPC, low-level software, infrastructure, and cybersecurity.",
         author: {
           "@type": "Person",
           name: "Gustavo Widman",
@@ -138,7 +138,7 @@ export function BlogJsonLd() {
         "@type": "Blog",
         name: "Gustavo Widman's Blog",
         description:
-          "Technical articles on systems programming, NixOS infrastructure, and cybersecurity research.",
+          "Technical articles on systems programming, performance work, NixOS infrastructure, and cybersecurity research.",
         url: `${SITE_URL}/blog`,
         author: {
           "@type": "Person",

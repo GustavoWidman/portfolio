@@ -21,8 +21,8 @@ export const DATA: Record<string, TranslationData> = {
     hero: {
       subtitle: "Gustavo Widman // Engineering Portfolio",
       title1: "SYSTEMS &",
-      title2: "SOFTWARE",
-      desc: "Building the kernel, hardening the infrastructure, and scaling the backend.",
+      title2: "HPC",
+      desc: "Writing low-level software, tuning data-heavy workloads, and keeping the infrastructure tight.",
       cta: "View Projects",
       github: "GitHub",
       resume: "Download CV",
@@ -32,31 +32,33 @@ export const DATA: Record<string, TranslationData> = {
       openToWork: "Open to Work",
       heading: (
         <>
-          Full-stack engineering with a <br />
-          <span className="text-zinc-500 dark:text-zinc-500">security-first mindset.</span>
+          Systems programming with a <br />
+          <span className="text-zinc-500 dark:text-zinc-500">security-aware, infrastructure-heavy mindset.</span>
         </>
       ),
       p1: (
         <>
           I am a Computer Engineering student at{" "}
           <span className="text-black dark:text-white font-semibold">INTELI</span> and a{" "}
-          <span className="text-black dark:text-white font-semibold">Rust Software Developer at Azion</span>
+          <span className="text-black dark:text-white font-semibold">Rust Software Engineer at Azion</span>.
         </>
       ),
       p2: (
         <>
-          My expertise spans from the metal up. I write{" "}
-          <span className="text-black dark:text-white font-semibold">Rust</span> kernels for fun,
-          architect reproducible{" "}
-          <span className="text-black dark:text-white font-semibold">NixOS</span> infrastructures
-          for work, and break them both during{" "}
-          <span className="text-black dark:text-white font-semibold">red team</span> operations.
+          Most of my time goes into{" "}
+          <span className="text-black dark:text-white font-semibold">systems programming</span>,{" "}
+          <span className="text-black dark:text-white font-semibold">performance work</span>, and
+          reproducible{" "}
+          <span className="text-black dark:text-white font-semibold">NixOS</span> infrastructure. I
+          like understanding how software behaves close to the machine, not just at the service layer.
         </>
       ),
       p3: (
         <>
-          Whether configuring high-security VPNs with WireGuard or building distributed Go
-          microservices, I prioritize correctness, security, and performance.
+          Outside that core, I also work on{" "}
+          <span className="text-black dark:text-white font-semibold">cybersecurity</span> and
+          distributed systems: red team operations, hardened networks with WireGuard, and the services
+          that support them.
         </>
       ),
     },
@@ -64,19 +66,19 @@ export const DATA: Record<string, TranslationData> = {
       title: "02 / The Stack",
       categories: [
         {
-          title: "Systems & Low Level",
+          title: "Systems, HPC & Low Level",
           description:
-            "Where software meets hardware. I specialize in building performant, memory-safe systems near the metal.",
+            "Rust-heavy work near the metal: kernels, memory-sensitive code, parallel workloads, and systems tooling.",
         },
         {
-          title: "DevOps & Infrastructure",
+          title: "Infrastructure & Operations",
           description:
-            "Infrastructure as Code is not just a buzzword. I build reproducible, hardened environments that scale.",
+            "Reproducible NixOS environments, deployment plumbing, networking, and the day-to-day work of keeping systems sane.",
         },
         {
-          title: "Backend & Security",
+          title: "Security & Service Layers",
           description:
-            "Architecting distributed systems and ensuring they remain secure against modern threats.",
+            "Offensive security work plus the protocols, data paths, and service code that support it.",
         },
       ],
     },
@@ -90,9 +92,9 @@ export const DATA: Record<string, TranslationData> = {
             {
               role: "Software Engineer II (Rust)",
               description: [
-                "Developing high-performance computing solutions utilizing Rust for edge computing applications.",
-                "Collaborating with the application & security team to enhance CDN performance and reliability.",
-                "Engaging in distributed computing projects to optimise system efficiency and scalability.",
+                "Building Rust systems for edge workloads with an emphasis on throughput, latency, and operational reliability.",
+                "Working on CDN internals with the application and security teams, focusing on performance-sensitive paths.",
+                "Contributing to distributed computing work where systems behavior and resource efficiency matter.",
               ],
             },
           ],
@@ -103,10 +105,10 @@ export const DATA: Record<string, TranslationData> = {
             {
               role: "Chief Technology Officer (CTO)",
               description: [
-                "Leading technical strategy and infrastructure for a cybersecurity consulting startup.",
-                "Performing advanced penetration testing and red teaming operations for enterprise clients.",
-                "Architecting fully reproducible, hardened infrastructure using NixOS and Home Manager.",
-                "Designing secure internal networks using WireGuard with redundant staging environments.",
+                "Led technical strategy across infrastructure, internal tooling, and security operations for a cybersecurity consultancy.",
+                "Ran penetration testing and red team engagements for enterprise clients.",
+                "Built reproducible NixOS environments and hardened operational workflows with Home Manager.",
+                "Designed secure WireGuard-based networks with redundant staging environments.",
               ],
             },
           ],
@@ -143,10 +145,9 @@ export const DATA: Record<string, TranslationData> = {
             {
               role: "Full Stack Developer",
               description: [
-                "Full Stack development using Python, Node.js, and C# on the backend.",
-                "Frontend development with React, Vite, and TypeScript.",
-                "Database management for MS SQL, MySQL, and SQLite.",
-                "Clients served: CESP (Database Management), Hunter Douglas (E-commerce) and CETESB.",
+                "Delivered client systems across Python, Node.js, and C# backends with React and TypeScript frontends where needed.",
+                "Handled application data layers across MS SQL, MySQL, and SQLite.",
+                "Worked across internal tools, line-of-business systems, and e-commerce projects for clients including CESP, Hunter Douglas, and CETESB.",
               ],
             },
           ],
@@ -214,15 +215,15 @@ export const DATA: Record<string, TranslationData> = {
     },
     curl: {
       name: "Gustavo Widman",
-      title: "Backend & Systems Engineer",
+      title: "Systems Programmer",
       sites: "https://guswid.com | https://r3dlust.com",
       source: "src: https://github.com/GustavoWidman/portfolio",
       aboutHeader: "About",
       aboutText: [
-        "Backend & Systems",
-        "Engineer passionate",
-        "about low-level systems",
-        "and infrastructure.",
+        "Systems programmer",
+        "focused on low-level",
+        "software, HPC, and",
+        "reproducible infrastructure.",
       ],
       socialsHeader: "Socials",
       github: "https://github.com/GustavoWidman",
@@ -244,8 +245,8 @@ export const DATA: Record<string, TranslationData> = {
     hero: {
       subtitle: "Gustavo Widman // Portfólio de Engenharia",
       title1: "SISTEMAS &",
-      title2: "SOFTWARE",
-      desc: "Desenvolvendo o kernel, protegendo a infraestrutura e escalando o backend.",
+      title2: "HPC",
+      desc: "Escrevendo software de baixo nível, ajustando cargas pesadas e mantendo a infraestrutura sob controle.",
       cta: "Ver Projetos",
       github: "GitHub",
       resume: "Baixar CV",
@@ -255,31 +256,33 @@ export const DATA: Record<string, TranslationData> = {
       openToWork: "Disponível",
       heading: (
         <>
-          Engenharia Full-stack com foco em <br />
-          <span className="text-zinc-500 dark:text-zinc-500">segurança em primeiro lugar.</span>
+          Programação de sistemas com uma <br />
+          <span className="text-zinc-500 dark:text-zinc-500">visão de segurança e muita infraestrutura.</span>
         </>
       ),
       p1: (
         <>
           Sou estudante de Engenharia da Computação no{" "}
           <span className="text-black dark:text-white font-semibold">INTELI</span> e{" "}
-          <span className="text-black dark:text-white font-semibold">Software Engineer na Azion</span>.
+          <span className="text-black dark:text-white font-semibold">Software Engineer em Rust na Azion</span>.
         </>
       ),
       p2: (
         <>
-          Minha expertise vai do hardware ao software. Escrevo kernels em{" "}
-          <span className="text-black dark:text-white font-semibold">Rust</span> por diversão,
-          arquiteto infraestruturas{" "}
-          <span className="text-black dark:text-white font-semibold">NixOS</span> reprodutíveis
-          profissionalmente e quebro ambos em operações de{" "}
-          <span className="text-black dark:text-white font-semibold">red team</span>.
+          A maior parte do meu tempo vai para{" "}
+          <span className="text-black dark:text-white font-semibold">programação de sistemas</span>,{" "}
+          <span className="text-black dark:text-white font-semibold">trabalho de performance</span> e
+          infraestrutura reprodutível em{" "}
+          <span className="text-black dark:text-white font-semibold">NixOS</span>. Gosto de entender
+          como o software se comporta perto da máquina, não só na camada de serviço.
         </>
       ),
       p3: (
         <>
-          Seja configurando VPNs seguras com WireGuard ou construindo microsserviços distribuídos em
-          Go, priorizo corretude, segurança e performance.
+          Fora desse núcleo, também atuo com{" "}
+          <span className="text-black dark:text-white font-semibold">segurança</span> e sistemas
+          distribuídos: operações de red team, redes endurecidas com WireGuard e os serviços que dão
+          suporte a isso.
         </>
       ),
     },
@@ -287,19 +290,19 @@ export const DATA: Record<string, TranslationData> = {
       title: "02 / Stack Tecnológico",
       categories: [
         {
-          title: "Sistemas & Baixo Nível",
+          title: "Sistemas, HPC & Baixo Nível",
           description:
-            "Onde software encontra hardware. Especialista em construir sistemas performáticos e memory-safe próximos ao metal.",
+            "Trabalho pesado em Rust perto do metal: kernels, código sensível à memória, cargas paralelas e tooling de sistemas.",
         },
         {
-          title: "DevOps & Infraestrutura",
+          title: "Infraestrutura & Operações",
           description:
-            'Infrastructure as Code não é só buzzword. Construo ambientes reprodutíveis e "hardened" que escalam.',
+            "Ambientes reprodutíveis em NixOS, automação de deploy, redes e a rotina de manter sistemas estáveis.",
         },
         {
-          title: "Backend & Segurança",
+          title: "Segurança & Camadas de Serviço",
           description:
-            "Arquitetando sistemas distribuídos e garantindo segurança contra ameaças modernas.",
+            "Segurança ofensiva junto com os protocolos, fluxos de dados e serviços que a sustentam.",
         },
       ],
     },
@@ -313,9 +316,9 @@ export const DATA: Record<string, TranslationData> = {
             {
               role: "Software Engineer II (Rust)",
               description: [
-                "Desenvolvendo soluções de computação de alto desempenho utilizando Rust para aplicações de computação em borda.",
-                "Colaborando com a equipe de aplicação e segurança para melhorar o desempenho e a confiabilidade da CDN.",
-                "Participando de projetos de computação distribuída para otimizar a eficiência e escalabilidade do sistema.",
+                "Construindo sistemas em Rust para cargas de edge com foco em throughput, latência e confiabilidade operacional.",
+                "Atuando em partes internas da CDN com os times de aplicação e segurança, com atenção aos caminhos sensíveis de performance.",
+                "Contribuindo em trabalho de computação distribuída onde comportamento de sistema e eficiência de recursos importam.",
               ],
             },
           ],
@@ -326,10 +329,10 @@ export const DATA: Record<string, TranslationData> = {
             {
               role: "Chief Technology Officer (CTO)",
               description: [
-                "Liderando estratégia técnica e infraestrutura para uma startup de consultoria em segurança.",
-                "Executando testes de intrusão avançados e operações de red team para clientes corporativos.",
-                "Arquitetando infraestrutura totalmente reprodutível e segura usando NixOS e Home Manager.",
-                "Projetando redes internas seguras usando WireGuard com ambientes de staging redundantes.",
+                "Liderei a estratégia técnica em infraestrutura, tooling interno e operações de segurança de uma consultoria de cibersegurança.",
+                "Executei testes de intrusão e operações de red team para clientes corporativos.",
+                "Construí ambientes reprodutíveis em NixOS e fluxos operacionais endurecidos com Home Manager.",
+                "Projetei redes baseadas em WireGuard com ambientes de staging redundantes.",
               ],
             },
           ],
@@ -366,10 +369,9 @@ export const DATA: Record<string, TranslationData> = {
             {
               role: "Desenvolvedor Full Stack",
               description: [
-                "Desenvolvimento Full Stack de sistemas utilizando Python, JavaScript (NodeJS) e C# no back-end.",
-                "Desenvolvimento Front-end com React, Vite e TypeScript.",
-                "Gerenciamento de banco de dados MS SQL, MySQL e SQLite.",
-                "Clientes atendidos: CESP (banco de dados), Hunter Douglas (site de e-commerce) e CETESB.",
+                "Entreguei sistemas para clientes com backends em Python, Node.js e C#, usando React e TypeScript no frontend quando necessário.",
+                "Cuidei das camadas de dados em MS SQL, MySQL e SQLite.",
+                "Atuei em ferramentas internas, sistemas de negócio e projetos de e-commerce para clientes como CESP, Hunter Douglas e CETESB.",
               ],
             },
           ],
@@ -437,15 +439,15 @@ export const DATA: Record<string, TranslationData> = {
     },
     curl: {
       name: "Gustavo Widman",
-      title: "Engenheiro de Backend & Sistemas",
+      title: "Programador de Sistemas",
       sites: "https://guswid.com | https://r3dlust.com",
       source: "src: https://github.com/GustavoWidman/portfolio",
       aboutHeader: "Sobre",
       aboutText: [
-        "Engenheiro de Backend &",
-        "Sistemas apaixonado",
-        "por sistemas de baixo",
-        "nível e infraestrutura.",
+        "Programador de sistemas",
+        "focado em software",
+        "de baixo nível, HPC e",
+        "infraestrutura reprodutível.",
       ],
       socialsHeader: "Social",
       github: "https://github.com/GustavoWidman",
@@ -642,6 +644,7 @@ export const SKILL_ICONS: SkillCategory[] = [
       { name: "C / C++", icon: <SiC size={16} /> },
       { name: "x86 Assembly", icon: <Cpu size={16} /> },
       { name: "Kernel Dev", icon: <Server size={16} /> },
+      { name: "HPC", icon: <Cpu size={16} /> },
     ],
   },
   {
@@ -655,7 +658,7 @@ export const SKILL_ICONS: SkillCategory[] = [
     ],
   },
   {
-    id: "backend",
+    id: "security-services",
     icon: <Shield size={20} />,
     skills: [
       { name: "Go (Golang)", icon: <TbBrandGolang size={16} /> },
