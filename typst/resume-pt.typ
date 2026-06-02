@@ -25,6 +25,12 @@
 // --- EXPERIENCE ---
 #section("Experiência Profissional")
 
+*Azion* #h(1fr) Remoto \
+_Software Engineer II (Rust)_ #h(1fr) Abr 2026 – Presente
+- Desenvolvo sistemas de alta performance em *Rust* para edge computing e workloads de CDN.
+- Trabalho com o time de aplicação e segurança para melhorar performance, confiabilidade e segurança operacional da plataforma.
+- Construo componentes de computação distribuída focados em execução de baixa latência e infraestrutura de edge escalável.
+
 *CamelSec* #h(1fr) Remoto \
 _Chief Technology Officer (CTO)_ #h(1fr) Abr 2025 – Dez 2025
 - Arquitetei infraestrutura completamente reprodutível com *NixOS*, reduzindo drift de deployment a quase zero em *10+ máquinas*.

@@ -25,6 +25,12 @@
 // --- EXPERIENCE ---
 #section("Professional Experience")
 
+*Azion* #h(1fr) Remote \
+_Software Engineer II (Rust)_ #h(1fr) Apr 2026 – Present
+- Developing high-performance *Rust* systems for edge computing and CDN workloads.
+- Working with the application and security team to improve platform performance, reliability, and operational safety.
+- Building distributed computing components focused on low-latency execution and scalable edge infrastructure.
+
 *CamelSec* #h(1fr) Remote \
 _Chief Technology Officer (CTO)_ #h(1fr) Apr 2025 – Dec 2025
 - Architected fully reproducible infrastructure using *NixOS*, reducing deployment drift to near-zero across *10+ machines*.
