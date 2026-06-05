@@ -41,10 +41,9 @@ _Chief Technology Officer (CTO)_ #h(1fr) Abr 2025 – Dez 2025
 
 *MW APP IT Consulting* #h(1fr) São Paulo, SP \
 _Desenvolvedor Full Stack_ #h(1fr) Jan 2021 – Abr 2025
-- Construí e mantive aplicações full-stack em produção usando *React/TypeScript*, *.NET/C\#* e *Python/FastAPI* para clientes corporativos de alto tráfego.
-- Otimizei performance de queries de banco de dados em *até 2,43x* em *MS SQL*, *MySQL* e *SQLite*, melhorando tempos de resposta para milhares de usuários concorrentes.
-- Liderei pequenas equipes de engenharia entregando software para *CESP*, *Hunter Douglas* e *CETESB*, cumprindo consistentemente prazos apertados e restrições orçamentárias.
-- Entreguei features production-grade ao longo de *4+ anos*, contribuindo para lançamentos bem-sucedidos de múltiplos sistemas de alto tráfego.
+- Construí aplicações full-stack em produção com *React/TypeScript*, *.NET/C\#* e *Python/FastAPI* para clientes corporativos de alto tráfego.
+- Otimizei performance de queries em *até 2,43x* em *MS SQL*, *MySQL* e *SQLite*.
+- Liderei pequenas equipes entregando software para *CESP*, *Hunter Douglas* e *CETESB* ao longo de *4+ anos*.
 
 #v(6pt)
 
@@ -68,13 +67,10 @@ _Desenvolvedor Full Stack_ #h(1fr) Jan 2021 – Abr 2025
 - Otimizei ingestão de dados para processar *1B de linhas em 1,8 segundos* usando paralelismo `rayon` e I/O mapeado em memória, alcançando performance de ponta sem SIMD otimizado manualmente.
 
 *Nix Config Collection (NixOS, CI/CD)* #h(1fr) #link("https://github.com/GustavoWidman/nix")[GitHub]
-- Gerenciei *6+ máquinas* (cloud + físicas) por *7 meses* com configs declarativas NixOS. Construí infraestrutura hardened incluindo servidores de e-mail, DNS (AdGuard) e VPNs mesh.
+- Gerenciei *6+ máquinas* com configs declarativas NixOS para infra hardened, DNS, e-mail e VPNs mesh.
 
 *Educational x86-64 Kernel (Rust, x86 Assembly)* #h(1fr) #link("https://github.com/GustavoWidman/based-kernel")[GitHub]
 - Construí um kernel inicializável em Rust (`no_std`) com bootloader em assembly x86, mudança para modo protegido, arena allocator, tratamento de interrupções (IDT) e driver de texto VGA.
-
-*Zero-Dependency RNN (Rust)* #h(1fr) #link("https://github.com/GustavoWidman/rnn-rust")[GitHub]
-- Desenvolvi uma rede neural recorrente do zero com ajuste manual de memória, superando velocidade de treinamento do PyTorch em *mais de 6000%* em workloads específicos.
 
 #section("Experiência de Liderança")
 

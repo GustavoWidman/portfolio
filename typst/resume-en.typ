@@ -41,10 +41,9 @@ _Chief Technology Officer (CTO)_ #h(1fr) Apr 2025 – Dec 2025
 
 *MW APP IT Consulting* #h(1fr) São Paulo, SP \
 _Full Stack Developer_ #h(1fr) Jan 2021 – Apr 2025
-- Built and maintained production full-stack applications using *React/TypeScript*, *.NET/C\#*, and *Python/FastAPI* for high-traffic enterprise clients.
-- Optimized database query performance by *up to 2.43x* across *MS SQL*, *MySQL*, and *SQLite*, improving response times for thousands of concurrent users.
-- Led small engineering teams delivering software for *CESP*, *Hunter Douglas*, and *CETESB*, consistently meeting tight deadlines and budget constraints.
-- Shipped production-grade features across *4+ years*, contributing to successful launches of multiple high-traffic systems.
+- Built production full-stack applications with *React/TypeScript*, *.NET/C\#*, and *Python/FastAPI* for high-traffic enterprise clients.
+- Optimized database query performance by *up to 2.43x* across *MS SQL*, *MySQL*, and *SQLite*.
+- Led small engineering teams delivering software for *CESP*, *Hunter Douglas*, and *CETESB* across *4+ years*.
 
 #v(6pt)
 
@@ -68,13 +67,10 @@ _Full Stack Developer_ #h(1fr) Jan 2021 – Apr 2025
 - Optimized data ingestion to process *1B rows in 1.8 seconds* using `rayon` parallelism and memory-mapped I/O, achieving top-tier performance without hand-tuned SIMD.
 
 *Nix Config Collection (NixOS, CI/CD)* #h(1fr) #link("https://github.com/GustavoWidman/nix")[GitHub]
-- Managed *6+ machines* (cloud + physical) over *7 months* with declarative NixOS configs. Built hardened infrastructure including mail servers, DNS (AdGuard), and mesh VPNs.
+- Managed *6+ machines* with declarative NixOS configs for hardened infra, DNS, mail, and mesh VPNs.
 
 *Educational x86-64 Kernel (Rust, x86 Assembly)* #h(1fr) #link("https://github.com/GustavoWidman/based-kernel")[GitHub]
 - Built a bootable kernel in Rust (`no_std`) with x86 assembly bootloader, protected mode switching, arena allocator, interrupt handling (IDT), and VGA text driver.
-
-*Zero-Dependency RNN (Rust)* #h(1fr) #link("https://github.com/GustavoWidman/rnn-rust")[GitHub]
-- Developed a recurrent neural network from scratch with manual memory tuning, exceeding PyTorch training speed by *over 6000%* on specific workloads.
 
 #section("Leadership Experience")
 
