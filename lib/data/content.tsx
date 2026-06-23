@@ -20,8 +20,8 @@ export const DATA: Record<string, TranslationData> = {
     },
     hero: {
       subtitle: "Gustavo Widman // Rust Platform & Distributed Systems",
-      title1: "RUST PLATFORM &",
-      title2: "DISTRIBUTED SYSTEMS",
+      title1: "SYSTEMS &",
+      title2: "SOFTWARE",
       desc: "Edge/CDN systems, infrastructure security, and reproducible operations in Rust.",
       cta: "View Projects",
       github: "GitHub",
@@ -227,8 +227,8 @@ export const DATA: Record<string, TranslationData> = {
     },
     hero: {
       subtitle: "Gustavo Widman // Plataforma Rust & Sistemas Distribuídos",
-      title1: "PLATAFORMA RUST &",
-      title2: "SISTEMAS DISTRIBUÍDOS",
+      title1: "SISTEMAS &",
+      title2: "SOFTWARE",
       desc: "Sistemas de edge/CDN, segurança de infraestrutura e operações reprodutíveis em Rust.",
       cta: "Ver Projetos",
       github: "GitHub",
