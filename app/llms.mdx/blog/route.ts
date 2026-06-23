@@ -77,7 +77,7 @@ export async function GET() {
 
   const content = `# Gustavo Widman's Blog
 
-> A collection of articles on systems programming, NixOS infrastructure, and cybersecurity research.
+> A collection of articles on Rust systems, edge/CDN infrastructure, NixOS operations, and infrastructure security.
 > URL: https://guswid.com/blog
 > Generated: ${new Date().toISOString()}
 

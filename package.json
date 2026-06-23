@@ -1,6 +1,6 @@
 {
   "name": "portfolio",
-  "version": "2.6.8",
+  "version": "2.6.9",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,7 +14,7 @@
     "preview": "bun run build && bun run start",
     "postinstall": "fumadocs-mdx && bun2nix -o .bun.nix",
     "doctor": "react-doctor --no-ami --offline --verbose",
-    "compile-resumes": "typst compile typst/resume-en.typ public/resume-en.pdf && typst compile typst/resume-pt.typ public/resume-pt.pdf"
+    "compile-resumes": "bash scripts/compile-resumes.sh"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",

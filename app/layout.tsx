@@ -37,24 +37,24 @@ const SITE_URL = "https://guswid.com";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Gustavo Widman | Systems Programmer",
+    default: "Gustavo Widman | Rust Platform & Distributed Systems",
     template: "%s | Gustavo Widman",
   },
   description:
-    "Systems programmer focused on Rust, HPC, low-level software, reproducible infrastructure, and cybersecurity. Explore projects, experience, and technical writing.",
+    "Rust platform and distributed systems engineer focused on edge/CDN systems, infrastructure security, and reproducible NixOS operations. Explore projects, experience, and technical writing.",
   keywords: [
     "guswid",
     "gustavo widman",
     "r3dlust",
     "portfolio",
-    "systems programmer",
-    "systems programming",
-    "hpc",
-    "low level programming",
+    "rust platform engineer",
+    "distributed systems",
+    "edge computing",
+    "cdn",
     "rust",
     "nixos",
-    "infrastructure",
-    "cybersecurity",
+    "infrastructure security",
+    "systems programming",
     "performance engineering",
     "software engineer",
   ],
@@ -73,9 +73,9 @@ export const metadata: Metadata = {
     locale: "en_US",
     alternateLocale: ["pt_BR"],
     siteName: "Gustavo Widman",
-    title: "Gustavo Widman | Systems Programmer",
+    title: "Gustavo Widman | Rust Platform & Distributed Systems",
     description:
-      "Systems programmer focused on Rust, HPC, low-level software, reproducible infrastructure, and cybersecurity.",
+      "Rust platform and distributed systems engineer focused on edge/CDN systems, infrastructure security, and reproducible NixOS operations.",
     url: SITE_URL,
     images: [
       {
@@ -90,9 +90,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@guswid",
     creator: "@guswid",
-    title: "Gustavo Widman | Systems Programmer",
+    title: "Gustavo Widman | Rust Platform & Distributed Systems",
     description:
-      "Systems programmer focused on Rust, HPC, low-level software, reproducible infrastructure, and cybersecurity.",
+      "Rust platform and distributed systems engineer focused on edge/CDN systems, infrastructure security, and reproducible NixOS operations.",
     images: ["/og/portfolio-en.png"],
   },
   robots: {
@@ -113,7 +113,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${jetbrainsMono.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${jetbrainsMono.variable}`}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <body className="font-sans">
         <PersonJsonLd />
         <WebsiteJsonLd />

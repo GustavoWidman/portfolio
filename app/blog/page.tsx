@@ -20,16 +20,16 @@ export async function generateMetadata({ searchParams }: BlogPageProps): Promise
   return {
     title: "Blog",
     description:
-      "Articles by Gustavo Widman on systems programming, HPC, low-level software, NixOS infrastructure, and cybersecurity research.",
+      "Articles by Gustavo Widman on Rust systems, edge/CDN infrastructure, NixOS operations, and infrastructure security.",
     keywords: [
       "guswid blog",
       "gustavo widman blog",
-      "systems programming",
-      "hpc",
-      "low-level software",
-      "NixOS",
-      "cybersecurity",
       "rust programming",
+      "distributed systems",
+      "edge computing",
+      "CDN",
+      "NixOS",
+      "infrastructure security",
       "reverse engineering",
     ],
     alternates: {
@@ -42,7 +42,7 @@ export async function generateMetadata({ searchParams }: BlogPageProps): Promise
     openGraph: {
       title: "Blog | Gustavo Widman",
       description:
-        "Articles on systems programming, HPC, low-level software, NixOS infrastructure, and cybersecurity research.",
+        "Articles on Rust systems, edge/CDN infrastructure, NixOS operations, and infrastructure security.",
       type: "website",
       url: `${SITE_URL}/blog`,
       siteName: "Gustavo Widman",
@@ -59,7 +59,7 @@ export async function generateMetadata({ searchParams }: BlogPageProps): Promise
       card: "summary_large_image",
       title: "Blog | Gustavo Widman",
       description:
-        "Articles on systems programming, HPC, low-level software, NixOS infrastructure, and cybersecurity research.",
+        "Articles on Rust systems, edge/CDN infrastructure, NixOS operations, and infrastructure security.",
       images: [`/og/blog-index-${lang}.png`],
       creator: "@guswid",
     },

@@ -5,19 +5,20 @@ import { HomeClient } from "@/components/portfolio";
 const SITE_URL = "https://guswid.com";
 
 export const metadata: Metadata = {
-  title: "Gustavo Widman | Systems Programmer",
+  title: "Gustavo Widman | Rust Platform & Distributed Systems",
   description:
-    "Systems programmer focused on Rust, HPC, low-level software, reproducible infrastructure, and cybersecurity. Personal portfolio with projects, experience, and technical writing.",
+    "Rust platform and distributed systems engineer focused on edge/CDN systems, infrastructure security, and reproducible NixOS operations. Personal portfolio with projects, experience, and technical writing.",
   keywords: [
     "Gustavo Widman",
     "guswid",
     "r3dlust",
-    "Systems Programmer",
-    "Systems Programming",
-    "HPC",
+    "Rust Platform Engineer",
+    "Distributed Systems",
+    "Edge Computing",
+    "CDN",
+    "Infrastructure Security",
     "NixOS",
     "Rust",
-    "Cybersecurity",
     "Portfolio",
   ],
   authors: [{ name: "Gustavo Widman", url: SITE_URL }],
@@ -29,9 +30,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Gustavo Widman | Systems Programmer",
+    title: "Gustavo Widman | Rust Platform & Distributed Systems",
     description:
-      "Systems programmer focused on Rust, HPC, low-level software, reproducible infrastructure, and cybersecurity.",
+      "Rust platform and distributed systems engineer focused on edge/CDN systems, infrastructure security, and reproducible NixOS operations.",
     type: "website",
     url: SITE_URL,
     siteName: "Gustavo Widman",
@@ -40,15 +41,15 @@ export const metadata: Metadata = {
         url: "/og/portfolio-en.png",
         width: 1200,
         height: 630,
-        alt: "Gustavo Widman - Systems Programmer",
+        alt: "Gustavo Widman - Rust Platform & Distributed Systems",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Gustavo Widman | Systems Programmer",
+    title: "Gustavo Widman | Rust Platform & Distributed Systems",
     description:
-      "Systems programmer focused on Rust, HPC, low-level software, reproducible infrastructure, and cybersecurity.",
+      "Rust platform and distributed systems engineer focused on edge/CDN systems, infrastructure security, and reproducible NixOS operations.",
     images: ["/og/portfolio-en.png"],
     creator: "@guswid",
   },

@@ -18,14 +18,18 @@ import React from "react";
 import { DATA, STATIC_PROJECTS } from "@/lib/data/content";
 import type { Language } from "@/lib/types";
 
+import oneBrcOriginalNumbers from "../../blog/1brc/imgs/original-numbers.png";
 import basedKernelVgaHello from "../../blog/based-kernel/imgs/vga-hello-uncropped.png";
-import rnnRustKaggleRun from "../../blog/rnn-rust/imgs/rust-kaggle-run.png";
+import modernizingRsyncThroughput from "../../blog/modernizing-rsync/imgs/throughput.png";
 import nixIntroTrinity from "../../blog/nix-intro/imgs/the-declarative-trinity.jpg";
+import upstreamerBenchmark from "../../blog/upstreamer/imgs/benchmark-comparison.png";
 
 const PROJECT_IMAGES: Record<string, StaticImageData> = {
-  "1": basedKernelVgaHello,
-  "2": nixIntroTrinity,
-  "3": rnnRustKaggleRun,
+  "1": upstreamerBenchmark,
+  "2": modernizingRsyncThroughput,
+  "3": nixIntroTrinity,
+  "4": basedKernelVgaHello,
+  "5": oneBrcOriginalNumbers,
 };
 
 interface ProjectsProps {

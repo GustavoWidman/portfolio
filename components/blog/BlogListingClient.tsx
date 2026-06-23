@@ -38,8 +38,8 @@ export default function BlogListingClient({ posts, serverLang = "en" }: BlogList
           </h1>
           <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed mb-6">
             {lang === "en"
-              ? "A collection of articles on systems programming, NixOS infrastructure, and cybersecurity research."
-              : "Uma coleção de artigos sobre programação de sistemas, infraestrutura NixOS e pesquisa em segurança cibernética."}
+              ? "A collection of articles on Rust systems, edge/CDN infrastructure, NixOS operations, and infrastructure security."
+              : "Uma coleção de artigos sobre sistemas em Rust, infraestrutura de edge/CDN, operações NixOS e segurança de infraestrutura."}
           </p>
 
           <div className="md:hidden">

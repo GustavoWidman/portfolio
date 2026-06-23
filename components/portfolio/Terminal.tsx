@@ -195,7 +195,7 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
             `portfolio v${APP_VERSION}`,
             `commit: ${COMMIT_HASH}`,
             `mode: ${IS_DEV ? "development" : "production"}`,
-            `built with Next.js 15 + React 19 + Nix`,
+            `built with Next.js 16 + React 19 + Nix`,
           );
           break;
         case "blog":
@@ -205,51 +205,51 @@ const Terminal: React.FC<TerminalProps> = ({ startBoot = false }) => {
         case "whoami":
           newTexts.push(
             "Gustavo Widman.",
-            "Systems programmer.",
-            "Focused on low-level software, HPC, NixOS infrastructure,",
-            "and cybersecurity work.",
+            "Rust platform & distributed systems engineer.",
+            "Focused on edge/CDN systems, infrastructure security,",
+            "and reproducible NixOS operations.",
           );
           break;
         case "exp":
           newTexts.push(
             "--- Professional Experience ---",
             "Software Engineer II (Rust) @ Azion (April 2026 - Present)",
-            " > Building Rust systems for edge workloads",
+            " > Building Rust systems for edge/CDN workloads",
             " > Working on CDN performance and distributed systems",
             "",
-            "CTO @ CamelSec (August 2025 - December 2025)",
+            "Technical Lead, Security Infrastructure @ CamelSec (April 2025 - December 2025)",
             " > Built NixOS infrastructure and internal tooling",
             " > Led pentesting and red team operations",
-            "",
-            "EchoSec (2023-Present)",
-            " > Counselor / President / Member",
             "",
             "MW APP IT Consulting (2021-2025)",
             " > Client delivery across Python, Node.js, C#, React",
             " > Data layers in MSSQL, MySQL, and SQLite",
+            "",
+            "EchoSec (2023-Present)",
+            " > Counselor / President / Member",
           );
           break;
         case "stack":
           newTexts.push(
-            "--- Systems, HPC & Low Level ---",
+            "--- Rust Platform & Low Level ---",
             "Rust, C/C++, x86 Assembly, Kernel Dev, mmap, parallelism",
             "",
-            "--- Infrastructure & Operations ---",
-            "NixOS, Docker, K8s, WireGuard, CI/CD",
+            "--- Edge, Infrastructure & Operations ---",
+            "CDN, distributed systems, NixOS, Docker, K8s, WireGuard, CI/CD",
             "",
-            "--- Security & Service Layers ---",
-            "Go, Python, Java, TypeScript, pentesting",
+            "--- Infrastructure Security ---",
+            "Linux hardening, pentesting, red team, ISO 27001, reverse engineering",
           );
           break;
         case "ls":
           newTexts.push(
             "total 6",
-            `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} based-kernel`,
+            `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} upstreamer`,
+            `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} ferrisync-notes`,
             `drwx------ 1 widman nixos  1024 ${generateLsLikeDate()} nix`,
-            `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} rust-rnn`,
-            `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} chatbot`,
+            `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} based-kernel`,
             `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} 1brc`,
-            `drwx------ 1 widman golang 1024 ${generateLsLikeDate()} screenium`,
+            `drwx------ 1 widman rust   1024 ${generateLsLikeDate()} chatbot`,
           );
           break;
         case "sudo":

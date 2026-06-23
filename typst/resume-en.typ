@@ -2,7 +2,6 @@
 #set text(font: "Times New Roman", size: 10pt)
 #set par(leading: 0.5em, spacing: 0.5em)
 
-// Custom section styling - matches LaTeX titleformat
 #let section(title) = {
   v(12pt, weak: true)
   {
@@ -12,7 +11,6 @@
   line(length: 100%, stroke: 0.4pt)
 }
 
-// --- HEADER ---
 #align(center)[
   #text(size: 24.88pt, weight: "bold")[Gustavo Widman]
   #v(-2pt)
@@ -22,69 +20,70 @@
 ]
 #v(6pt)
 
-// --- EXPERIENCE ---
 #section("Professional Experience")
 
 *Azion* #h(1fr) Remote \
 _Software Engineer II (Rust)_ #h(1fr) Apr 2026 – Present
-- Developing high-performance *Rust* systems for edge computing and CDN workloads.
-- Working with the application and security team to improve platform performance, reliability, and operational safety.
-- Building distributed computing components focused on low-latency execution and scalable edge infrastructure.
+- Building *Rust* systems for edge/CDN workloads, focused on throughput, latency, and operational reliability.
+- Working with application and security teams on performance-sensitive CDN internals.
+- Contributing to distributed edge components under tight CPU and memory budgets.
 
 *CamelSec* #h(1fr) Remote \
-_Chief Technology Officer (CTO)_ #h(1fr) Apr 2025 – Dec 2025
-- Architected fully reproducible infrastructure using *NixOS*, reducing deployment drift to near-zero across *10+ machines*.
-- Designed zero-trust internal networks using *WireGuard* with granular *ACL policies* for secure client data isolation.
-- Led *monthly pentesting engagements* for enterprise clients (Sapore, SIT, FAMMA), identifying critical vulnerabilities in *under 5 hours* per assessment on average.
-- Implemented automated *ISO 27001* compliance validation, ensuring continuous security posture alignment.
-- Deployed redundant staging environments with strict data segregation for sensitive client workloads.
+_Technical Lead, Security Infrastructure_ #h(1fr) Apr 2025 – Dec 2025
+- Owned technical strategy across infrastructure, internal tooling, and security operations for a cybersecurity consultancy.
+- Built reproducible *NixOS* environments and hardened operational workflows across *10+ machines*.
+- Designed *WireGuard*-based internal networks and redundant staging environments for isolated client workloads.
+- Ran penetration testing and red-team engagements for enterprise clients.
 
 *MW APP IT Consulting* #h(1fr) São Paulo, SP \
-_Full Stack Developer_ #h(1fr) Jan 2021 – Apr 2025
-- Built production full-stack applications with *React/TypeScript*, *.NET/C\#*, and *Python/FastAPI* for high-traffic enterprise clients.
+_Software Engineer_ #h(1fr) Jan 2021 – Apr 2025
+- Built software for enterprise clients across backend, frontend, and database layers.
 - Optimized database query performance by *up to 2.43x* across *MS SQL*, *MySQL*, and *SQLite*.
-- Led small engineering teams delivering software for *CESP*, *Hunter Douglas*, and *CETESB* across *4+ years*.
+- Led engineering teams delivering software for *CESP*, *Hunter Douglas*, and *CETESB*.
 
 #v(6pt)
 
-// --- SKILLS ---
 #section("Technical Skills")
-- *Languages*: Rust, Go, C/C++, Python, TypeScript, C\#/.NET, Assembly (x86), SQL.
-- *Infrastructure & DevOps*: Nix/NixOS, Docker, Kubernetes, GitHub Actions, WireGuard, Linux Hardening.
+- *Languages*: Rust, Go, C/C++, Python, TypeScript, C\#/.NET, Assembly (x86/x86-64), SQL.
+- *Systems & Infrastructure*: Linux, Nix/NixOS, Docker, Kubernetes, WireGuard, GitHub Actions.
+- *Rust Stack*: Tokio, Actix, Axum, Rayon, `no_std`, memory-mapped I/O, concurrency, low-latency services.
 - *Security*: Network Penetration Testing, Red Teaming, ISO 27001 Compliance, Reverse Engineering.
-- *Tools & Frameworks*: Git, FastAPI, NestJS, Drizzle/Prisma, Gin, Gorm, Rayon, Tokio, Actix, Axum.
-- *Database Systems*: PostgreSQL, MySQL, SQLite, MS SQL Server.
 
 #v(6pt)
 
-// --- PROJECTS ---
-#section("Projects")
+#section("Selected Projects")
 
-*High-Performance API (Rust / Docker)* #h(1fr) #link("https://github.com/GustavoWidman/rinha-de-backend")[GitHub]
-- Scaled a REST API to *2,917 RPS* with *0.5ms P50 latency* using `actix-web`, `nginx` load balancing, and optimized `SQLite` with write-ahead logging and connection pooling.
+*upstreamer (Rust reverse proxy)* #h(1fr) #link("https://github.com/GustavoWidman/upstreamer")[GitHub]
+- Built a reverse proxy in Rust with Kubernetes service discovery, hot config reload, active/passive health checks, and Prometheus metrics.
+- Benchmarked *76,663 RPS* with *0.64ms p50* and *3.81ms p99.99*, ahead of HAProxy, nginx, Caddy, and Apache in the published setup.
 
-*"One Billion Row Challenge" (Rust, HPC)* #h(1fr) #link("https://github.com/GustavoWidman/1brc")[GitHub]
-- Optimized data ingestion to process *1B rows in 1.8 seconds* using `rayon` parallelism and memory-mapped I/O, achieving top-tier performance without hand-tuned SIMD.
+*FerriSync (Rust file synchronization research)* #h(1fr) #link("https://guswid.com/blog/modernizing-rsync")[Write-up]
+- Researching and prototyping an rsync-style Rust synchronization engine around rolling-hash bottlenecks, cache-aware lookup design, and multi-core delta computation.
+- Framed around backup, storage, and data-center synchronization workloads rather than application-layer features.
 
-*Nix Config Collection (NixOS, CI/CD)* #h(1fr) #link("https://github.com/GustavoWidman/nix")[GitHub]
-- Managed *6+ machines* with declarative NixOS configs for hardened infra, DNS, mail, and mesh VPNs.
+*NixOS Infrastructure* #h(1fr) #link("https://github.com/GustavoWidman/nix")[GitHub]
+- Managed *6+ machines* with declarative NixOS configs for hardened infrastructure, DNS, mail, and mesh VPNs.
 
-*Educational x86-64 Kernel (Rust, x86 Assembly)* #h(1fr) #link("https://github.com/GustavoWidman/based-kernel")[GitHub]
-- Built a bootable kernel in Rust (`no_std`) with x86 assembly bootloader, protected mode switching, arena allocator, interrupt handling (IDT), and VGA text driver.
+*x86-64 Kernel (Rust, x86 Assembly)* #h(1fr) #link("https://github.com/GustavoWidman/based-kernel")[GitHub]
+- Built a bootable Rust `no_std` kernel with an x86 assembly bootloader, page-table setup, protected-to-long-mode transition, interrupt handling, a memory allocator, and VGA text output.
 
-#section("Leadership Experience")
+*One Billion Row Challenge (Rust)* #h(1fr) #link("https://github.com/GustavoWidman/1brc")[GitHub]
+- Processed *1B rows in 1.8 seconds* using `rayon` parallelism and memory-mapped I/O.
+
+#v(6pt)
+
+#section("Leadership & volunteering")
 
 *EchoSec (Cybersecurity League)* #h(1fr) São Paulo, SP \
 _President & Counselor_ #h(1fr) Mar 2023 – Present
-- Organized and led Capture The Flag (CTF) competitions, building practical offensive security skills across the community.
-- Mentored *20+ members* in Linux fundamentals, binary exploitation, and red teaming methodologies.
+- Organized Capture The Flag (CTF) events and hands-on security workshops.
+- Mentored members in Linux fundamentals, binary exploitation, and offensive security practice.
 
 #v(6pt)
 
-// --- EDUCATION ---
 #section("Education")
 *INTELI (Institute of Technology and Leadership)* #h(1fr) São Paulo, SP \
 _Bachelor of Computer Engineering_ #h(1fr) Expected Dec 2026
-- Project-Based Learning with real-world corporate partners, delivering industry-grade solutions throughout coursework.
+- Project-based program with industry-sponsored software delivery.
 
 #v(6pt)

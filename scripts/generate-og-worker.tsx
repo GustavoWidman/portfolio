@@ -162,12 +162,15 @@ function OGLayout({ children }: { children: React.ReactNode }) {
 }
 
 function PortfolioOG({ lang }: { lang: "en" | "pt" }) {
-  const title = lang === "en" ? "Systems Programmer" : "Programador de Sistemas";
+  const title =
+    lang === "en"
+      ? "Rust Platform & Distributed Systems"
+      : "Plataforma Rust & Sistemas Distribuídos";
   const subtitle =
     lang === "en"
-      ? "Rust, HPC, low-level software, NixOS, and security."
-      : "Rust, HPC, software de baixo nivel, NixOS e seguranca.";
-  const tags = lang === "en" ? ["Rust", "HPC", "Systems"] : ["Rust", "HPC", "Sistemas"];
+      ? "Edge/CDN systems, infrastructure security, and NixOS operations."
+      : "Edge/CDN, segurança de infraestrutura e operações NixOS.";
+  const tags = lang === "en" ? ["Rust", "Edge/CDN", "Security"] : ["Rust", "Edge/CDN", "Segurança"];
 
   return (
     <OGLayout>
@@ -232,10 +235,9 @@ function PortfolioOG({ lang }: { lang: "en" | "pt" }) {
 function BlogIndexOG({ lang }: { lang: "en" | "pt" }) {
   const subtitle =
     lang === "en"
-      ? "Thoughts on Systems Engineering, NixOS, and Cybersecurity."
-      : "Reflexoes sobre Engenharia de Sistemas, NixOS e Ciberseguranca.";
-  const tags =
-    lang === "en" ? ["Engineering", "Systems", "NixOS"] : ["Engenharia", "Sistemas", "NixOS"];
+      ? "Rust systems, edge/CDN infrastructure, NixOS, and security."
+      : "Rust, edge/CDN, NixOS e segurança de infraestrutura.";
+  const tags = lang === "en" ? ["Rust", "Edge/CDN", "NixOS"] : ["Rust", "Edge/CDN", "NixOS"];
 
   return (
     <OGLayout>
@@ -432,12 +434,7 @@ async function init() {
         break;
       case "blogPost":
         element = (
-          <BlogPostOG
-            title={task.title}
-            date={task.date}
-            tags={task.tags}
-            lang={task.lang}
-          />
+          <BlogPostOG title={task.title} date={task.date} tags={task.tags} lang={task.lang} />
         );
         filename = `${task.slug}-${task.lang}.png`;
         break;

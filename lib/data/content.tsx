@@ -19,10 +19,10 @@ export const DATA: Record<string, TranslationData> = {
       blog: "Blog",
     },
     hero: {
-      subtitle: "Gustavo Widman // Engineering Portfolio",
-      title1: "SYSTEMS &",
-      title2: "HPC",
-      desc: "Writing low-level software, tuning data-heavy workloads, and keeping the infrastructure tight.",
+      subtitle: "Gustavo Widman // Rust Platform & Distributed Systems",
+      title1: "RUST PLATFORM &",
+      title2: "DISTRIBUTED SYSTEMS",
+      desc: "Edge/CDN systems, infrastructure security, and reproducible operations in Rust.",
       cta: "View Projects",
       github: "GitHub",
       resume: "Download CV",
@@ -32,33 +32,42 @@ export const DATA: Record<string, TranslationData> = {
       openToWork: "Open to Work",
       heading: (
         <>
-          Systems programming with a <br />
-          <span className="text-zinc-500 dark:text-zinc-500">security-aware, infrastructure-heavy mindset.</span>
+          Rust platform engineering for <br />
+          <span className="text-zinc-500 dark:text-zinc-500">
+            edge systems, secure infrastructure, and distributed services.
+          </span>
         </>
       ),
       p1: (
         <>
           I am a Computer Engineering student at{" "}
           <span className="text-black dark:text-white font-semibold">INTELI</span> and a{" "}
-          <span className="text-black dark:text-white font-semibold">Rust Software Engineer at Azion</span>.
+          <span className="text-black dark:text-white font-semibold">
+            Rust Software Engineer at Azion
+          </span>
+          {"."}
         </>
       ),
       p2: (
         <>
-          Most of my time goes into{" "}
-          <span className="text-black dark:text-white font-semibold">systems programming</span>,{" "}
-          <span className="text-black dark:text-white font-semibold">performance work</span>, and
-          reproducible{" "}
-          <span className="text-black dark:text-white font-semibold">NixOS</span> infrastructure. I
-          like understanding how software behaves close to the machine, not just at the service layer.
+          My main work is in{" "}
+          <span className="text-black dark:text-white font-semibold">
+            Rust platform engineering
+          </span>
+          {", "}
+          <span className="text-black dark:text-white font-semibold">distributed systems</span>
+          {", and "}
+          <span className="text-black dark:text-white font-semibold">edge/CDN infrastructure</span>.
+          I like building systems that stay fast, predictable, and easy to operate.
         </>
       ),
       p3: (
         <>
-          Outside that core, I also work on{" "}
-          <span className="text-black dark:text-white font-semibold">cybersecurity</span> and
-          distributed systems: red team operations, hardened networks with WireGuard, and the services
-          that support them.
+          I also spend a lot of time on{" "}
+          <span className="text-black dark:text-white font-semibold">infrastructure security</span>
+          {", "}
+          <span className="text-black dark:text-white font-semibold">NixOS</span>, and network
+          design, especially where secure operations and low-level behavior meet.
         </>
       ),
     },
@@ -66,19 +75,19 @@ export const DATA: Record<string, TranslationData> = {
       title: "02 / The Stack",
       categories: [
         {
-          title: "Systems, HPC & Low Level",
+          title: "Rust platform & low-level systems",
           description:
-            "Rust-heavy work near the metal: kernels, memory-sensitive code, parallel workloads, and systems tooling.",
+            "Rust services, networking paths, kernels, memory-aware code, and systems tooling built close to the machine.",
         },
         {
-          title: "Infrastructure & Operations",
+          title: "Edge, infrastructure & operations",
           description:
-            "Reproducible NixOS environments, deployment plumbing, networking, and the day-to-day work of keeping systems sane.",
+            "Edge/CDN systems, reproducible NixOS environments, deployment plumbing, and the operational work that keeps services stable.",
         },
         {
-          title: "Security & Service Layers",
+          title: "Infrastructure security",
           description:
-            "Offensive security work plus the protocols, data paths, and service code that support it.",
+            "Security engineering, hardened networks, red team work, and the service layers that support secure platforms.",
         },
       ],
     },
@@ -103,7 +112,7 @@ export const DATA: Record<string, TranslationData> = {
           company: "CamelSec",
           positions: [
             {
-              role: "Chief Technology Officer (CTO)",
+              role: "Technical Lead, Security Infrastructure",
               description: [
                 "Led technical strategy across infrastructure, internal tooling, and security operations for a cybersecurity consultancy.",
                 "Ran penetration testing and red team engagements for enterprise clients.",
@@ -114,36 +123,10 @@ export const DATA: Record<string, TranslationData> = {
           ],
         },
         {
-          company: "EchoSec",
-          positions: [
-            {
-              role: "Counselor",
-              description: [
-                "Advising the current board on strategic decisions and community growth.",
-                "Mentoring new members in CTF challenges and offensive security concepts.",
-              ],
-            },
-            {
-              role: "President",
-              description: [
-                "Led the cybersecurity league at INTELI, organizing workshops and events.",
-                "Coordinated internal CTF competitions and external representation.",
-              ],
-            },
-            {
-              role: "Member",
-              description: [
-                "Participated in security research groups and initial league formation.",
-                "Collaborated on open-source security tools and learning initiatives.",
-              ],
-            },
-          ],
-        },
-        {
           company: "MW APP IT Consulting",
           positions: [
             {
-              role: "Full Stack Developer",
+              role: "Software Engineer",
               description: [
                 "Delivered client systems across Python, Node.js, and C# backends with React and TypeScript frontends where needed.",
                 "Handled application data layers across MS SQL, MySQL, and SQLite.",
@@ -161,46 +144,46 @@ export const DATA: Record<string, TranslationData> = {
       list: [
         {
           id: "1",
-          title: "Rust x86 Kernel",
+          title: "upstreamer",
           description:
-            "A custom x86 kernel built from scratch in Rust (no_std). Features VGA drivers, interrupt handling, paging, and a functional Tic-Tac-Toe game running directly on bare metal.",
+            "A Rust reverse proxy for edge workloads with Kubernetes service discovery, hot config reload, health checks, and published benchmarks against nginx, HAProxy, Caddy, and Apache.",
         },
         {
           id: "2",
-          title: "NixOS Infrastructure",
+          title: "FerriSync / modernizing rsync",
           description:
-            "Monorepo managing my entire digital infrastructure. Manages 5 machines (cloud & physical) with reproducible builds, hosting mail servers, DNS ad-blocking, and VPNs.",
+            "A long-form Rust systems write-up on why rsync is CPU-bound on modern networks and how cache-aware, multi-core delta computation could change that.",
         },
         {
           id: "3",
-          title: "Zero-Dependency RNN",
+          title: "NixOS Infrastructure",
           description:
-            "A Recurrent Neural Network built from scratch in pure Rust. Hand-optimized memory management and math operations allow it to beat PyTorch and Keras in training speed.",
+            "The NixOS monorepo behind my public and private infrastructure: reproducible hosts, CI, mail, DNS, VPNs, and day-to-day operational tooling.",
         },
         {
           id: "4",
-          title: "Cognitive Discord Bot",
+          title: "Rust x86-64 Kernel",
           description:
-            "Sophisticated bot featuring a 'Free Will' engine and RAG memory. Integrates with LLMs via Vector DBs to maintain long-term personality and context awareness.",
+            "A bootable Rust `no_std` kernel with paging, interrupts, memory management, and bare-metal drivers built to understand the platform from the bottom up.",
         },
         {
           id: "5",
           title: "1 Billion Row Challenge",
           description:
-            "High-performance solution to the 1BRC. Utilizes memory mapping (mmap) and intelligent parallelism (Rayon) to process gigabytes of data in seconds without the need for SIMD.",
+            "A Rust 1BRC solution built around memory-mapped I/O and parallel processing to push data-heavy workloads under tight CPU budgets.",
         },
         {
           id: "6",
-          title: "Screenium (Go Multiplexer)",
+          title: "Cognitive Discord Bot",
           description:
-            "A modern remake of GNU Screen written in Go. Supports multiple parallel shell sessions, detaching/attaching, and robust session management.",
+            "A Rust bot with long-lived memory, retrieval, and tool-driven behavior for experimenting with stateful agents in production-like conditions.",
         },
       ],
     },
     footer: {
       title: "Ready to collaborate?",
       subtitle:
-        "From low-level kernel development to high-availability distributed systems, I'm ready to build.",
+        "From edge/CDN systems to secure infrastructure, I'm ready to build Rust platforms that hold up under load.",
       email: "Email Me",
       linkedin: "LinkedIn",
       resume: "Download Resume",
@@ -215,15 +198,15 @@ export const DATA: Record<string, TranslationData> = {
     },
     curl: {
       name: "Gustavo Widman",
-      title: "Systems Programmer",
+      title: "Rust Platform Engineer",
       sites: "https://guswid.com | https://r3dlust.com",
       source: "src: https://github.com/GustavoWidman/portfolio",
       aboutHeader: "About",
       aboutText: [
-        "Systems programmer",
-        "focused on low-level",
-        "software, HPC, and",
-        "reproducible infrastructure.",
+        "Rust platform engineer",
+        "focused on edge/CDN",
+        "systems, distributed",
+        "services, and infra security.",
       ],
       socialsHeader: "Socials",
       github: "https://github.com/GustavoWidman",
@@ -243,10 +226,10 @@ export const DATA: Record<string, TranslationData> = {
       blog: "Blog",
     },
     hero: {
-      subtitle: "Gustavo Widman // Portfólio de Engenharia",
-      title1: "SISTEMAS &",
-      title2: "HPC",
-      desc: "Escrevendo software de baixo nível, ajustando cargas pesadas e mantendo a infraestrutura sob controle.",
+      subtitle: "Gustavo Widman // Plataforma Rust & Sistemas Distribuídos",
+      title1: "PLATAFORMA RUST &",
+      title2: "SISTEMAS DISTRIBUÍDOS",
+      desc: "Sistemas de edge/CDN, segurança de infraestrutura e operações reprodutíveis em Rust.",
       cta: "Ver Projetos",
       github: "GitHub",
       resume: "Baixar CV",
@@ -256,33 +239,46 @@ export const DATA: Record<string, TranslationData> = {
       openToWork: "Disponível",
       heading: (
         <>
-          Programação de sistemas com uma <br />
-          <span className="text-zinc-500 dark:text-zinc-500">visão de segurança e muita infraestrutura.</span>
+          Engenharia de plataforma em Rust para <br />
+          <span className="text-zinc-500 dark:text-zinc-500">
+            sistemas de edge, infraestrutura segura e serviços distribuídos.
+          </span>
         </>
       ),
       p1: (
         <>
           Sou estudante de Engenharia da Computação no{" "}
           <span className="text-black dark:text-white font-semibold">INTELI</span> e{" "}
-          <span className="text-black dark:text-white font-semibold">Software Engineer em Rust na Azion</span>.
+          <span className="text-black dark:text-white font-semibold">
+            Software Engineer em Rust na Azion
+          </span>
+          {"."}
         </>
       ),
       p2: (
         <>
-          A maior parte do meu tempo vai para{" "}
-          <span className="text-black dark:text-white font-semibold">programação de sistemas</span>,{" "}
-          <span className="text-black dark:text-white font-semibold">trabalho de performance</span> e
-          infraestrutura reprodutível em{" "}
-          <span className="text-black dark:text-white font-semibold">NixOS</span>. Gosto de entender
-          como o software se comporta perto da máquina, não só na camada de serviço.
+          Meu foco principal está em{" "}
+          <span className="text-black dark:text-white font-semibold">
+            engenharia de plataforma em Rust
+          </span>
+          {", "}
+          <span className="text-black dark:text-white font-semibold">sistemas distribuídos</span>
+          {" e "}
+          <span className="text-black dark:text-white font-semibold">
+            infraestrutura de edge/CDN
+          </span>
+          {"."} Gosto de construir sistemas rápidos, previsíveis e fáceis de operar.
         </>
       ),
       p3: (
         <>
-          Fora desse núcleo, também atuo com{" "}
-          <span className="text-black dark:text-white font-semibold">segurança</span> e sistemas
-          distribuídos: operações de red team, redes endurecidas com WireGuard e os serviços que dão
-          suporte a isso.
+          Também passo bastante tempo com{" "}
+          <span className="text-black dark:text-white font-semibold">
+            segurança de infraestrutura
+          </span>
+          {", "}
+          <span className="text-black dark:text-white font-semibold">NixOS</span> e desenho de
+          redes, principalmente onde operação segura encontra comportamento de baixo nível.
         </>
       ),
     },
@@ -290,19 +286,19 @@ export const DATA: Record<string, TranslationData> = {
       title: "02 / Stack Tecnológico",
       categories: [
         {
-          title: "Sistemas, HPC & Baixo Nível",
+          title: "Plataforma Rust & sistemas de baixo nível",
           description:
-            "Trabalho pesado em Rust perto do metal: kernels, código sensível à memória, cargas paralelas e tooling de sistemas.",
+            "Serviços em Rust, caminhos de rede, kernels, código atento a memória e tooling de sistemas perto da máquina.",
         },
         {
-          title: "Infraestrutura & Operações",
+          title: "Edge, infraestrutura & operações",
           description:
-            "Ambientes reprodutíveis em NixOS, automação de deploy, redes e a rotina de manter sistemas estáveis.",
+            "Sistemas de edge/CDN, ambientes reprodutíveis em NixOS, automação de deploy e o trabalho operacional que mantém serviços estáveis.",
         },
         {
-          title: "Segurança & Camadas de Serviço",
+          title: "Segurança de infraestrutura",
           description:
-            "Segurança ofensiva junto com os protocolos, fluxos de dados e serviços que a sustentam.",
+            "Engenharia de segurança, redes endurecidas, red team e as camadas de serviço que sustentam plataformas seguras.",
         },
       ],
     },
@@ -327,7 +323,7 @@ export const DATA: Record<string, TranslationData> = {
           company: "CamelSec",
           positions: [
             {
-              role: "Chief Technology Officer (CTO)",
+              role: "Technical Lead, Security Infrastructure",
               description: [
                 "Liderei a estratégia técnica em infraestrutura, tooling interno e operações de segurança de uma consultoria de cibersegurança.",
                 "Executei testes de intrusão e operações de red team para clientes corporativos.",
@@ -338,36 +334,10 @@ export const DATA: Record<string, TranslationData> = {
           ],
         },
         {
-          company: "EchoSec",
-          positions: [
-            {
-              role: "Conselheiro",
-              description: [
-                "Aconselhando a diretoria atual em decisões estratégicas e crescimento da comunidade.",
-                "Mentoria de novos membros em desafios CTF e conceitos de segurança ofensiva.",
-              ],
-            },
-            {
-              role: "Presidente",
-              description: [
-                "Liderei a liga de segurança cibernética do INTELI, organizando workshops e eventos.",
-                "Coordenei competições internas de CTF e representação externa.",
-              ],
-            },
-            {
-              role: "Membro",
-              description: [
-                "Participei de grupos de pesquisa de segurança e da formação inicial da liga.",
-                "Colaborei em ferramentas de segurança open-source e iniciativas de aprendizado.",
-              ],
-            },
-          ],
-        },
-        {
           company: "MW APP IT Consulting",
           positions: [
             {
-              role: "Desenvolvedor Full Stack",
+              role: "Software Engineer",
               description: [
                 "Entreguei sistemas para clientes com backends em Python, Node.js e C#, usando React e TypeScript no frontend quando necessário.",
                 "Cuidei das camadas de dados em MS SQL, MySQL e SQLite.",
@@ -385,46 +355,46 @@ export const DATA: Record<string, TranslationData> = {
       list: [
         {
           id: "1",
-          title: "Kernel x86 em Rust",
+          title: "upstreamer",
           description:
-            "Um kernel x86 customizado construído do zero em Rust (no_std). Possui drivers VGA, tratamento de interrupções e um jogo da velha rodando diretamente no hardware.",
+            "Um reverse proxy em Rust para cargas de edge com service discovery via Kubernetes, reload de configuração sem downtime, health checks e benchmark público contra nginx, HAProxy, Caddy e Apache.",
         },
         {
           id: "2",
-          title: "Infraestrutura NixOS",
+          title: "FerriSync / modernizando o rsync",
           description:
-            "Monorepo gerenciando toda minha infraestrutura digital. Gerencia 5 máquinas com builds reprodutíveis, hospedando servidores de email, bloqueio de anúncios e VPNs.",
+            "Um write-up longo de sistemas em Rust sobre por que o rsync ficou limitado por CPU nas redes atuais e como delta computation com cache awareness e multi-core pode mudar isso.",
         },
         {
           id: "3",
-          title: "RNN Zero-Dependências",
+          title: "Infraestrutura NixOS",
           description:
-            "Implementação de RNN em Rust puro. Otimizada manualmente com operações matemáticas de baixo nível para superar PyTorch e Keras em velocidade de treino.",
+            "O monorepo NixOS por trás da minha infraestrutura pública e privada: hosts reprodutíveis, CI, mail, DNS, VPNs e tooling operacional do dia a dia.",
         },
         {
           id: "4",
-          title: "Bot Cognitivo (Discord)",
+          title: "Kernel x86-64 em Rust",
           description:
-            "Bot sofisticado com 'Livre Arbítrio' e memória RAG. Integra-se com LLMs via bancos vetoriais para manter personalidade e contexto a longo prazo.",
+            "Um kernel inicializável em Rust `no_std` com paging, interrupções, gerenciamento de memória e drivers bare-metal, construído para entender a plataforma da base ao topo.",
         },
         {
           id: "5",
           title: "1 Billion Row Challenge",
           description:
-            "Solução de alta performance para o 1BRC. Utiliza mapeamento de memória (mmap) e paralelismo inteligente (Rayon) para processar gigabytes de dados em segundos.",
+            "Uma solução em Rust para o 1BRC baseada em I/O mapeado em memória e processamento paralelo para empurrar cargas pesadas sob orçamento apertado de CPU.",
         },
         {
           id: "6",
-          title: "Screenium (Multiplexer Go)",
+          title: "Bot Cognitivo (Discord)",
           description:
-            "Um remake moderno do GNU Screen escrito em Go. Suporta múltiplas sessões de shell paralelas, anexar/desanexar e gerenciamento robusto de sessões.",
+            "Um bot em Rust com memória de longa duração, retrieval e comportamento guiado por ferramentas para experimentar agentes com estado em condições próximas de produção.",
         },
       ],
     },
     footer: {
       title: "Pronto para colaborar?",
       subtitle:
-        "De desenvolvimento de kernel baixo nível a sistemas distribuídos de alta disponibilidade, estou pronto para construir.",
+        "De sistemas de edge/CDN a infraestrutura segura, estou pronto para construir plataformas em Rust que aguentam carga.",
       email: "Me envie um email",
       linkedin: "LinkedIn",
       resume: "Baixar CV",
@@ -439,15 +409,15 @@ export const DATA: Record<string, TranslationData> = {
     },
     curl: {
       name: "Gustavo Widman",
-      title: "Programador de Sistemas",
+      title: "Engenheiro de Plataforma Rust",
       sites: "https://guswid.com | https://r3dlust.com",
       source: "src: https://github.com/GustavoWidman/portfolio",
       aboutHeader: "Sobre",
       aboutText: [
-        "Programador de sistemas",
-        "focado em software",
-        "de baixo nível, HPC e",
-        "infraestrutura reprodutível.",
+        "Engenheiro de plataforma",
+        "Rust focado em edge/CDN,",
+        "sistemas distribuídos e",
+        "segurança de infraestrutura.",
       ],
       socialsHeader: "Social",
       github: "https://github.com/GustavoWidman",
@@ -462,48 +432,49 @@ export const DATA: Record<string, TranslationData> = {
 export const STATIC_PROJECTS: Project[] = [
   {
     id: "1",
-    title: "Rust x86 Kernel",
+    title: "upstreamer",
     description: "",
-    tags: ["Rust", "OS Dev", "x86 Assembly", "No Std"],
-    githubUrl: "https://github.com/GustavoWidman/based-kernel",
-    blogPostSlug: "based-kernel",
+    tags: ["Rust", "Reverse Proxy", "Kubernetes", "Edge"],
+    githubUrl: "https://github.com/GustavoWidman/upstreamer",
+    blogPostSlug: "upstreamer",
   },
   {
     id: "2",
+    title: "FerriSync / modernizing rsync",
+    description: "",
+    tags: ["Rust", "Distributed Systems", "File Sync", "Research"],
+    blogPostSlug: "modernizing-rsync",
+  },
+  {
+    id: "3",
     title: "NixOS Infrastructure",
     description: "",
-    tags: ["Nix", "NixOS", "DevOps", "Self-Hosting"],
+    tags: ["NixOS", "Infrastructure", "Security", "Self-Hosting"],
     githubUrl: "https://github.com/GustavoWidman/nix",
     blogPostSlug: "nix-intro",
   },
   {
-    id: "3",
-    title: "Zero-Dependency RNN",
-    description: "",
-    tags: ["Rust", "Machine Learning", "HPC", "Math"],
-    githubUrl: "https://github.com/GustavoWidman/rnn-rust",
-    blogPostSlug: "rnn-rust",
-  },
-  {
     id: "4",
-    title: "Cognitive Discord Bot",
+    title: "Rust x86-64 Kernel",
     description: "",
-    tags: ["Rust", "AI", "RAG", "Vector DB"],
-    githubUrl: "https://github.com/GustavoWidman/chatbot",
+    tags: ["Rust", "Kernel", "x86-64", "no_std"],
+    githubUrl: "https://github.com/GustavoWidman/based-kernel",
+    blogPostSlug: "based-kernel",
   },
   {
     id: "5",
     title: "1 Billion Row Challenge",
     description: "",
-    tags: ["Rust", "HPC", "Concurrency", "Systems"],
+    tags: ["Rust", "Data Processing", "Parallelism", "mmap"],
     githubUrl: "https://github.com/GustavoWidman/1brc",
+    blogPostSlug: "1brc",
   },
   {
     id: "6",
-    title: "Screenium",
+    title: "Cognitive Discord Bot",
     description: "",
-    tags: ["Go", "Systems", "CLI", "Terminal"],
-    githubUrl: "https://github.com/GustavoWidman/screenium",
+    tags: ["Rust", "Agents", "Retrieval", "Discord"],
+    githubUrl: "https://github.com/GustavoWidman/chatbot",
   },
 ];
 
@@ -526,13 +497,7 @@ export const STATIC_EXPERIENCE: Experience[] = [
         startDate: "2026-04-22",
         endDate: undefined,
         description: [],
-        techStack: [
-          "Rust",
-          "Edge Computing",
-          "CDN",
-          "Distributed Systems",
-          "High Performance",
-        ],
+        techStack: ["Rust", "Edge Computing", "CDN", "Distributed Systems", "High Performance"],
       },
     ],
   },
@@ -550,7 +515,7 @@ export const STATIC_EXPERIENCE: Experience[] = [
     ),
     positions: [
       {
-        role: "Chief Technology Officer (CTO)",
+        role: "Technical Lead, Security Infrastructure",
         startDate: "2025-04-01",
         endDate: "2025-12-31",
         description: [],
@@ -563,42 +528,6 @@ export const STATIC_EXPERIENCE: Experience[] = [
           "Pentesting",
           "AI Agents",
         ],
-      },
-    ],
-  },
-  {
-    id: "echosec",
-    company: "EchoSec",
-    logo: (
-      <Image
-        src="/icons/echosec_logo.jpg"
-        alt="EchoSec Logo"
-        fill
-        sizes="48px"
-        className="object-cover rounded"
-      />
-    ),
-    positions: [
-      {
-        role: "Counselor",
-        startDate: "2025-08-01",
-        endDate: undefined,
-        description: [],
-        techStack: ["Advising", "Mentorship", "Education"],
-      },
-      {
-        role: "President",
-        startDate: "2024-03-01",
-        endDate: "2024-07-30",
-        description: [],
-        techStack: ["Leadership", "Event Org", "CTF Mgmt"],
-      },
-      {
-        role: "Member",
-        startDate: "2023-09-01",
-        endDate: "2024-03-17",
-        description: [],
-        techStack: ["CyberSecurity", "Research", "Linux", "Pentesting", "Teamwork"],
       },
     ],
   },
@@ -616,7 +545,7 @@ export const STATIC_EXPERIENCE: Experience[] = [
     ),
     positions: [
       {
-        role: "Full Stack Developer",
+        role: "Software Engineer",
         startDate: "2021-01-01",
         endDate: "2025-04-01",
         description: [],
@@ -644,7 +573,7 @@ export const SKILL_ICONS: SkillCategory[] = [
       { name: "C / C++", icon: <SiC size={16} /> },
       { name: "x86 Assembly", icon: <Cpu size={16} /> },
       { name: "Kernel Dev", icon: <Server size={16} /> },
-      { name: "HPC", icon: <Cpu size={16} /> },
+      { name: "Edge/CDN", icon: <Server size={16} /> },
     ],
   },
   {

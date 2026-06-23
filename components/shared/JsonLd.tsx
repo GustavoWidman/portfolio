@@ -14,19 +14,19 @@ export function PersonJsonLd() {
         alternateName: ["guswid", "r3dlust"],
         url: SITE_URL,
         image: `${SITE_URL}/og/portfolio-en.png`,
-        jobTitle: "Systems Programmer",
+        jobTitle: "Rust Platform & Distributed Systems Engineer",
         description:
-          "Systems programmer focused on Rust, HPC, low-level software, reproducible infrastructure, and cybersecurity.",
+          "Rust platform and distributed systems engineer focused on edge/CDN systems, infrastructure security, and reproducible NixOS operations.",
         sameAs: ["https://github.com/GustavoWidman", "https://www.linkedin.com/in/gustavo-widman"],
         knowsAbout: [
-          "Systems Programming",
-          "High-Performance Computing",
           "Rust",
-          "NixOS",
-          "Infrastructure Engineering",
-          "Cybersecurity",
-          "Reverse Engineering",
           "Distributed Systems",
+          "Edge Computing",
+          "CDN",
+          "NixOS",
+          "Infrastructure Security",
+          "Systems Programming",
+          "Reverse Engineering",
         ],
       }}
     />
@@ -45,7 +45,7 @@ export function WebsiteJsonLd() {
         alternateName: ["guswid blog", "r3dlust portfolio"],
         url: SITE_URL,
         description:
-          "Personal portfolio and blog of Gustavo Widman, a systems programmer focused on Rust, HPC, low-level software, infrastructure, and cybersecurity.",
+          "Personal portfolio and blog of Gustavo Widman, a Rust platform and distributed systems engineer focused on edge/CDN systems, infrastructure security, and reproducible operations.",
         author: {
           "@type": "Person",
           name: "Gustavo Widman",
@@ -138,7 +138,7 @@ export function BlogJsonLd() {
         "@type": "Blog",
         name: "Gustavo Widman's Blog",
         description:
-          "Technical articles on systems programming, performance work, NixOS infrastructure, and cybersecurity research.",
+          "Technical articles on Rust systems, edge/CDN infrastructure, NixOS operations, and infrastructure security.",
         url: `${SITE_URL}/blog`,
         author: {
           "@type": "Person",
