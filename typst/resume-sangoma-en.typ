@@ -24,7 +24,7 @@
 
 #section("Professional Experience")
 
-*Azion* #h(1fr) Remote \
+*Azion* #h(1fr) São Paulo, SP \
 _Software Engineer II (Rust)_ #h(1fr) Apr 2026 – Present
 - Building *Rust* components for edge/CDN workloads where latency, memory use, and operational reliability shape the design.
 - Working across application and security teams on performance-sensitive distributed systems and production debugging.

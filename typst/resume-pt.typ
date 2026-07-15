@@ -22,7 +22,7 @@
 
 #section("Experiência Profissional")
 
-*Azion* #h(1fr) Remoto \
+*Azion* #h(1fr) São Paulo, SP \
 _Software Engineer II (Rust)_ #h(1fr) Abr 2026 – Presente
 - Construindo sistemas em *Rust* para cargas de edge/CDN, com foco em throughput, latência e confiabilidade operacional.
 - Atuando em partes internas da CDN com os times de aplicação e segurança.
