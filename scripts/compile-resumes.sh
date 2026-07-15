@@ -27,5 +27,3 @@ compile() {
 
 compile typst/resume-en.typ public/resume-en.pdf
 compile typst/resume-pt.typ public/resume-pt.pdf
-compile typst/resume-google-gce-en.typ public/resume-google-gce-en.pdf
-compile typst/resume-sangoma-en.typ public/resume-sangoma-en.pdf
