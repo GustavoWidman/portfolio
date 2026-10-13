@@ -1,0 +1,128 @@
+---
+title: colocando leds bluetooth baratos no apple home
+date: "2026-10-29T14:00:00-03:00"
+excerpt: eu queria minha fita de led no apple home. isso virou uma ponte Matter, um experimento com webcam e uma correção de cor com opiniões fortes.
+tags: [esp32, matter, bluetooth, embarcados, engenharia-reversa, apple-home]
+---
+
+# colocando leds bluetooth baratos no apple home
+
+eu queria controlar minha fita de led pelo Apple Home.
+
+não trocar a fita. não comprar outro controlador. não abrir o negócio e começar a soldar. só usar as luzes que eu já tinha, sem precisar abrir o aplicativo delas toda vez.
+
+parecia um projetinho de fim de semana. geralmente é assim que essas coisas começam a mentir pra mim.
+
+o resultado é o [Iris](https://github.com/GustavoWidman/iris): uma ponte com ESP32-S3 entre Matter por Wi-Fi e o controlador Bluetooth que já estava ligado à fita. o controlador original fica, o controle remoto IR fica, e eu consigo mudar as luzes pelo Home.
+
+eu construí e depurei isso com meu assistente. ele ajudou com firmware, investigação do protocolo, testes e ferramentas; eu entrei com o hardware e o feedback extremamente científico de "isso tá verde" e "por que o vermelho ficou rosa?". no fim, foi bastante hipótese sendo confrontada com uma parede de verdade.
+
+## uma ponte, não uma substituição
+
+o controlador se anuncia como `BJ_LED`, e o aplicativo dele é o MohuanLED. o Iris conversa com esse controlador por BLE, em vez de assumir a tarefa de alimentar a fita.
+
+```text title="o arranjo inteiro"
+Apple Home
+    | Matter por Wi-Fi
+    v
+ESP32-S3 rodando Iris
+    | comandos BLE
+    v
+controlador BJ_LED existente
+    |
+    v
+fita de led existente
+```
+
+o firmware usa ESP-IDF e ESP-Matter para apresentar uma lâmpada colorida Matter e traduzir os comandos do Home. o repo documenta o setup testado com ESP32-S3 e os requisitos de pareamento. eu queria minhas luzes no Home, não um programa de certificação de compatibilidade.
+
+## sete bytes, várias suposições
+
+o comando RGB desse controlador é maravilhosamente sem graça:
+
+```text title="frame RGB"
+69 96 05 02 R G B
+```
+
+três bytes de cor num frame curto. manda vermelho, recebe vermelho. com certeza a parte difícil acabou.
+
+o vermelho funcionou mesmo. as misturas tinham outros planos.
+
+"o comando funcionou" podia significar que a conversão estava certa, o pacote tinha os bytes esperados, o controlador mudou a saída ou a parede ficou da cor certa. NÃO são a mesma pergunta.
+
+havia um bug real na conversão de XY para RGB, corrigido separadamente. mas arrumar a matemática não consertou todas as cores físicas. eu já tinha visto misturas estranhas pelo aplicativo original, antes de a ponte existir.
+
+essa distinção importava. senão passaríamos a noite "consertando Matter" por um comportamento que o controlador já tinha.
+
+adicionamos um modo de diagnóstico com RGB exato que ignora a correção, separando conversão de saída. algumas observações da minha fita:
+
+- `(128,0,0)` parecia um bom vermelho profundo.
+- `(128,8,0)` parecia um laranja intenso.
+- `(120,18,0)` virou meu amarelo preferido naquele brilho testado.
+- adições minúsculas de azul ao vermelho podiam ficar surpreendentemente rosas.
+- `(128,16,4)` parecia um branco cremoso.
+
+não é uma função de transferência medida, nem garantia de que escalar os números preservaria a aparência. mesmo assim, mais útil do que "o roxo tá errado".
+
+## a webcam não era um colorímetro
+
+em algum momento conectei uma Logitech C930e ao Mac e apontei pra parede. se um humano estava cansando de descrever cores, com certeza uma câmera podia assumir.
+
+depois de resolver as permissões do macOS, travamos exposição, foco e balanço de branco pra câmera não compensar cada amostra. capturamos a luz refletida na parede, não os pontinhos brancos estourados dos LEDs: 20 amostras lentas em cerca de dois minutos, depois restauramos meu amarelo preferido e as configurações da câmera.
+
+![vinte amostras de luz na parede antes da correção, com RGB solicitado, leituras da câmera, avisos de sinal baixo e um pedido de amarelo que continuou azul](./imgs/camera-swatch-pass.jpg "antes da correção: RGB solicitado ao lado das leituras da câmera, com avisos de sinal baixo. exposição e balanço de branco fixos; sem clarear ou regraduar as cores.")
+
+um comando amarelo reportou uma escrita BLE bem-sucedida enquanto a parede ainda mostrava o azul anterior. excluímos a amostra, em vez de pedir educadamente pra planilha acreditar no log. a causa não foi estabelecida; as amostras de sinal baixo também não serviam para ajustar uma curva.
+
+a câmera também chamou meu amarelo preferido de laranja. pros meus olhos, era amarelo vivo. configurações fixas tornaram as comparações mais repetíveis, não colorimetricamente precisas. a câmera ajudou a encontrar falhas de saída; ela não ganhou o direito de mandar no que eu estava enxergando.
+
+## uma correção, não uma calibração
+
+eu ainda queria algo usável pelo Home, não uma coleção de números RGB pra digitar manualmente.
+
+o experimento final deixa o vermelho quieto e atenua progressivamente verde e azul quando há vermelho. as primárias puras e todo o plano com vermelho zero, incluindo ciano, ficam iguais. antes de arredondar para bytes:
+
+```text title="balanço experimental baseado no vermelho"
+peak = max(R, G, B)
+if peak == 0: return (0, 0, 0)
+
+red_context = R / peak
+R_out = R
+G_out = G * (1 - 0.85 * red_context)
+B_out = B * (1 - 0.96875 * red_context)
+```
+
+a implementação usa aritmética inteira com arredondamento explícito; as intensidades são escolhas heurísticas baseadas nas amostras acima.
+
+| RGB solicitado  | RGB corrigido |
+| --------------- | ------------- |
+| `(120,120,0)`   | `(120,18,0)`  |
+| `(128,128,128)` | `(128,19,4)`  |
+| `(128,0,0)`     | `(128,0,0)`   |
+| `(0,128,128)`   | `(0,128,128)` |
+
+uma versão anterior normalizava de volta ao pico original. preservava o azul puro, mas adicionar uma unidade de vermelho podia transformar `(0,0,32)` em `(32,0,32)`.
+
+tecnicamente uma função. emocionalmente um jumpscare.
+
+outra versão evitava esse salto, mas escurecia muito o ciano, sem evidência de que ele precisava de correção. também foi rejeitada.
+
+a versão final foi verificada para todas as 16.777.216 entradas RGB de 8 bits e mais de 100 milhões de transições entre valores vizinhos. nenhuma amplificação de canal, plano com vermelho zero inalterado e nenhum salto de canal maior que uma unidade para uma mudança de uma unidade na entrada. as suítes no host passaram com GCC, Clang e sanitização de comportamento indefinido.
+
+são garantias numéricas, não prova de que toda cor fica certa. misturas com vermelho podem perder valor de pico; brilho percebido é outro problema.
+
+é opt-in. a transformação identidade continua sendo o padrão no código público, e o diagnóstico de RGB exato continua ignorando a correção.
+
+## bom pra caramba é um ponto de parada útil
+
+compilamos o firmware experimental e gravamos apenas a partição do aplicativo, mantendo o pareamento com Apple Home e uma imagem neutra para rollback. Wi-Fi, Matter e BLE voltaram. aí testei pelo Home, onde a correção realmente roda, em vez de avaliar o override de diagnóstico.
+
+meu veredito: "não tá perfeito, mas tá bom pra caramba."
+
+uma placa, um controlador, uma fita e os olhos de uma pessoa: não uma calibração universal, mas luzes que eu realmente gosto de usar.
+
+[o Iris está no GitHub](https://github.com/GustavoWidman/iris), com notas do protocolo, instruções de setup, o perfil opt-in e testes no host. a correção publicada está no [`49044d1`](https://github.com/GustavoWidman/iris/commit/49044d1b9e6924f175cde3f9b28479e94e315b04), e o CI passou com GCC e Clang. dados privados de pareamento e imagens de rollback não estão no repo.
+
+comecei com "consigo ligar minhas luzes pelo Home?" e terminei depurando a diferença entre uma escrita Bluetooth bem-sucedida e uma parede amarela.
+
+pelo menos agora consigo ligar as luzes pelo Home.
