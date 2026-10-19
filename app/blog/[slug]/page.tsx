@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { getAllBlogSlugs, getBlogPost } from "@/lib/source";
-import { isScheduled } from "@/lib/helpers";
 import { detectLanguage, getLanguageFromParam } from "@/lib/language-server";
 import { shouldServeMarkdown } from "@/lib/is-ai-agent";
 import BlogPostClient from "@/components/blog/BlogPostClient";
@@ -17,6 +16,8 @@ export async function generateStaticParams() {
   const slugs = getAllBlogSlugs();
   return slugs.map((slug) => ({ slug }));
 }
+
+export const dynamic = "force-dynamic";
 
 const SITE_URL = "https://guswid.com";
 
@@ -86,11 +87,6 @@ export default async function BlogPostPage({ params, searchParams }: PageProps) 
   const postPt = getBlogPost(slug, "pt");
 
   if (!postEn && !postPt) {
-    notFound();
-  }
-
-  const postDate = postEn?.date || postPt?.date;
-  if (postDate && isScheduled(postDate)) {
     notFound();
   }
 

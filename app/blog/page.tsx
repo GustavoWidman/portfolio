@@ -6,6 +6,8 @@ import { detectLanguage, getLanguageFromParam } from "@/lib/language-server";
 import { shouldServeMarkdown } from "@/lib/is-ai-agent";
 import BlogListingClient from "@/components/blog/BlogListingClient";
 import { BlogBreadcrumbJsonLd, BlogJsonLd } from "@/components/shared/JsonLd";
+export const dynamic = "force-dynamic";
+
 const SITE_URL = "https://guswid.com";
 
 interface BlogPageProps {

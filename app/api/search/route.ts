@@ -27,13 +27,7 @@ function buildSubdomainIndexes() {
   }));
 }
 
-const searchAPI = createSearchAPI("advanced", {
-  indexes: buildIndexes,
-});
-
-const searchAPISubdomain = createSearchAPI("advanced", {
-  indexes: buildSubdomainIndexes,
-});
+export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -41,9 +35,10 @@ export async function GET(request: Request) {
     url.searchParams.get("subdomain") === "true" ||
     (request.headers.get("host")?.startsWith("blog.") ?? false);
 
-  if (isSubdomain) {
-    return searchAPISubdomain.staticGET();
-  }
-
-  return searchAPI.staticGET();
+  const searchAPI = createSearchAPI("advanced", {
+    indexes: isSubdomain ? buildSubdomainIndexes : buildIndexes,
+  });
+  const response = await searchAPI.staticGET();
+  response.headers.set("Cache-Control", "no-store");
+  return response;
 }

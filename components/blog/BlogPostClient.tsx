@@ -5,7 +5,7 @@ import PrefetchLink from "@/components/PrefetchLink";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { normalizeToTimezoneMidnight } from "@/lib/helpers";
+import { getPublicationDate } from "@/lib/publication-date";
 import { BlogTOC } from "./BlogTOC";
 import type { BlogPost } from "@/lib/source";
 import { useLanguage } from "@/lib/useLanguage";
@@ -140,7 +140,7 @@ export default function BlogPostClient({
             <div className="flex flex-wrap items-center gap-6 text-zinc-500 dark:text-zinc-400 text-sm font-mono border-b border-zinc-200 dark:border-zinc-800 pb-8">
               <span className="flex items-center">
                 <Calendar size={14} className="mr-2" />
-                {normalizeToTimezoneMidnight(post.date).toLocaleDateString(
+                {getPublicationDate(post.date).toLocaleDateString(
                   lang === "en" ? "en-US" : "pt-BR",
                   {
                     year: "numeric",

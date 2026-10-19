@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getAllBlogSlugs, getBlogPost } from "@/lib/source";
+import { getPublicationDate } from "@/lib/publication-date";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 const SITE_URL = "https://guswid.com";
 
@@ -13,7 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       const post = getBlogPost(slug, "en") || getBlogPost(slug, "pt");
       if (!post) return null;
 
-      const lastModified = post.date ? new Date(post.date) : new Date();
+      const lastModified = post.date ? getPublicationDate(post.date) : new Date();
 
       return {
         url: `${SITE_URL}/blog/${slug}`,

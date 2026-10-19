@@ -1,0 +1,147 @@
+---
+title: i want to stop babysitting the loop
+date: '2026-10-21T16:00:00-03:00'
+excerpt: FerriSync got me attached to an optimization problem. Volund got me thinking about what happens when trying the next hypothesis no longer needs me at the keyboard.
+tags: [ai, agents, optimization, software-engineering, volund, ferrisync]
+---
+
+# i want to stop babysitting the loop
+
+i've spent an unreasonable amount of time trying to move fewer bytes between two computers.
+
+that was supposed to be a file sync tool. then i wanted delta synchronization. then i wanted to know why finding the differences was so expensive. eventually i was reading papers, looking at profiles, changing data structures, and finding more questions than i started with.
+
+FerriSync happened somewhere in there.
+
+[i've teased that project before](/blog/modernizing-rsync). it isn't public yet: the research is currently under review, and the code and detailed results will have to wait. this isn't the technical reveal. but the amount of time i've spent on that problem is relevant to something else i've been thinking about.
+
+so much of optimization is a loop i keep manually operating.
+
+look at a profile. come up with an explanation. change something. run it. realize the explanation was wrong, or the benchmark was wrong, or the code got faster because it stopped doing part of its job. fix that. try again.
+
+i don't think the interesting future of AI-assisted programming is just making the "change something" part faster.
+
+i want to describe what the program must do, what it's allowed to change, and how we'll decide whether it improved. then run the thing, let it work, and come back to inspect what happened.
+
+not a chat full of suggestions. actual experiments.
+
+## the file sync problem isn't going to run out of hypotheses
+
+with something like delta synchronization, there are always more directions to investigate. different ways of finding reusable data. different layouts. different amounts of parallel work. different tradeoffs between computation, memory, and bytes sent.
+
+some of those ideas deserve an implementation. some deserve a small experiment that kills them before they become an implementation. figuring out which is which is part of the work.
+
+i can have a perfectly reasonable explanation for why something should be faster, spend days implementing it, and discover that the cost i removed wasn't the cost that mattered. or that the improvement disappears outside the input i happened to be looking at.
+
+the code wasn't necessarily the hard part. getting from "this might help" to "here's what actually happened" was.
+
+that's the part i want to hand over more often. not deciding that a result is true because the agent sounds confident. letting it do enough work that there's a result to argue about in the first place.
+
+FerriSync is why i care about this. Volund is a separate, much smaller experiment in what that workflow can look like.
+
+## what i actually tried with Volund
+
+[Volund](https://github.com/GustavoWidman/volund), which i wrote up with Laiza Ribeiro Silva, studies unattended multiagent program optimization.
+
+the task was a synthetic C++20 range-statistics engine. give it events and queries, and it has to return exact counts, sums, minima, and maxima for timestamp ranges. the interface and correctness rules were fixed. the implementation could change.
+
+we ran three independently initialized optimization campaigns from the same untuned seed. those campaigns ran serially; this wasn't a demonstration of a thousand agents working at once.
+
+inside each campaign, a lead could investigate, delegate hypotheses to workers, compare alternatives, and nominate a candidate. a separate reviewer rebuilt it and collected its own correctness and performance evidence before it could replace the accepted version. the candidate wasn't supposed to win because its author wrote a convincing report.
+
+the final implementations were **2.24×, 4.55×, and 5.45× faster than the seed** across the final transfer portfolio. one campaign also had about **9.7% higher latency on a shifted sparse-query workload**.
+
+three campaigns, one synthetic task, no matched human or single-agent comparator. those results don't tell me this workflow is generally better than every other way of optimizing software. they do show that these particular unattended campaigns produced reviewed improvements, different outcomes, and a regression worth keeping visible.
+
+that's the part i'm interested in extending. the program didn't need me to personally type "okay, now test the next hypothesis" every time.
+
+## the expensive part is deciding what winning means
+
+"make it faster" is a terrible specification if you're going to walk away.
+
+faster on which inputs? does setup time count? can it build an index once and quietly reuse it forever? can it use more memory? more threads? is a win on large inputs allowed to hide a loss on small ones? what happens when a supposedly faster version gets an answer wrong?
+
+for a sync algorithm, add another question: did we save compute by sending more of the file?
+
+i want to hand the loop something closer to this:
+
+```text title="what i'd rather specify"
+contract:     the answers and behavior that must stay correct
+search space: what the implementation may change
+objective:    the workload, metric, and resource limits
+acceptance:   independent correctness checks and repeated measurements
+budget:       when to stop, including when nothing improves
+output:       source, evidence, rejected ideas, and remaining problems
+```
+
+then it can go try things. i can wait and inspect the outcome instead of approving each edit in a conversation.
+
+getting that setup right is still engineering. probably more of it than the phrase "just run an agent" suggests. a test suite can miss the bug. a benchmark can reward the wrong behavior. if the evaluator is bad, the loop can spend all night getting very good at producing something i don't want.
+
+but once i've made the task executable enough, i don't want my availability to be a dependency between every two experiments.
+
+## i don't need one hypothesis to work
+
+this is where i think the scale gets interesting.
+
+if i can run one bounded campaign, i can imagine running three with different starting hypotheses. or thirty. or a thousand, if the problem and the budget justify it.
+
+not a thousand agents all editing the same checkout. separate workspaces, separate experiments, a record of what each tried, and a deliberate process for accepting or combining results. some can investigate data layout. some can test an algorithmic change. some can look for counterexamples to the current favorite.
+
+Volund didn't test that scale. the thousand-campaign version is where i think this can go, not a result from the paper.
+
+and the hardware doesn't become imaginary because there's an agent attached. a thousand performance measurements fighting over the same CPU would mostly tell me how well they fight over a CPU. exploration can be parallel while final measurements still need controlled resources. model calls cost money. independent campaigns can rediscover the same idea. review and integration can become their own bottlenecks.
+
+still, i find this a much more interesting use of more compute than generating a thousand versions of the same answer in a chat window.
+
+i want a larger search over things that can actually be run and checked.
+
+## i'm more attached to my bad ideas than i should be
+
+a bad hypothesis from an agent doesn't have the same personal cost as one i've spent my own weekends defending.
+
+if i've spent weeks building an approach, i want it to work. even when i'm trying to be honest about the results, abandoning it means accepting that a lot of my time didn't produce the thing i hoped for. there's always one more optimization i could try before admitting the premise might be wrong.
+
+an agent doesn't need to get a paper out of that particular idea. it doesn't have to explain to a friend why the project it kept talking about is now a negative result. i can make the job "test this, record what happened, move on if it fails".
+
+that doesn't mean models are naturally good scientists. i've seen them defend broken code, explain away failures, and keep patching a direction that should have been dropped. removing a human ego doesn't automatically produce intellectual honesty.
+
+so the ability to move on has to be built into the process. a failed hypothesis is a valid outcome. the reviewer gets to say no. an unfavorable valid measurement doesn't get rerun until a nicer one appears. rejected ideas stay in the record rather than disappearing from the final story.
+
+with those rules, a wrong guess can be a relatively cheap experiment instead of a direction i organize the next month around. try it, find out, keep the evidence, next.
+
+i'd like more of my own engineering to work that way, honestly.
+
+## waiting is fine if something useful is happening
+
+there's a kind of "AI coding" that still feels like operating a very fast keyboard through a slow conversation. ask for a change, inspect it, point out the issue, ask again. useful, but i'm still driving every turn.
+
+what i'm describing is less immediate. i set up the problem and let the program work. when i come back, maybe there's a better implementation. maybe the interesting output is that five plausible ideas failed and one workload still breaks the current approach.
+
+that's fine. i'd rather get that than a large diff and a confident summary.
+
+the thing that doesn't get tired is the loop, assuming i keep paying for it and it doesn't get stuck. it doesn't need me to feel like looking at another profile at 1 a.m. it can keep testing while i'm doing something else. it should also stop when the budget is gone, when the task is complete, or when it needs a decision it wasn't authorized to make.
+
+for optimization, the feedback is unusually convenient: run the program, check its answers, measure it. plenty of software work is messier. "is this a good interface?" doesn't turn into a trustworthy scalar just because i want to automate it. permissions, production state, and things that affect other people don't become safe to experiment on by default either.
+
+i don't think that makes the direction less important. it tells me where to start, and where the loop still needs a person.
+
+## where i think coding is going
+
+i think we're going to spend less time personally carrying each candidate implementation from idea to measurement, and more time deciding which problems are worth running, what evidence would change our minds, and which results deserve to survive.
+
+there will still be code to read and bad abstractions to untangle. someone still has to notice that the test is wrong, that the workload isn't representative, or that a faster answer isn't useful to the actual user. i don't expect to retire from thinking about the program.
+
+but i do expect to stop being the thing that has to wake up and start the next experiment.
+
+FerriSync left me with a pile of questions about a problem i couldn't leave alone. Volund gave me a small, concrete example of a loop that could work through optimization without me steering each step. i want to see how far that goes when we give these systems better evaluators, more room to explore, and a way to keep the failed ideas as useful evidence.
+
+a swarm of agents is an easy thing to say. a thousand independently checked experiments would be much more interesting to come back to.
+
+## links
+
+[Volund paper, coauthored with Laiza Ribeiro Silva](https://doi.org/10.2139/ssrn.7610439)
+
+[Volund code and released evidence](https://github.com/GustavoWidman/volund)
+
+[the earlier FerriSync teaser](/blog/modernizing-rsync)

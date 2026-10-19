@@ -1,32 +1,9 @@
 import { blog } from "fumadocs-mdx:collections/server";
 import { getLLMText } from "@/lib/get-llm-text";
-import { isScheduled } from "@/lib/helpers";
+import { formatDateValue, getPublicationDate, isScheduled } from "@/lib/publication-date";
 
-// Cache forever - content is static
-export const revalidate = false;
-
-function formatDate(date: unknown): string {
-  if (!date) {
-    return "";
-  }
-  if (typeof date === "string") {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return date;
-    }
-    const parsed = new Date(date);
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed.toISOString().split("T")[0];
-    }
-    return date;
-  }
-  if (typeof date === "object" && date !== null) {
-    const d = date as Date;
-    if (typeof d.toISOString === "function") {
-      return d.toISOString().split("T")[0];
-    }
-  }
-  return String(date);
-}
+// Evaluate publication gates on every request, including after a scheduled release.
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   // Group posts by slug, prefer English over Portuguese
@@ -41,7 +18,7 @@ export async function GET() {
     const lang = pathParts[pathParts.length - 1];
 
     // Skip scheduled posts
-    const dateStr = formatDate(entry.date);
+    const dateStr = formatDateValue(entry.date);
     if (isScheduled(dateStr)) {
       continue;
     }
@@ -55,7 +32,9 @@ export async function GET() {
 
   // Sort by date descending and get markdown content
   const sortedEntries = Array.from(slugMap.values())
-    .sort((a, b) => new Date(b.dateStr).getTime() - new Date(a.dateStr).getTime())
+    .sort(
+      (a, b) => getPublicationDate(b.dateStr).getTime() - getPublicationDate(a.dateStr).getTime(),
+    )
     .map((item) => getLLMText(item.entry));
 
   const posts = await Promise.all(sortedEntries);
@@ -73,7 +52,7 @@ ${posts.join("\n\n---\n\n")}`;
   return new Response(content, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=31536000, immutable",
+      "Cache-Control": "no-store",
     },
   });
 }

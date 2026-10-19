@@ -296,8 +296,10 @@ Configured in `tsconfig.json`:
 - Scheduled posts show a live countdown timer and are not accessible via URL
 - With SSR, scheduled status is evaluated at request time (not build time), so posts automatically become available when their release time passes
 - Site timezone is configured in `lib/config.ts` (`SITE_TIMEZONE`)
-- All dates are interpreted in the configured timezone and displayed in the user's browser timezone
-- Use `getDateInTimezone()` and `normalizeToTimezoneMidnight()` from `lib/helpers.ts` for date handling
+- Date-only metadata releases at site-local midnight. For an exact release, use a quoted ISO timestamp with an explicit offset (e.g. `date: '2026-10-21T16:00:00-03:00'`). Display remains in the user's browser timezone.
+- Use `getPublicationDate()`, `formatDateValue()`, and `isScheduled()` from `lib/publication-date.ts` for shared publication handling.
+- HTML, markdown/LLM routes, search, and sitemap evaluate publication gates per request. Do not statically cache these gates or retain search indexes across releases.
+- Standalone scheduling regression assertions: `bun scripts/check-publication-dates.ts` (no test framework required).
 
 ## Performance Patterns
 

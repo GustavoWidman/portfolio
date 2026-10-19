@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
-import { normalizeToTimezoneMidnight } from "@/lib/helpers";
+import { getPublicationDate } from "@/lib/publication-date";
 
 interface ScheduledPostCardProps {
   title: string;
@@ -23,14 +24,21 @@ function useCountdown(targetDate: Date): TimeRemaining {
     calculateTimeRemaining(targetDate),
   );
   const targetDateRef = useRef(targetDate);
+  const router = useRouter();
 
   useEffect(() => {
     targetDateRef.current = targetDate;
-    const update = () => setTimeRemaining(calculateTimeRemaining(targetDateRef.current));
-    update();
+    const update = () => {
+      setTimeRemaining(calculateTimeRemaining(targetDateRef.current));
+      if (Date.now() >= targetDateRef.current.getTime()) {
+        clearInterval(interval);
+        router.refresh();
+      }
+    };
     const interval = setInterval(update, 1000);
+    update();
     return () => clearInterval(interval);
-  }, [targetDate]);
+  }, [targetDate, router]);
 
   return timeRemaining;
 }
@@ -69,7 +77,7 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 }
 
 export default function ScheduledPostCard({ title, date, tags, lang }: ScheduledPostCardProps) {
-  const targetDate = useMemo(() => normalizeToTimezoneMidnight(date), [date]);
+  const targetDate = useMemo(() => getPublicationDate(date), [date]);
   const countdown = useCountdown(targetDate);
 
   const labels =

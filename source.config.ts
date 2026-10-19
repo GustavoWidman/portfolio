@@ -1,14 +1,23 @@
 import { defineCollections, defineConfig } from "fumadocs-mdx/config";
 import type { ShikiTransformer } from "@shikijs/types";
 import { z } from "zod";
+import { formatDateValue, getPublicationDate } from "./lib/publication-date";
 
 export const blog = defineCollections({
   type: "doc",
   dir: "./blog",
   schema: z.object({
     title: z.string(),
-    // YAML parses dates as Date objects, so we coerce to string
-    date: z.coerce.string(),
+    // Quote timed releases with an explicit UTC offset; legacy YAML dates stay date-only.
+    date: z.preprocess(
+      formatDateValue,
+      z
+        .string()
+        .refine(
+          (value) => Number.isFinite(getPublicationDate(value).getTime()),
+          "Use YYYY-MM-DD or a quoted ISO timestamp with an explicit timezone",
+        ),
+    ),
     excerpt: z.string(),
     tags: z.array(z.string()),
   }),

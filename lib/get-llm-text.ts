@@ -1,4 +1,5 @@
 import { blog } from "fumadocs-mdx:collections/server";
+import { formatDateValue, isScheduled } from "@/lib/publication-date";
 
 export interface LLMBlogPost {
   slug: string;
@@ -16,26 +17,6 @@ function parseEntryPath(path: string): { slug: string; lang: "en" | "pt" } {
   const lang = pathParts[pathParts.length - 1] as "en" | "pt";
   const slug = pathParts.slice(0, -1).join("/") || pathParts[0];
   return { slug, lang };
-}
-
-function formatDateValue(date: unknown): string {
-  if (!date) {
-    return "";
-  }
-  if (typeof date === "string") {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return date;
-    }
-    const parsed = new Date(date);
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed.toISOString().split("T")[0];
-    }
-    return date;
-  }
-  if (date instanceof Date) {
-    return date.toISOString().split("T")[0];
-  }
-  return String(date);
 }
 
 /**
@@ -69,21 +50,23 @@ ${markdown}`;
  * Get all blog posts as LLM-friendly content
  */
 export async function getAllLLMPosts(): Promise<LLMBlogPost[]> {
-  return blog.map((entry) => {
-    const { slug, lang } = parseEntryPath(entry.info.path);
-    const date = formatDateValue(entry.date);
+  return blog
+    .filter((entry) => !isScheduled(formatDateValue(entry.date)))
+    .map((entry) => {
+      const { slug, lang } = parseEntryPath(entry.info.path);
+      const date = formatDateValue(entry.date);
 
-    return {
-      slug,
-      lang,
-      title: entry.title,
-      date,
-      excerpt: entry.excerpt,
-      tags: entry.tags,
-      url: `https://guswid.com/blog/${slug}`,
-      markdown: "", // Will be populated asynchronously
-    };
-  });
+      return {
+        slug,
+        lang,
+        title: entry.title,
+        date,
+        excerpt: entry.excerpt,
+        tags: entry.tags,
+        url: `https://guswid.com/blog/${slug}`,
+        markdown: "", // Will be populated asynchronously
+      };
+    });
 }
 
 /**
@@ -100,6 +83,6 @@ export function getAllLLMSlugs(): string[] {
 export function getBlogEntry(slug: string, lang: "en" | "pt"): (typeof blog)[number] | undefined {
   return blog.find((entry) => {
     const { slug: entrySlug, lang: entryLang } = parseEntryPath(entry.info.path);
-    return entrySlug === slug && entryLang === lang;
+    return entrySlug === slug && entryLang === lang && !isScheduled(formatDateValue(entry.date));
   });
 }

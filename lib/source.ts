@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { blog } from "fumadocs-mdx:collections/server";
 import type { MDXProps } from "mdx/types";
-import { isScheduled } from "@/lib/helpers";
+import { formatDateValue, getPublicationDate, isScheduled } from "@/lib/publication-date";
 
 export interface BlogPost {
   slug: string;
@@ -29,26 +29,6 @@ function parseEntryPath(path: string): { slug: string; lang: "en" | "pt" } {
   const lang = pathParts[pathParts.length - 1] as "en" | "pt";
   const slug = pathParts.slice(0, -1).join("/") || pathParts[0];
   return { slug, lang };
-}
-
-function formatDateValue(date: unknown): string {
-  if (!date) {
-    return "";
-  }
-  if (typeof date === "string") {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return date;
-    }
-    const parsed = new Date(date);
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed.toISOString().split("T")[0];
-    }
-    return date;
-  }
-  if (date instanceof Date) {
-    return date.toISOString().split("T")[0];
-  }
-  return String(date);
 }
 
 function getBlogPosts(): BlogPost[] {
@@ -89,11 +69,13 @@ export function getBlogPostSummaries(): BlogPostSummary[] {
         scheduled: isScheduled(date),
       };
     })
-    .sort((a, b) => (a.date > b.date ? -1 : a.date < b.date ? 1 : 0));
+    .sort((a, b) => getPublicationDate(b.date).getTime() - getPublicationDate(a.date).getTime());
 }
 
 export function getBlogPost(slug: string, lang: "en" | "pt"): BlogPost | undefined {
-  return getBlogPosts().find((post) => post.slug === slug && post.lang === lang);
+  return getBlogPosts().find(
+    (post) => post.slug === slug && post.lang === lang && !isScheduled(post.date),
+  );
 }
 
 export function getAllBlogSlugs(): string[] {

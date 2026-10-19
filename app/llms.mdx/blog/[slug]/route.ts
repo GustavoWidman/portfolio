@@ -1,13 +1,11 @@
-import { getLLMText, getAllLLMSlugs, getBlogEntry } from "@/lib/get-llm-text";
-import { notFound } from "next/navigation";
+import { getLLMText, getBlogEntry } from "@/lib/get-llm-text";
 import { cookies, headers } from "next/headers";
 
 interface RouteContext {
   params: Promise<{ slug: string }>;
 }
 
-// Cache forever - content is static
-export const revalidate = false;
+export const dynamic = "force-dynamic";
 
 export async function GET(_request: Request, { params }: RouteContext) {
   const { slug } = await params;
@@ -34,7 +32,10 @@ export async function GET(_request: Request, { params }: RouteContext) {
   }
 
   if (!entry) {
-    notFound();
+    return new Response("Not Found", {
+      status: 404,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+    });
   }
 
   const markdown = await getLLMText(entry);
@@ -42,11 +43,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   return new Response(markdown, {
     headers: {
       "Content-Type": "text/markdown; charset=utf-8",
-      "Cache-Control": "public, max-age=31536000, immutable",
+      "Cache-Control": "no-store",
     },
   });
-}
-
-export function generateStaticParams() {
-  return getAllLLMSlugs().map((slug) => ({ slug }));
 }

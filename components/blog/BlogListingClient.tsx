@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import PrefetchLink from "@/components/PrefetchLink";
-import { normalizeToTimezoneMidnight } from "@/lib/helpers";
+import { getPublicationDate } from "@/lib/publication-date";
 import type { BlogPostSummary } from "@/lib/source";
 import { useLanguage } from "@/lib/useLanguage";
 import { SearchTrigger } from "./SearchTrigger";
@@ -71,7 +71,7 @@ export default function BlogListingClient({ posts, serverLang = "en" }: BlogList
               >
                 <div className="flex justify-between items-start mb-4">
                   <span className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
-                    {normalizeToTimezoneMidnight(post.date).toLocaleDateString(
+                    {getPublicationDate(post.date).toLocaleDateString(
                       lang === "en" ? "en-US" : "pt-BR",
                       {
                         year: "numeric",

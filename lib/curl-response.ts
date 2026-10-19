@@ -1,6 +1,6 @@
 import { blog } from "fumadocs-mdx:collections/server";
 import { DATA } from "@/lib/data/content";
-import { isScheduled } from "@/lib/helpers";
+import { formatDateValue, getPublicationDate, isScheduled } from "@/lib/publication-date";
 import type { Language } from "@/lib/types";
 
 const ANSI = {
@@ -65,22 +65,12 @@ function getBlogEntries(lang: Language): BlogEntry[] {
       const pathParts = entry.info.path.replace(/\.mdx?$/, "").split("/");
       const entryLang = pathParts[pathParts.length - 1] as "en" | "pt";
 
-      let date = "";
-      if (entry.date) {
-        if (/^\d{4}-\d{2}-\d{2}$/.test(entry.date)) {
-          date = entry.date;
-        } else {
-          const parsed = new Date(entry.date);
-          date = Number.isNaN(parsed.getTime())
-            ? entry.date
-            : parsed.toISOString().split("T")[0];
-        }
-      }
+      const date = formatDateValue(entry.date);
 
       return { title: entry.title, date, lang: entryLang };
     })
     .filter((e) => e.lang === lang && e.date !== "" && !isScheduled(e.date))
-    .sort((a, b) => (a.date > b.date ? -1 : a.date < b.date ? 1 : 0))
+    .sort((a, b) => getPublicationDate(b.date).getTime() - getPublicationDate(a.date).getTime())
     .map(({ title, date }) => ({ title, date }));
 }
 

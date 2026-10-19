@@ -1,0 +1,147 @@
+---
+title: quero parar de ficar de babá do loop
+date: '2026-10-21T16:00:00-03:00'
+excerpt: FerriSync me deixou preso a um problema de otimização. Volund me fez pensar no que acontece quando testar a próxima hipótese não depende mais de eu estar no teclado.
+tags: [ai, agents, optimization, software-engineering, volund, ferrisync]
+---
+
+# quero parar de ficar de babá do loop
+
+eu passei um tempo absurdo tentando mover menos bytes entre dois computadores.
+
+era pra ser uma ferramenta de sincronização de arquivos. aí eu quis sincronização por delta. depois quis entender por que encontrar as diferenças custava tanto. quando fui ver, estava lendo artigos, olhando perfis de execução, trocando estruturas de dados e encontrando mais perguntas do que tinha no começo.
+
+FerriSync surgiu em algum momento no meio disso.
+
+[eu já dei uma prévia desse projeto](/blog/modernizing-rsync). ele ainda não é público: a pesquisa está em avaliação, e o código e os resultados detalhados vão ter que esperar. este não é o post que vai revelar os detalhes técnicos. mas o tempo que passei nesse problema tem a ver com outra coisa em que venho pensando.
+
+boa parte da otimização é um loop que eu continuo operando manualmente.
+
+olhar um perfil de execução. pensar numa explicação. mudar alguma coisa. rodar. perceber que a explicação estava errada, ou que o benchmark estava errado, ou que o código ficou mais rápido porque parou de fazer parte do trabalho. corrigir. tentar de novo.
+
+eu não acho que o futuro interessante da programação assistida por IA seja só acelerar a parte de "mudar alguma coisa".
+
+eu quero descrever o que o programa precisa fazer, o que pode mudar e como vamos decidir se melhorou. aí rodar o negócio, deixar trabalhar e voltar pra inspecionar o que aconteceu.
+
+não um chat cheio de sugestões. experimentos de verdade.
+
+## o problema da sincronização de arquivos não vai ficar sem hipóteses
+
+num problema como sincronização por delta, sempre tem mais caminhos pra investigar. outras formas de encontrar dados reaproveitáveis. outros layouts. outros graus de paralelismo. outros tradeoffs entre processamento, memória e bytes enviados.
+
+algumas dessas ideias merecem uma implementação. outras merecem um experimento pequeno que mate a ideia antes de ela virar uma implementação. descobrir qual é qual faz parte do trabalho.
+
+eu posso ter uma explicação perfeitamente razoável pra algo ser mais rápido, passar dias implementando e descobrir que o custo que eliminei não era o que importava. ou que a melhoria desaparece fora da entrada que eu estava olhando por acaso.
+
+o código não era necessariamente a parte difícil. sair de "isso talvez ajude" pra "foi isso que realmente aconteceu" era.
+
+é essa parte que eu quero delegar mais vezes. não decidir que um resultado é verdadeiro porque o agente parece confiante. deixar ele trabalhar o suficiente pra existir um resultado sobre o qual discutir, pra começo de conversa.
+
+FerriSync é o motivo de eu me importar com isso. Volund é um experimento separado, bem menor, sobre como esse fluxo pode funcionar.
+
+## o que eu de fato testei com Volund
+
+[Volund](https://github.com/GustavoWidman/volund), que escrevi em coautoria com Laiza Ribeiro Silva, estuda otimização de programas por múltiplos agentes, sem acompanhamento humano durante a execução.
+
+a tarefa era um motor sintético de estatísticas por intervalo em C++20. você passa eventos e consultas, e ele precisa retornar contagens, somas, mínimos e máximos exatos para intervalos de timestamps. a interface e as regras de correção eram fixas. a implementação podia mudar.
+
+rodamos três campanhas de otimização inicializadas de forma independente, a partir da mesma implementação inicial não otimizada. elas rodaram em sequência; isso não foi uma demonstração de mil agentes trabalhando ao mesmo tempo.
+
+dentro de cada campanha, um agente líder podia investigar, delegar hipóteses a agentes de trabalho, comparar alternativas e indicar um candidato. um revisor separado recompilava esse candidato e coletava suas próprias evidências de correção e desempenho antes de ele poder substituir a versão aceita. o candidato não deveria vencer porque seu autor escreveu um relatório convincente.
+
+as implementações finais ficaram **2,24×, 4,55× e 5,45× mais rápidas que a implementação inicial** no conjunto final de cargas de transferência. uma das campanhas também teve uma **latência cerca de 9,7% maior numa carga de consultas esparsas deslocadas**.
+
+três campanhas, uma tarefa sintética, sem uma comparação em condições equivalentes com humanos ou com um único agente. esses resultados não me dizem que esse fluxo é, em geral, melhor que qualquer outra forma de otimizar software. eles mostram que essas campanhas específicas, sem acompanhamento humano, produziram melhorias revisadas, resultados diferentes entre si e uma regressão que vale a pena manter visível.
+
+é essa parte que eu quero expandir. o programa não precisou que eu digitasse pessoalmente "beleza, agora testa a próxima hipótese" toda vez.
+
+## a parte cara é decidir o que conta como vitória
+
+"deixa mais rápido" é uma especificação péssima se você pretende sair de perto.
+
+mais rápido com quais entradas? o tempo de preparação conta? pode construir um índice uma vez e ficar reutilizando pra sempre sem avisar? pode usar mais memória? mais threads? um ganho em entradas grandes pode esconder uma perda nas pequenas? o que acontece quando uma versão supostamente mais rápida erra uma resposta?
+
+pra um algoritmo de sincronização, acrescenta outra pergunta: economizamos processamento mandando uma parte maior do arquivo?
+
+eu quero entregar pro loop algo mais próximo disto:
+
+```text title="o que eu preferia especificar"
+contrato:     as respostas e o comportamento que precisam continuar corretos
+espaço de busca: o que a implementação pode mudar
+objetivo:     a carga de trabalho, a métrica e os limites de recursos
+aceitação:    verificações independentes de correção e medições repetidas
+orçamento:    quando parar, inclusive se nada melhorar
+saída:        código-fonte, evidências, ideias rejeitadas e problemas restantes
+```
+
+aí ele pode ir testar as coisas. eu posso esperar e inspecionar o resultado em vez de aprovar cada edição numa conversa.
+
+acertar essa preparação ainda é engenharia. provavelmente mais do que a frase "é só rodar um agente" sugere. uma suíte de testes pode deixar um bug passar. um benchmark pode recompensar o comportamento errado. se o avaliador for ruim, o loop pode passar a noite inteira ficando muito bom em produzir algo que eu não quero.
+
+mas, depois que eu defini a tarefa de um jeito que dá pra executar e avaliar, não quero que a minha disponibilidade seja uma dependência entre um experimento e o próximo.
+
+## eu não preciso que uma hipótese dê certo
+
+é aqui que eu acho que a escala começa a ficar interessante.
+
+se eu consigo rodar uma campanha com limites definidos, consigo imaginar três começando com hipóteses diferentes. ou trinta. ou mil, se o problema e o orçamento justificarem.
+
+não mil agentes editando o mesmo checkout. ambientes separados, experimentos separados, um registro do que cada um tentou e um processo deliberado pra aceitar ou combinar resultados. alguns podem investigar o layout dos dados. outros podem testar uma mudança de algoritmo. outros podem procurar contraexemplos pra ideia favorita do momento.
+
+Volund não testou essa escala. a versão com mil campanhas é onde eu acho que isso pode chegar, não um resultado do artigo.
+
+e o hardware não vira imaginário só porque tem um agente envolvido. mil medições de desempenho brigando pela mesma CPU me diriam, principalmente, quão bem elas brigam por uma CPU. a exploração pode ser paralela enquanto as medições finais ainda precisam de recursos controlados. chamadas a modelos custam dinheiro. campanhas independentes podem redescobrir a mesma ideia. revisão e integração podem virar gargalos por si só.
+
+mesmo assim, acho isso um uso muito mais interessante de mais processamento do que gerar mil versões da mesma resposta numa janela de chat.
+
+eu quero uma busca maior por coisas que de fato possam ser executadas e verificadas.
+
+## eu me apego mais às minhas ideias ruins do que deveria
+
+uma hipótese ruim de um agente não tem o mesmo custo pessoal de uma que eu passei meus próprios fins de semana defendendo.
+
+se eu passei semanas construindo uma abordagem, quero que ela funcione. mesmo tentando ser honesto com os resultados, abandonar aquilo significa aceitar que muito do meu tempo não produziu o que eu esperava. sempre tem mais uma otimização que eu poderia tentar antes de admitir que a premissa talvez esteja errada.
+
+um agente não precisa tirar um artigo daquela ideia específica. não precisa explicar pra um amigo por que o projeto de que ele tanto falava agora é um resultado negativo. eu posso definir o trabalho como "testa isso, registra o que aconteceu, segue pra próxima se não funcionar".
+
+isso não significa que modelos sejam naturalmente bons cientistas. já vi defenderem código quebrado, arranjarem justificativas pra falhas e continuarem remendando um caminho que já deveria ter sido abandonado. tirar o ego humano não produz honestidade intelectual automaticamente.
+
+então a capacidade de seguir em frente precisa fazer parte do processo. uma hipótese que falhou é um resultado válido. o revisor pode dizer não. uma medição válida e desfavorável não pode ser repetida até aparecer uma mais bonita. ideias rejeitadas ficam no registro, em vez de sumirem da história final.
+
+com essas regras, um palpite errado pode ser um experimento relativamente barato em vez de uma direção em torno da qual eu organizo o próximo mês. testa, descobre, guarda a evidência, próxima.
+
+sinceramente, eu queria que mais do meu próprio trabalho de engenharia funcionasse assim.
+
+## não tem problema esperar, se alguma coisa útil estiver acontecendo
+
+existe um tipo de "programação com IA" que ainda parece operar um teclado muito rápido por meio de uma conversa lenta. pedir uma mudança, inspecionar, apontar o problema, pedir de novo. útil, mas eu continuo conduzindo cada etapa.
+
+o que estou descrevendo é menos imediato. eu preparo o problema e deixo o programa trabalhar. quando volto, talvez exista uma implementação melhor. talvez o resultado interessante seja que cinco ideias plausíveis falharam e uma carga de trabalho ainda quebra a abordagem atual.
+
+tudo bem. prefiro receber isso a um diff enorme e um resumo confiante.
+
+o que não se cansa é o loop, desde que eu continue pagando e ele não fique preso. ele não precisa que eu esteja a fim de olhar mais um perfil de execução à uma da manhã. pode continuar testando enquanto faço outra coisa. também deve parar quando o orçamento acabar, quando a tarefa estiver concluída ou quando precisar de uma decisão que não estava autorizado a tomar.
+
+pra otimização, o feedback é especialmente conveniente: executar o programa, conferir as respostas, medir. boa parte do trabalho com software é mais bagunçada. "essa interface é boa?" não vira um número confiável só porque eu quero automatizar. permissões, estado de produção e coisas que afetam outras pessoas também não viram um campo seguro de experimentação por padrão.
+
+eu não acho que isso torne essa direção menos importante. isso me diz por onde começar e onde o loop ainda precisa de uma pessoa.
+
+## pra onde eu acho que programar está indo
+
+eu acho que vamos passar menos tempo levando pessoalmente cada implementação candidata da ideia à medição, e mais tempo decidindo quais problemas vale a pena colocar pra rodar, quais evidências nos fariam mudar de ideia e quais resultados merecem ficar.
+
+ainda vai ter código pra ler e abstrações ruins pra desembaraçar. alguém ainda precisa perceber que o teste está errado, que a carga de trabalho não é representativa ou que uma resposta mais rápida não serve pro usuário de verdade. eu não espero me aposentar de pensar sobre o programa.
+
+mas espero parar de ser a peça que precisa acordar e iniciar o próximo experimento.
+
+FerriSync me deixou com uma pilha de perguntas sobre um problema que eu não conseguia largar. Volund me deu um exemplo pequeno e concreto de um loop capaz de trabalhar na otimização sem que eu conduzisse cada passo. quero ver até onde isso vai quando dermos a esses sistemas avaliadores melhores, mais espaço pra explorar e um jeito de guardar as ideias que falharam como evidência útil.
+
+um enxame de agentes é fácil de dizer. mil experimentos verificados de forma independente seriam muito mais interessantes de encontrar na volta.
+
+## links
+
+[artigo do Volund, em coautoria com Laiza Ribeiro Silva](https://doi.org/10.2139/ssrn.7610439)
+
+[código e evidências disponibilizadas do Volund](https://github.com/GustavoWidman/volund)
+
+[a prévia anterior do FerriSync](/blog/modernizing-rsync)
