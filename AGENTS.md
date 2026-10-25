@@ -271,7 +271,7 @@ Configured in `tsconfig.json`:
 
 ## Key Dependencies
 
-- **Next.js 15**: App Router, standalone SSR
+- **Next.js 16.4+**: App Router, standalone SSR
 - **React 19**: UI framework
 - **Tailwind CSS 4**: Styling with custom theme
 - **fumadocs-mdx/ui**: Blog documentation system
@@ -312,10 +312,12 @@ Configured in `tsconfig.json`:
 
 ## Build Notes
 
+- Nix builds and the standalone server use the patched Bun runtime from `nix/bun.nix` (currently 1.4.4 or newer). The flake exports `packages.<system>.bun` and `overlays.default` for consumers.
 - Build requires `bun` runtime
 - Postinstall runs `fumadocs-mdx` to process MDX content
 - OG images generated at build time via `scripts/generate-og.tsx`
 - Standalone SSR compatible (Next.js server runtime)
 - Production deployments use Nix flakes; see `/Users/r3dlust/GitHub/nix/hosts/oracle-2/portfolio.nix`
-- Nix build requires `vips` and `stdenv.cc.cc.lib` for sharp (image processing)
+- Nix builds include `vips` and `stdenv.cc.cc.lib` for Sharp (image processing); the standalone launcher supplies their runtime library paths.
+- Security dependency updates must refresh both `bun.lock` and `.bun.nix` (`bun run postinstall`). Patched minimums: Next.js 16.4.1, React/React DOM 19.3.1, Sharp 0.35.5, Bun 1.4.4.
 - Blog images are bundled with posts via fumadocs-mdx `useImport: true`
