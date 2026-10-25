@@ -22,14 +22,20 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ self.overlays.default ];
+        };
       in
       {
+        packages.bun = pkgs.bun;
         packages.default = bun2nix.packages.${system}.default.mkDerivation {
           packageJson = ./package.json; # inherit `name` and `version` from package.json
           src = ./.;
 
           dontPatchShebangs = true;
+          nativeBuildInputs = [ pkgs.bun pkgs.makeWrapper ];
+          buildInputs = [ pkgs.vips pkgs.stdenv.cc.cc.lib ];
           bunDeps = bun2nix.packages.${system}.default.fetchBunDeps {
             bunNix = ./.bun.nix;
           };
@@ -37,7 +43,7 @@
             export NEXT_TELEMETRY_DISABLED=1
             export SOURCE_COMMIT="${commitHash}"
 
-            bun run build
+            ${pkgs.bun}/bin/bun run build
           '';
 
           installPhase = ''
@@ -63,6 +69,8 @@
             exec ${pkgs.bun}/bin/bun $out/share/server.js
             EOF
             chmod +x $out/bin/portfolio
+            wrapProgram $out/bin/portfolio \
+              --prefix LD_LIBRARY_PATH : ${pkgs.lib.makeLibraryPath [ pkgs.vips pkgs.stdenv.cc.cc.lib ]}
           '';
 
           meta = with pkgs.lib; {
@@ -74,6 +82,8 @@
       }
     )
     // {
+      overlays.default = final: prev: { bun = import ./nix/bun.nix prev; };
+
       nixosModules.default =
         {
           config,
