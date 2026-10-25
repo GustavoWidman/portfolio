@@ -34,8 +34,14 @@
           src = ./.;
 
           dontPatchShebangs = true;
-          nativeBuildInputs = [ pkgs.bun pkgs.makeWrapper ];
-          buildInputs = [ pkgs.vips pkgs.stdenv.cc.cc.lib ];
+          nativeBuildInputs = [
+            pkgs.bun
+            pkgs.makeWrapper
+          ];
+          buildInputs = [
+            pkgs.vips
+            pkgs.stdenv.cc.cc.lib
+          ];
           bunDeps = bun2nix.packages.${system}.default.fetchBunDeps {
             bunNix = ./.bun.nix;
           };
@@ -70,7 +76,12 @@
             EOF
             chmod +x $out/bin/portfolio
             wrapProgram $out/bin/portfolio \
-              --prefix LD_LIBRARY_PATH : ${pkgs.lib.makeLibraryPath [ pkgs.vips pkgs.stdenv.cc.cc.lib ]}
+              --prefix LD_LIBRARY_PATH : ${
+                pkgs.lib.makeLibraryPath [
+                  pkgs.vips
+                  pkgs.stdenv.cc.cc.lib
+                ]
+              }
           '';
 
           meta = with pkgs.lib; {
