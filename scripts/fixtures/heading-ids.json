@@ -1,0 +1,2186 @@
+{
+ "1brc": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "one-billion-rows-zero-platform-intrinsics",
+    "text": "one billion rows, zero platform intrinsics"
+   },
+   {
+    "depth": 2,
+    "id": "the-problem",
+    "text": "the problem"
+   },
+   {
+    "depth": 3,
+    "id": "the-dataset",
+    "text": "the dataset"
+   },
+   {
+    "depth": 3,
+    "id": "what-knowing-the-dataset-unlocks",
+    "text": "what knowing the dataset unlocks"
+   },
+   {
+    "depth": 2,
+    "id": "getting-started",
+    "text": "getting started"
+   },
+   {
+    "depth": 2,
+    "id": "bypassing-the-kernel-with-memmap2",
+    "text": "bypassing the kernel with memmap2"
+   },
+   {
+    "depth": 2,
+    "id": "never-parse-a-float-you-dont-need-to",
+    "text": "never parse a float you don't need to"
+   },
+   {
+    "depth": 3,
+    "id": "fitting-in-cache",
+    "text": "fitting in cache"
+   },
+   {
+    "depth": 2,
+    "id": "parallel-chunking-with-rayon",
+    "text": "parallel chunking with rayon"
+   },
+   {
+    "depth": 3,
+    "id": "the-merge",
+    "text": "the merge"
+   },
+   {
+    "depth": 2,
+    "id": "the-hashmap",
+    "text": "the hashmap"
+   },
+   {
+    "depth": 3,
+    "id": "memchr-for-the-hot-loop",
+    "text": "memchr for the hot loop"
+   },
+   {
+    "depth": 2,
+    "id": "where-it-landed",
+    "text": "where it landed"
+   },
+   {
+    "depth": 2,
+    "id": "an-autonomous-agent-takes-a-swing",
+    "text": "an autonomous agent takes a swing"
+   },
+   {
+    "depth": 2,
+    "id": "where-it-breaks",
+    "text": "where it breaks"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "um-bilhão-de-linhas-zero-intrínsecos-de-plataforma",
+    "text": "um bilhão de linhas, zero intrínsecos de plataforma"
+   },
+   {
+    "depth": 2,
+    "id": "o-problema",
+    "text": "o problema"
+   },
+   {
+    "depth": 3,
+    "id": "o-dataset",
+    "text": "o dataset"
+   },
+   {
+    "depth": 3,
+    "id": "o-que-saber-o-dataset-de-antemão-libera",
+    "text": "o que saber o dataset de antemão libera"
+   },
+   {
+    "depth": 2,
+    "id": "pra-rodar",
+    "text": "pra rodar"
+   },
+   {
+    "depth": 2,
+    "id": "contornando-o-kernel-com-memmap2",
+    "text": "contornando o kernel com memmap2"
+   },
+   {
+    "depth": 2,
+    "id": "nunca-parsear-um-float-que-você-não-precisa",
+    "text": "nunca parsear um float que você não precisa"
+   },
+   {
+    "depth": 3,
+    "id": "cabendo-no-cache",
+    "text": "cabendo no cache"
+   },
+   {
+    "depth": 2,
+    "id": "chunking-paralelo-com-rayon",
+    "text": "chunking paralelo com rayon"
+   },
+   {
+    "depth": 3,
+    "id": "o-merge",
+    "text": "o merge"
+   },
+   {
+    "depth": 2,
+    "id": "o-hashmap",
+    "text": "o hashmap"
+   },
+   {
+    "depth": 3,
+    "id": "memchr-para-o-loop-quente",
+    "text": "memchr para o loop quente"
+   },
+   {
+    "depth": 2,
+    "id": "onde-chegamos",
+    "text": "onde chegamos"
+   },
+   {
+    "depth": 2,
+    "id": "um-agente-autônomo-tenta-melhorar",
+    "text": "um agente autônomo tenta melhorar"
+   },
+   {
+    "depth": 2,
+    "id": "onde-quebra",
+    "text": "onde quebra"
+   }
+  ]
+ },
+ "autonomous-loops": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "i-want-to-stop-babysitting-the-loop",
+    "text": "i want to stop babysitting the loop"
+   },
+   {
+    "depth": 2,
+    "id": "the-file-sync-problem-isnt-going-to-run-out-of-hypotheses",
+    "text": "the file sync problem isn't going to run out of hypotheses"
+   },
+   {
+    "depth": 2,
+    "id": "what-i-actually-tried-with-volund",
+    "text": "what i actually tried with Volund"
+   },
+   {
+    "depth": 2,
+    "id": "the-expensive-part-is-deciding-what-winning-means",
+    "text": "the expensive part is deciding what winning means"
+   },
+   {
+    "depth": 2,
+    "id": "i-dont-need-one-hypothesis-to-work",
+    "text": "i don't need one hypothesis to work"
+   },
+   {
+    "depth": 2,
+    "id": "im-more-attached-to-my-bad-ideas-than-i-should-be",
+    "text": "i'm more attached to my bad ideas than i should be"
+   },
+   {
+    "depth": 2,
+    "id": "waiting-is-fine-if-something-useful-is-happening",
+    "text": "waiting is fine if something useful is happening"
+   },
+   {
+    "depth": 2,
+    "id": "where-i-think-coding-is-going",
+    "text": "where i think coding is going"
+   },
+   {
+    "depth": 2,
+    "id": "links",
+    "text": "links"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "quero-parar-de-ficar-de-babá-do-loop",
+    "text": "quero parar de ficar de babá do loop"
+   },
+   {
+    "depth": 2,
+    "id": "o-problema-da-sincronização-de-arquivos-não-vai-ficar-sem-hipóteses",
+    "text": "o problema da sincronização de arquivos não vai ficar sem hipóteses"
+   },
+   {
+    "depth": 2,
+    "id": "o-que-eu-de-fato-testei-com-volund",
+    "text": "o que eu de fato testei com Volund"
+   },
+   {
+    "depth": 2,
+    "id": "a-parte-cara-é-decidir-o-que-conta-como-vitória",
+    "text": "a parte cara é decidir o que conta como vitória"
+   },
+   {
+    "depth": 2,
+    "id": "eu-não-preciso-que-uma-hipótese-dê-certo",
+    "text": "eu não preciso que uma hipótese dê certo"
+   },
+   {
+    "depth": 2,
+    "id": "eu-me-apego-mais-às-minhas-ideias-ruins-do-que-deveria",
+    "text": "eu me apego mais às minhas ideias ruins do que deveria"
+   },
+   {
+    "depth": 2,
+    "id": "não-tem-problema-esperar-se-alguma-coisa-útil-estiver-acontecendo",
+    "text": "não tem problema esperar, se alguma coisa útil estiver acontecendo"
+   },
+   {
+    "depth": 2,
+    "id": "pra-onde-eu-acho-que-programar-está-indo",
+    "text": "pra onde eu acho que programar está indo"
+   },
+   {
+    "depth": 2,
+    "id": "links",
+    "text": "links"
+   }
+  ]
+ },
+ "based-kernel": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "writing-a-64-bit-os-from-scratch-to-dodge-homework",
+    "text": "writing a 64-bit os from scratch to dodge homework"
+   },
+   {
+    "depth": 2,
+    "id": "the-32-bit-trap",
+    "text": "the 32-bit trap"
+   },
+   {
+    "depth": 3,
+    "id": "the-custom-target-dilemma",
+    "text": "the custom target dilemma"
+   },
+   {
+    "depth": 3,
+    "id": "choosing-the-harder-path",
+    "text": "choosing the harder path"
+   },
+   {
+    "depth": 2,
+    "id": "flipping-the-magic-cpu-bits",
+    "text": "flipping the magic cpu bits"
+   },
+   {
+    "depth": 3,
+    "id": "identity-mapping-a-gigabyte",
+    "text": "identity mapping a gigabyte"
+   },
+   {
+    "depth": 3,
+    "id": "the-four-registers-of-the-apocalypse",
+    "text": "the four registers of the apocalypse"
+   },
+   {
+    "depth": 2,
+    "id": "building-the-game-the-right-way",
+    "text": "building the game the right way"
+   },
+   {
+    "depth": 3,
+    "id": "allocating-memory-from-thin-air",
+    "text": "allocating memory from thin air"
+   },
+   {
+    "depth": 3,
+    "id": "interrupt-driven-keyboard-events",
+    "text": "interrupt-driven keyboard events"
+   },
+   {
+    "depth": 2,
+    "id": "why-based-kernel",
+    "text": "why \"based-kernel\"?"
+   },
+   {
+    "depth": 2,
+    "id": "what-this-cost-me",
+    "text": "what this cost me"
+   },
+   {
+    "depth": 2,
+    "id": "wrapping-up",
+    "text": "wrapping up"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "escrevendo-um-os-64-bit-do-zero-para-fugir-da-tarefa",
+    "text": "escrevendo um os 64-bit do zero para fugir da tarefa"
+   },
+   {
+    "depth": 2,
+    "id": "a-armadilha-do-32-bit",
+    "text": "a armadilha do 32-bit"
+   },
+   {
+    "depth": 3,
+    "id": "o-dilema-do-target-customizado",
+    "text": "o dilema do target customizado"
+   },
+   {
+    "depth": 3,
+    "id": "escolhendo-o-caminho-mais-difícil",
+    "text": "escolhendo o caminho mais difícil"
+   },
+   {
+    "depth": 2,
+    "id": "invertendo-os-bits-mágicos-da-cpu",
+    "text": "invertendo os bits mágicos da cpu"
+   },
+   {
+    "depth": 3,
+    "id": "identity-mapping-de-um-gigabyte",
+    "text": "identity mapping de um gigabyte"
+   },
+   {
+    "depth": 3,
+    "id": "os-quatro-registradores-do-apocalipse",
+    "text": "os quatro registradores do apocalipse"
+   },
+   {
+    "depth": 2,
+    "id": "construindo-o-jogo-do-jeito-certo",
+    "text": "construindo o jogo do jeito certo"
+   },
+   {
+    "depth": 3,
+    "id": "alocando-memória-do-nada",
+    "text": "alocando memória do nada"
+   },
+   {
+    "depth": 3,
+    "id": "eventos-de-teclado-orientados-a-interrupções",
+    "text": "eventos de teclado orientados a interrupções"
+   },
+   {
+    "depth": 2,
+    "id": "por-que-based-kernel",
+    "text": "por que \"based-kernel\"?"
+   },
+   {
+    "depth": 2,
+    "id": "o-preço-que-eu-paguei",
+    "text": "o preço que eu paguei"
+   },
+   {
+    "depth": 2,
+    "id": "fechando-a-conta",
+    "text": "fechando a conta"
+   }
+  ]
+ },
+ "hamming-rust": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "dodging-garbage-collectors-with-error-correction",
+    "text": "dodging garbage collectors with error correction"
+   },
+   {
+    "depth": 2,
+    "id": "the-assignment-that-started-it",
+    "text": "the assignment that started it"
+   },
+   {
+    "depth": 2,
+    "id": "the-problem-with-raw-bits",
+    "text": "the problem with raw bits"
+   },
+   {
+    "depth": 3,
+    "id": "a-naive-approach",
+    "text": "a naive approach"
+   },
+   {
+    "depth": 2,
+    "id": "the-genius-of-overlapping-groups",
+    "text": "the genius of overlapping groups"
+   },
+   {
+    "depth": 3,
+    "id": "checking-the-binary-representation",
+    "text": "checking the binary representation"
+   },
+   {
+    "depth": 2,
+    "id": "indexing-nightmares",
+    "text": "indexing nightmares"
+   },
+   {
+    "depth": 3,
+    "id": "the-0-indexed-vs-1-indexed-trap",
+    "text": "the 0-indexed vs 1-indexed trap"
+   },
+   {
+    "depth": 2,
+    "id": "finding-the-needle-in-the-haystack",
+    "text": "finding the needle in the haystack"
+   },
+   {
+    "depth": 2,
+    "id": "the-gus-protocol-great-unused-standard",
+    "text": "the gus protocol (great unused standard)"
+   },
+   {
+    "depth": 3,
+    "id": "the-frame-wrapper",
+    "text": "the frame wrapper"
+   },
+   {
+    "depth": 2,
+    "id": "getting-started-with-the-repo",
+    "text": "getting started with the repo"
+   },
+   {
+    "depth": 2,
+    "id": "the-tradeoffs-of-fixing-errors",
+    "text": "the tradeoffs of fixing errors"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "fugindo-de-garbage-collectors-com-correção-de-erros",
+    "text": "fugindo de garbage collectors com correção de erros"
+   },
+   {
+    "depth": 2,
+    "id": "o-trabalho-que-começou-tudo",
+    "text": "o trabalho que começou tudo"
+   },
+   {
+    "depth": 2,
+    "id": "o-problema-com-bits-crus",
+    "text": "o problema com bits crus"
+   },
+   {
+    "depth": 3,
+    "id": "uma-abordagem-ingênua",
+    "text": "uma abordagem ingênua"
+   },
+   {
+    "depth": 2,
+    "id": "a-genialidade-dos-grupos-sobrepostos",
+    "text": "a genialidade dos grupos sobrepostos"
+   },
+   {
+    "depth": 3,
+    "id": "checando-a-representação-binária",
+    "text": "checando a representação binária"
+   },
+   {
+    "depth": 2,
+    "id": "pesadelos-de-indexação",
+    "text": "pesadelos de indexação"
+   },
+   {
+    "depth": 3,
+    "id": "a-armadilha-do-index-0-vs-index-1",
+    "text": "a armadilha do index-0 vs index-1"
+   },
+   {
+    "depth": 2,
+    "id": "achando-a-agulha-no-palheiro",
+    "text": "achando a agulha no palheiro"
+   },
+   {
+    "depth": 2,
+    "id": "o-protocolo-gus-great-unused-standard",
+    "text": "o protocolo gus (great unused standard)"
+   },
+   {
+    "depth": 3,
+    "id": "o-frame-wrapper",
+    "text": "o frame wrapper"
+   },
+   {
+    "depth": 2,
+    "id": "começando-com-o-repositório",
+    "text": "começando com o repositório"
+   },
+   {
+    "depth": 2,
+    "id": "os-prós-e-contras-de-consertar-erros",
+    "text": "os prós e contras de consertar erros"
+   }
+  ]
+ },
+ "http-impl": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "building-http11-on-a-tcp-stack-i-wrote-myself",
+    "text": "building http/1.1 on a tcp stack i wrote myself"
+   },
+   {
+    "depth": 2,
+    "id": "the-idea",
+    "text": "the idea"
+   },
+   {
+    "depth": 2,
+    "id": "parsing-http-by-hand",
+    "text": "parsing http by hand"
+   },
+   {
+    "depth": 3,
+    "id": "the-request-parser",
+    "text": "the request parser"
+   },
+   {
+    "depth": 3,
+    "id": "chunked-transfer-encoding",
+    "text": "chunked transfer encoding"
+   },
+   {
+    "depth": 3,
+    "id": "the-response-builder",
+    "text": "the response builder"
+   },
+   {
+    "depth": 2,
+    "id": "the-server",
+    "text": "the server"
+   },
+   {
+    "depth": 3,
+    "id": "built-in-routes",
+    "text": "built-in routes"
+   },
+   {
+    "depth": 2,
+    "id": "the-tun-device-bug-round-one",
+    "text": "the tun device bug (round one)"
+   },
+   {
+    "depth": 3,
+    "id": "what-happened",
+    "text": "what happened"
+   },
+   {
+    "depth": 3,
+    "id": "the-fix",
+    "text": "the fix"
+   },
+   {
+    "depth": 2,
+    "id": "the-tun-device-bug-round-two-the-10-second-stall",
+    "text": "the tun device bug (round two): the 10-second stall"
+   },
+   {
+    "depth": 3,
+    "id": "the-polling-loop-from-hell",
+    "text": "the polling loop from hell"
+   },
+   {
+    "depth": 3,
+    "id": "the-fix-1",
+    "text": "the fix"
+   },
+   {
+    "depth": 2,
+    "id": "dual-transport-tun-vs-kernel-tcp",
+    "text": "dual transport: tun vs kernel tcp"
+   },
+   {
+    "depth": 3,
+    "id": "kernel-tcp-mode",
+    "text": "kernel tcp mode"
+   },
+   {
+    "depth": 3,
+    "id": "why-both-modes-exist",
+    "text": "why both modes exist"
+   },
+   {
+    "depth": 2,
+    "id": "the-client",
+    "text": "the client"
+   },
+   {
+    "depth": 2,
+    "id": "the-architecture",
+    "text": "the architecture"
+   },
+   {
+    "depth": 3,
+    "id": "what-the-library-exports",
+    "text": "what the library exports"
+   },
+   {
+    "depth": 2,
+    "id": "whats-missing-on-purpose",
+    "text": "what's missing (on purpose)"
+   },
+   {
+    "depth": 2,
+    "id": "what-i-learned",
+    "text": "what i learned"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "construindo-http11-sobre-uma-stack-tcp-que-eu-mesmo-escrevi",
+    "text": "construindo http/1.1 sobre uma stack tcp que eu mesmo escrevi"
+   },
+   {
+    "depth": 2,
+    "id": "a-ideia",
+    "text": "a ideia"
+   },
+   {
+    "depth": 2,
+    "id": "parseando-http-na-mao",
+    "text": "parseando http na mao"
+   },
+   {
+    "depth": 3,
+    "id": "o-parser-de-requests",
+    "text": "o parser de requests"
+   },
+   {
+    "depth": 3,
+    "id": "chunked-transfer-encoding",
+    "text": "chunked transfer encoding"
+   },
+   {
+    "depth": 3,
+    "id": "o-builder-de-responses",
+    "text": "o builder de responses"
+   },
+   {
+    "depth": 2,
+    "id": "o-servidor",
+    "text": "o servidor"
+   },
+   {
+    "depth": 3,
+    "id": "rotas-embutidas",
+    "text": "rotas embutidas"
+   },
+   {
+    "depth": 2,
+    "id": "o-bug-do-dispositivo-tun-primeira-rodada",
+    "text": "o bug do dispositivo TUN (primeira rodada)"
+   },
+   {
+    "depth": 3,
+    "id": "o-que-aconteceu",
+    "text": "o que aconteceu"
+   },
+   {
+    "depth": 3,
+    "id": "a-correcao",
+    "text": "a correcao"
+   },
+   {
+    "depth": 2,
+    "id": "o-bug-do-dispositivo-tun-segunda-rodada-a-pausa-de-10-segundos",
+    "text": "o bug do dispositivo TUN (segunda rodada): a pausa de 10 segundos"
+   },
+   {
+    "depth": 3,
+    "id": "o-loop-de-polling-infernal",
+    "text": "o loop de polling infernal"
+   },
+   {
+    "depth": 3,
+    "id": "a-correcao-1",
+    "text": "a correcao"
+   },
+   {
+    "depth": 2,
+    "id": "transporte-duplo-tun-vs-kernel-tcp",
+    "text": "transporte duplo: TUN vs kernel TCP"
+   },
+   {
+    "depth": 3,
+    "id": "modo-kernel-tcp",
+    "text": "modo kernel TCP"
+   },
+   {
+    "depth": 3,
+    "id": "por-que-os-dois-modos-existem",
+    "text": "por que os dois modos existem"
+   },
+   {
+    "depth": 2,
+    "id": "o-cliente",
+    "text": "o cliente"
+   },
+   {
+    "depth": 2,
+    "id": "a-arquitetura",
+    "text": "a arquitetura"
+   },
+   {
+    "depth": 3,
+    "id": "o-que-a-biblioteca-exporta",
+    "text": "o que a biblioteca exporta"
+   },
+   {
+    "depth": 2,
+    "id": "o-que-falta-de-proposito",
+    "text": "o que falta (de proposito)"
+   },
+   {
+    "depth": 2,
+    "id": "o-que-eu-aprendi",
+    "text": "o que eu aprendi"
+   }
+  ]
+ },
+ "iris": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "bringing-cheap-bluetooth-leds-into-apple-home",
+    "text": "bringing cheap bluetooth leds into apple home"
+   },
+   {
+    "depth": 2,
+    "id": "a-bridge-not-a-replacement",
+    "text": "a bridge, not a replacement"
+   },
+   {
+    "depth": 2,
+    "id": "seven-bytes-several-assumptions",
+    "text": "seven bytes, several assumptions"
+   },
+   {
+    "depth": 2,
+    "id": "the-webcam-was-not-a-colorimeter",
+    "text": "the webcam was not a colorimeter"
+   },
+   {
+    "depth": 2,
+    "id": "a-correction-not-a-calibration",
+    "text": "a correction, not a calibration"
+   },
+   {
+    "depth": 2,
+    "id": "pretty-damn-good-is-a-useful-stopping-point",
+    "text": "pretty damn good is a useful stopping point"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "colocando-leds-bluetooth-baratos-no-apple-home",
+    "text": "colocando leds bluetooth baratos no apple home"
+   },
+   {
+    "depth": 2,
+    "id": "uma-ponte-não-uma-substituição",
+    "text": "uma ponte, não uma substituição"
+   },
+   {
+    "depth": 2,
+    "id": "sete-bytes-várias-suposições",
+    "text": "sete bytes, várias suposições"
+   },
+   {
+    "depth": 2,
+    "id": "a-webcam-não-era-um-colorímetro",
+    "text": "a webcam não era um colorímetro"
+   },
+   {
+    "depth": 2,
+    "id": "uma-correção-não-uma-calibração",
+    "text": "uma correção, não uma calibração"
+   },
+   {
+    "depth": 2,
+    "id": "bom-pra-caramba-é-um-ponto-de-parada-útil",
+    "text": "bom pra caramba é um ponto de parada útil"
+   }
+  ]
+ },
+ "modernizing-rsync": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "the-problem-with-rsync-in-2026",
+    "text": "the problem with rsync in 2026"
+   },
+   {
+    "depth": 2,
+    "id": "the-network-bottleneck-is-dead",
+    "text": "the network bottleneck is dead"
+   },
+   {
+    "depth": 2,
+    "id": "how-rsync-actually-works-the-deep-dive",
+    "text": "how rsync actually works (the deep dive)"
+   },
+   {
+    "depth": 3,
+    "id": "phase-1-signature-generation",
+    "text": "phase 1: signature generation"
+   },
+   {
+    "depth": 3,
+    "id": "phase-2-delta-computation",
+    "text": "phase 2: delta computation"
+   },
+   {
+    "depth": 3,
+    "id": "the-hidden-cost",
+    "text": "the hidden cost"
+   },
+   {
+    "depth": 2,
+    "id": "the-adler-32-ceiling",
+    "text": "the adler-32 ceiling"
+   },
+   {
+    "depth": 2,
+    "id": "content-defined-chunking-a-different-approach",
+    "text": "content-defined chunking: a different approach"
+   },
+   {
+    "depth": 3,
+    "id": "how-cdc-works",
+    "text": "how cdc works"
+   },
+   {
+    "depth": 3,
+    "id": "why-cdc-changes-everything",
+    "text": "why cdc changes everything"
+   },
+   {
+    "depth": 3,
+    "id": "the-cdc-tradeoff",
+    "text": "the cdc tradeoff"
+   },
+   {
+    "depth": 2,
+    "id": "the-attack-vectors",
+    "text": "the attack vectors"
+   },
+   {
+    "depth": 3,
+    "id": "1-simd-acceleration",
+    "text": "1. simd acceleration"
+   },
+   {
+    "depth": 3,
+    "id": "2-multi-core-parallelization",
+    "text": "2. multi-core parallelization"
+   },
+   {
+    "depth": 3,
+    "id": "3-cache-friendly-data-structures",
+    "text": "3. cache-friendly data structures"
+   },
+   {
+    "depth": 2,
+    "id": "why-this-matters",
+    "text": "why this matters"
+   },
+   {
+    "depth": 2,
+    "id": "what-ferrisync-is-and-isnt",
+    "text": "what ferrisync is (and isn't)"
+   },
+   {
+    "depth": 2,
+    "id": "what-comes-next",
+    "text": "what comes next"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "o-problema-do-rsync-em-2026",
+    "text": "o problema do rsync em 2026"
+   },
+   {
+    "depth": 2,
+    "id": "o-gargalo-de-rede-morreu",
+    "text": "o gargalo de rede morreu"
+   },
+   {
+    "depth": 2,
+    "id": "como-o-rsync-realmente-funciona-o-deep-dive",
+    "text": "como o rsync realmente funciona (o deep dive)"
+   },
+   {
+    "depth": 3,
+    "id": "fase-1-geração-de-assinatura",
+    "text": "fase 1: geração de assinatura"
+   },
+   {
+    "depth": 3,
+    "id": "fase-2-computação-de-delta",
+    "text": "fase 2: computação de delta"
+   },
+   {
+    "depth": 3,
+    "id": "o-custo-escondido",
+    "text": "o custo escondido"
+   },
+   {
+    "depth": 2,
+    "id": "o-teto-do-adler-32",
+    "text": "o teto do adler-32"
+   },
+   {
+    "depth": 2,
+    "id": "content-defined-chunking-uma-abordagem-diferente",
+    "text": "content-defined chunking: uma abordagem diferente"
+   },
+   {
+    "depth": 3,
+    "id": "como-cdc-funciona",
+    "text": "como cdc funciona"
+   },
+   {
+    "depth": 3,
+    "id": "por-que-cdc-muda-tudo",
+    "text": "por que cdc muda tudo"
+   },
+   {
+    "depth": 3,
+    "id": "o-tradeoff-do-cdc",
+    "text": "o tradeoff do cdc"
+   },
+   {
+    "depth": 2,
+    "id": "os-vetores-de-ataque",
+    "text": "os vetores de ataque"
+   },
+   {
+    "depth": 3,
+    "id": "1-aceleração-simd",
+    "text": "1. aceleração simd"
+   },
+   {
+    "depth": 3,
+    "id": "2-paralelização-multi-core",
+    "text": "2. paralelização multi-core"
+   },
+   {
+    "depth": 3,
+    "id": "3-estruturas-de-dados-cache-friendly",
+    "text": "3. estruturas de dados cache-friendly"
+   },
+   {
+    "depth": 2,
+    "id": "por-que-isso-importa",
+    "text": "por que isso importa"
+   },
+   {
+    "depth": 2,
+    "id": "o-que-o-ferrisync-é-e-não-é",
+    "text": "o que o ferrisync é (e não é)"
+   },
+   {
+    "depth": 2,
+    "id": "o-que-vem-a-seguir",
+    "text": "o que vem a seguir"
+   }
+  ]
+ },
+ "nix-intro": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "escaping-dependency-hell-by-over-engineering-my-entire-life",
+    "text": "escaping dependency hell by over-engineering my entire life"
+   },
+   {
+    "depth": 2,
+    "id": "what-even-is-nix-no-seriously",
+    "text": "what even is nix? (no, seriously)"
+   },
+   {
+    "depth": 2,
+    "id": "killing-the-fhs",
+    "text": "killing the fhs"
+   },
+   {
+    "depth": 3,
+    "id": "the-beauty-of-cryptographic-hashing",
+    "text": "the beauty of cryptographic hashing"
+   },
+   {
+    "depth": 3,
+    "id": "pure-environments-and-the-sandbox",
+    "text": "pure environments and the sandbox"
+   },
+   {
+    "depth": 2,
+    "id": "the-500gb-rust-mistake",
+    "text": "the 500gb rust mistake"
+   },
+   {
+    "depth": 2,
+    "id": "escaping-docker",
+    "text": "escaping docker"
+   },
+   {
+    "depth": 3,
+    "id": "the-ros2-networking-nightmare",
+    "text": "the ros2 networking nightmare"
+   },
+   {
+    "depth": 3,
+    "id": "native-execution-to-the-rescue",
+    "text": "native execution to the rescue"
+   },
+   {
+    "depth": 2,
+    "id": "getting-started-without-losing-your-mind",
+    "text": "getting started (without losing your mind)"
+   },
+   {
+    "depth": 3,
+    "id": "bonus-keeping-your-precious-shell",
+    "text": "bonus: keeping your precious shell"
+   },
+   {
+    "depth": 2,
+    "id": "the-bad-parts-and-there-are-many",
+    "text": "the bad parts (and there are many)"
+   },
+   {
+    "depth": 3,
+    "id": "building-blindfolded",
+    "text": "building blindfolded"
+   },
+   {
+    "depth": 3,
+    "id": "reading-the-unreadable",
+    "text": "reading the unreadable"
+   },
+   {
+    "depth": 3,
+    "id": "flying-blind",
+    "text": "flying blind"
+   },
+   {
+    "depth": 2,
+    "id": "was-it-worth-it",
+    "text": "was it worth it?"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "escapando-do-inferno-de-dependências-por-engenharia-excessiva-da-minha-própria-vida",
+    "text": "escapando do inferno de dependências por engenharia excessiva da minha própria vida"
+   },
+   {
+    "depth": 2,
+    "id": "o-que-diabos-é-nix-não-é-sério",
+    "text": "o que diabos é nix? (não, é sério)"
+   },
+   {
+    "depth": 2,
+    "id": "matando-o-fhs",
+    "text": "matando o fhs"
+   },
+   {
+    "depth": 3,
+    "id": "a-beleza-do-hash-criptográfico",
+    "text": "a beleza do hash criptográfico"
+   },
+   {
+    "depth": 3,
+    "id": "ambientes-puros-e-a-sandbox",
+    "text": "ambientes puros e a sandbox"
+   },
+   {
+    "depth": 2,
+    "id": "o-erro-de-500gb-do-rust",
+    "text": "o erro de 500gb do rust"
+   },
+   {
+    "depth": 2,
+    "id": "escapando-do-docker",
+    "text": "escapando do docker"
+   },
+   {
+    "depth": 3,
+    "id": "o-pesadelo-de-rede-do-ros2",
+    "text": "o pesadelo de rede do ros2"
+   },
+   {
+    "depth": 3,
+    "id": "execução-nativa-ao-resgate",
+    "text": "execução nativa ao resgate"
+   },
+   {
+    "depth": 2,
+    "id": "começando-sem-perder-a-cabeça",
+    "text": "começando (sem perder a cabeça)"
+   },
+   {
+    "depth": 3,
+    "id": "bônus-mantendo-o-seu-shell-precioso",
+    "text": "bônus: mantendo o seu shell precioso"
+   },
+   {
+    "depth": 2,
+    "id": "as-partes-ruins-e-há-muitas",
+    "text": "as partes ruins (e há muitas)"
+   },
+   {
+    "depth": 3,
+    "id": "compilando-de-olhos-vendados",
+    "text": "compilando de olhos vendados"
+   },
+   {
+    "depth": 3,
+    "id": "lendo-o-ilegível",
+    "text": "lendo o ilegível"
+   },
+   {
+    "depth": 3,
+    "id": "voando-às-cegas",
+    "text": "voando às cegas"
+   },
+   {
+    "depth": 2,
+    "id": "valeu-a-pena",
+    "text": "valeu a pena?"
+   }
+  ]
+ },
+ "rinha-de-backend": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "squeezing-3000-requests-per-second-from-a-shared-sqlite-file",
+    "text": "squeezing 3000 requests per second from a shared sqlite file"
+   },
+   {
+    "depth": 2,
+    "id": "the-first-death-caddy-runs-out-of-memory",
+    "text": "the first death: caddy runs out of memory"
+   },
+   {
+    "depth": 3,
+    "id": "tuning-into-the-void",
+    "text": "tuning into the void"
+   },
+   {
+    "depth": 3,
+    "id": "accepting-the-nginx-pill",
+    "text": "accepting the nginx pill"
+   },
+   {
+    "depth": 2,
+    "id": "the-database-dilemma-starving-for-resources",
+    "text": "the database dilemma: starving for resources"
+   },
+   {
+    "depth": 3,
+    "id": "greedy-postgres",
+    "text": "greedy postgres"
+   },
+   {
+    "depth": 3,
+    "id": "the-what-if-i-just-moment",
+    "text": "the \"what if i just\" moment"
+   },
+   {
+    "depth": 2,
+    "id": "abusing-sqlite-with-wal-mode",
+    "text": "abusing sqlite with wal mode"
+   },
+   {
+    "depth": 3,
+    "id": "mounting-a-shared-volume",
+    "text": "mounting a shared volume"
+   },
+   {
+    "depth": 3,
+    "id": "the-pragmas-that-made-it-work",
+    "text": "the pragmas that made it work"
+   },
+   {
+    "depth": 2,
+    "id": "breaking-the-benchmark-tool",
+    "text": "breaking the benchmark tool"
+   },
+   {
+    "depth": 3,
+    "id": "gatling-chokes-on-open-files",
+    "text": "gatling chokes on open files"
+   },
+   {
+    "depth": 3,
+    "id": "writing-a-custom-load-tester-in-rust",
+    "text": "writing a custom load tester in rust"
+   },
+   {
+    "depth": 2,
+    "id": "the-production-tradeoffs",
+    "text": "the production tradeoffs"
+   },
+   {
+    "depth": 2,
+    "id": "the-final-verdict",
+    "text": "the final verdict"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "extraindo-3000-requisições-por-segundo-de-um-arquivo-sqlite-compartilhado",
+    "text": "extraindo 3000 requisições por segundo de um arquivo sqlite compartilhado"
+   },
+   {
+    "depth": 2,
+    "id": "a-primeira-morte-caddy-fica-sem-memória",
+    "text": "a primeira morte: caddy fica sem memória"
+   },
+   {
+    "depth": 3,
+    "id": "otimizando-para-o-nada",
+    "text": "otimizando para o nada"
+   },
+   {
+    "depth": 3,
+    "id": "engolindo-o-orgulho-e-usando-nginx",
+    "text": "engolindo o orgulho e usando nginx"
+   },
+   {
+    "depth": 2,
+    "id": "o-dilema-do-banco-de-dados-fome-de-recursos",
+    "text": "o dilema do banco de dados: fome de recursos"
+   },
+   {
+    "depth": 3,
+    "id": "postgres-ganancioso",
+    "text": "postgres ganancioso"
+   },
+   {
+    "depth": 3,
+    "id": "o-momento-do-e-se-eu-simplesmente",
+    "text": "o momento do \"e se eu simplesmente\""
+   },
+   {
+    "depth": 2,
+    "id": "abusando-do-sqlite-com-o-modo-wal",
+    "text": "abusando do sqlite com o modo wal"
+   },
+   {
+    "depth": 3,
+    "id": "montando-um-volume-compartilhado",
+    "text": "montando um volume compartilhado"
+   },
+   {
+    "depth": 3,
+    "id": "os-pragmas-que-fizeram-funcionar",
+    "text": "os pragmas que fizeram funcionar"
+   },
+   {
+    "depth": 2,
+    "id": "quebrando-a-ferramenta-de-benchmark",
+    "text": "quebrando a ferramenta de benchmark"
+   },
+   {
+    "depth": 3,
+    "id": "gatling-engasga-nos-arquivos-abertos",
+    "text": "gatling engasga nos arquivos abertos"
+   },
+   {
+    "depth": 3,
+    "id": "escrevendo-um-testador-de-carga-customizado-em-rust",
+    "text": "escrevendo um testador de carga customizado em rust"
+   },
+   {
+    "depth": 2,
+    "id": "as-trocas-para-a-produção",
+    "text": "as trocas para a produção"
+   },
+   {
+    "depth": 2,
+    "id": "o-veredito-final",
+    "text": "o veredito final"
+   }
+  ]
+ },
+ "rnn-rust": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "how-i-accidentally-optimized-a-rust-rnn-to-be-faster-than-pytorch",
+    "text": "how i accidentally optimized a rust rnn to be faster than pytorch"
+   },
+   {
+    "depth": 2,
+    "id": "the-journey-and-the-arrogance",
+    "text": "the journey (and the arrogance)"
+   },
+   {
+    "depth": 3,
+    "id": "the-naive-approach-or-how-to-burn-cpu-cycles",
+    "text": "the naive approach (or: how to burn cpu cycles)"
+   },
+   {
+    "depth": 2,
+    "id": "optimization-arc",
+    "text": "optimization arc"
+   },
+   {
+    "depth": 3,
+    "id": "the-wait-i-can-just-moment",
+    "text": "the \"wait, i can just...\" moment"
+   },
+   {
+    "depth": 3,
+    "id": "iterator-nightmare",
+    "text": "iterator nightmare"
+   },
+   {
+    "depth": 3,
+    "id": "the-workspace-pattern",
+    "text": "the workspace pattern"
+   },
+   {
+    "depth": 2,
+    "id": "the-showdown",
+    "text": "the showdown"
+   },
+   {
+    "depth": 3,
+    "id": "the-results",
+    "text": "the results"
+   },
+   {
+    "depth": 3,
+    "id": "comparing-apples-to-giant-python-snakes",
+    "text": "comparing apples to... giant python snakes?"
+   },
+   {
+    "depth": 3,
+    "id": "the-kaggle-showdown",
+    "text": "the kaggle showdown"
+   },
+   {
+    "depth": 2,
+    "id": "conclusion",
+    "text": "conclusion"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "como-acidentalmente-otimizei-uma-rnn-em-rust-para-ser-mais-rápida-que-o-pytorch",
+    "text": "como acidentalmente otimizei uma rnn em rust para ser mais rápida que o pytorch"
+   },
+   {
+    "depth": 2,
+    "id": "a-jornada-e-a-arrogância",
+    "text": "a jornada (e a arrogância)"
+   },
+   {
+    "depth": 3,
+    "id": "a-abordagem-ingênua-ou-como-torrar-cpu",
+    "text": "a abordagem ingênua (ou: como torrar cpu)"
+   },
+   {
+    "depth": 2,
+    "id": "o-arco-da-otimização",
+    "text": "o arco da otimização"
+   },
+   {
+    "depth": 3,
+    "id": "o-momento-pera-eu-posso-só",
+    "text": "o momento \"pera, eu posso só...\""
+   },
+   {
+    "depth": 3,
+    "id": "pesadelo-de-iteradores",
+    "text": "pesadelo de iteradores"
+   },
+   {
+    "depth": 3,
+    "id": "o-padrão-workspace",
+    "text": "o padrão workspace"
+   },
+   {
+    "depth": 2,
+    "id": "a-hora-da-verdade",
+    "text": "a hora da verdade"
+   },
+   {
+    "depth": 3,
+    "id": "os-resultados",
+    "text": "os resultados"
+   },
+   {
+    "depth": 3,
+    "id": "comparando-maçãs-com-cobras-python-gigantes",
+    "text": "comparando maçãs com... cobras python gigantes?"
+   },
+   {
+    "depth": 3,
+    "id": "o-confronto-kaggle",
+    "text": "o confronto kaggle"
+   },
+   {
+    "depth": 2,
+    "id": "conclusão",
+    "text": "conclusão"
+   }
+  ]
+ },
+ "tcp-impl": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "writing-tcp-without-the-kernels-help",
+    "text": "writing tcp without the kernel's help"
+   },
+   {
+    "depth": 2,
+    "id": "why-tun-instead-of-raw-sockets",
+    "text": "why tun instead of raw sockets"
+   },
+   {
+    "depth": 3,
+    "id": "what-a-tun-device-actually-does",
+    "text": "what a TUN device actually does"
+   },
+   {
+    "depth": 3,
+    "id": "the-companion-ip-problem",
+    "text": "the companion ip problem"
+   },
+   {
+    "depth": 2,
+    "id": "the-state-machine",
+    "text": "the state machine"
+   },
+   {
+    "depth": 3,
+    "id": "states-i-skipped-on-purpose",
+    "text": "states i skipped on purpose"
+   },
+   {
+    "depth": 3,
+    "id": "the-initial-sequence-number",
+    "text": "the initial sequence number"
+   },
+   {
+    "depth": 2,
+    "id": "checksums-from-scratch",
+    "text": "checksums from scratch"
+   },
+   {
+    "depth": 2,
+    "id": "three-bugs-that-made-the-happy-path-unhappy",
+    "text": "three bugs that made the happy path unhappy"
+   },
+   {
+    "depth": 3,
+    "id": "data-stuck-until-the-other-side-speaks-first",
+    "text": "data stuck until the other side speaks first"
+   },
+   {
+    "depth": 3,
+    "id": "ctrlc-crashes-instead-of-dying-gracefully",
+    "text": "ctrl+c crashes instead of dying gracefully"
+   },
+   {
+    "depth": 3,
+    "id": "the-passive-close-that-never-completes",
+    "text": "the passive close that never completes"
+   },
+   {
+    "depth": 2,
+    "id": "cross-platform-macos-versus-linux",
+    "text": "cross-platform: macOS versus Linux"
+   },
+   {
+    "depth": 3,
+    "id": "the-4-byte-lie-on-macos",
+    "text": "the 4-byte lie on macOS"
+   },
+   {
+    "depth": 3,
+    "id": "gnu-nc-vs-bsd-nc",
+    "text": "gnu nc vs bsd nc"
+   },
+   {
+    "depth": 2,
+    "id": "the-tun-crate-upgrade-incident",
+    "text": "the tun crate upgrade incident"
+   },
+   {
+    "depth": 2,
+    "id": "it-actually-works",
+    "text": "it actually works"
+   },
+   {
+    "depth": 2,
+    "id": "was-it-worth-it",
+    "text": "was it worth it"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "escrevendo-tcp-sem-a-ajuda-do-kernel",
+    "text": "escrevendo tcp sem a ajuda do kernel"
+   },
+   {
+    "depth": 2,
+    "id": "por-que-tun-em-vez-de-raw-sockets",
+    "text": "por que tun em vez de raw sockets"
+   },
+   {
+    "depth": 3,
+    "id": "o-que-um-dispositivo-tun-realmente-faz",
+    "text": "o que um dispositivo TUN realmente faz"
+   },
+   {
+    "depth": 3,
+    "id": "o-problema-do-ip-companheiro",
+    "text": "o problema do ip companheiro"
+   },
+   {
+    "depth": 2,
+    "id": "a-máquina-de-estados",
+    "text": "a máquina de estados"
+   },
+   {
+    "depth": 3,
+    "id": "estados-que-pulei-de-propósito",
+    "text": "estados que pulei de propósito"
+   },
+   {
+    "depth": 3,
+    "id": "o-número-de-sequência-inicial",
+    "text": "o número de sequência inicial"
+   },
+   {
+    "depth": 2,
+    "id": "checksums-do-zero",
+    "text": "checksums do zero"
+   },
+   {
+    "depth": 2,
+    "id": "três-bugs-que-estragaram-o-happy-path",
+    "text": "três bugs que estragaram o happy path"
+   },
+   {
+    "depth": 3,
+    "id": "dados-travados-até-o-outro-lado-falar-primeiro",
+    "text": "dados travados até o outro lado falar primeiro"
+   },
+   {
+    "depth": 3,
+    "id": "ctrlc-causa-crash-em-vez-de-encerrar-graciosamente",
+    "text": "ctrl+c causa crash em vez de encerrar graciosamente"
+   },
+   {
+    "depth": 3,
+    "id": "o-fechamento-passivo-que-nunca-completa",
+    "text": "o fechamento passivo que nunca completa"
+   },
+   {
+    "depth": 2,
+    "id": "cross-platform-macos-versus-linux",
+    "text": "cross-platform: macOS versus Linux"
+   },
+   {
+    "depth": 3,
+    "id": "o-prefixo-de-4-bytes-que-o-macos-te-impõe",
+    "text": "o prefixo de 4 bytes que o macOS te impõe"
+   },
+   {
+    "depth": 3,
+    "id": "gnu-nc-vs-bsd-nc",
+    "text": "gnu nc vs bsd nc"
+   },
+   {
+    "depth": 2,
+    "id": "o-incidente-do-upgrade-do-crate-tun",
+    "text": "o incidente do upgrade do crate tun"
+   },
+   {
+    "depth": 2,
+    "id": "funciona-de-verdade",
+    "text": "funciona de verdade"
+   },
+   {
+    "depth": 2,
+    "id": "valeu-a-pena",
+    "text": "valeu a pena"
+   }
+  ]
+ },
+ "terraria-autofish": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "automating-terraria-fishing-because-i-hate-it",
+    "text": "automating terraria fishing (because i hate it)"
+   },
+   {
+    "depth": 2,
+    "id": "attempt-1-the-computer-vision-failure",
+    "text": "attempt 1: the computer vision failure"
+   },
+   {
+    "depth": 2,
+    "id": "attempt-2-reading-memory",
+    "text": "attempt 2: reading memory"
+   },
+   {
+    "depth": 3,
+    "id": "the-jit-problem",
+    "text": "the jit problem"
+   },
+   {
+    "depth": 3,
+    "id": "pattern-scanning-in-the-heap",
+    "text": "pattern scanning in the heap"
+   },
+   {
+    "depth": 2,
+    "id": "the-internal-cheat-technicality",
+    "text": "the \"internal\" cheat technicality"
+   },
+   {
+    "depth": 2,
+    "id": "performance-obsessed",
+    "text": "performance obsessed"
+   },
+   {
+    "depth": 2,
+    "id": "conclusion",
+    "text": "conclusion"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "automatizando-a-pesca-no-terraria-porque-eu-odeio-pescar",
+    "text": "automatizando a pesca no terraria (porque eu odeio pescar)"
+   },
+   {
+    "depth": 2,
+    "id": "tentativa-1-o-fracasso-da-visão-computacional",
+    "text": "tentativa 1: o fracasso da visão computacional"
+   },
+   {
+    "depth": 2,
+    "id": "tentativa-2-lendo-a-memória",
+    "text": "tentativa 2: lendo a memória"
+   },
+   {
+    "depth": 3,
+    "id": "o-problema-do-jit",
+    "text": "o problema do jit"
+   },
+   {
+    "depth": 3,
+    "id": "pattern-scanning-no-heap",
+    "text": "pattern scanning no heap"
+   },
+   {
+    "depth": 2,
+    "id": "a-tecnicalidade-do-cheat-interno",
+    "text": "a tecnicalidade do cheat \"interno\""
+   },
+   {
+    "depth": 2,
+    "id": "obsessão-por-performance",
+    "text": "obsessão por performance"
+   },
+   {
+    "depth": 2,
+    "id": "conclusão",
+    "text": "conclusão"
+   }
+  ]
+ },
+ "udp-impl": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "when-a-homework-assignment-becomes-a-raw-socket-rabbit-hole",
+    "text": "when a homework assignment becomes a raw socket rabbit hole"
+   },
+   {
+    "depth": 2,
+    "id": "the-assignment-and-why-i-couldnt-leave-it-alone",
+    "text": "the assignment (and why i couldn't leave it alone)"
+   },
+   {
+    "depth": 3,
+    "id": "the-project-structure",
+    "text": "the project structure"
+   },
+   {
+    "depth": 3,
+    "id": "the-trait-system",
+    "text": "the trait system"
+   },
+   {
+    "depth": 2,
+    "id": "raw-sockets-where-macos-stops-being-your-friend",
+    "text": "raw sockets: where macOS stops being your friend"
+   },
+   {
+    "depth": 3,
+    "id": "l2-vs-l3-a-distinction-that-matters",
+    "text": "L2 vs L3: a distinction that matters"
+   },
+   {
+    "depth": 3,
+    "id": "the-ip_hdrincl-problem",
+    "text": "the IP_HDRINCL problem"
+   },
+   {
+    "depth": 3,
+    "id": "the-sin_len-and-sin_family-saga",
+    "text": "the sin_len and sin_family saga"
+   },
+   {
+    "depth": 2,
+    "id": "the-checksum-my-nemesis",
+    "text": "the checksum: my nemesis"
+   },
+   {
+    "depth": 3,
+    "id": "rfc-1071-and-the-pseudo-header",
+    "text": "RFC 1071 and the pseudo-header"
+   },
+   {
+    "depth": 3,
+    "id": "the-algorithm-that-drove-me-insane",
+    "text": "the algorithm (that drove me insane)"
+   },
+   {
+    "depth": 3,
+    "id": "the-wireshark-brute-force-debugging-arc",
+    "text": "the wireshark brute-force debugging arc"
+   },
+   {
+    "depth": 3,
+    "id": "the-bug-that-survived-a-year",
+    "text": "the bug that survived a year"
+   },
+   {
+    "depth": 2,
+    "id": "the-cli-because-why-not",
+    "text": "the CLI (because why not)"
+   },
+   {
+    "depth": 3,
+    "id": "clap-and-subcommands",
+    "text": "clap and subcommands"
+   },
+   {
+    "depth": 3,
+    "id": "custom-logging",
+    "text": "custom logging"
+   },
+   {
+    "depth": 3,
+    "id": "utility-macros",
+    "text": "utility macros"
+   },
+   {
+    "depth": 2,
+    "id": "making-it-work-with-nc--u",
+    "text": "making it work with nc -u"
+   },
+   {
+    "depth": 2,
+    "id": "what-i-learned-and-what-id-do-differently",
+    "text": "what i learned (and what i'd do differently)"
+   },
+   {
+    "depth": 3,
+    "id": "endianness-is-not-optional",
+    "text": "endianness is not optional"
+   },
+   {
+    "depth": 3,
+    "id": "raw-sockets-are-platform-specific-landmines",
+    "text": "raw sockets are platform-specific landmines"
+   },
+   {
+    "depth": 3,
+    "id": "rfc-documents-are-worth-reading-eventually",
+    "text": "RFC documents are worth reading (eventually)"
+   },
+   {
+    "depth": 3,
+    "id": "checksums-are-harder-than-they-look",
+    "text": "checksums are harder than they look"
+   },
+   {
+    "depth": 2,
+    "id": "closing-thoughts",
+    "text": "closing thoughts"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "quando-um-trabalho-de-faculdade-vira-uma-toca-de-coelho-de-raw-sockets",
+    "text": "quando um trabalho de faculdade vira uma toca de coelho de raw sockets"
+   },
+   {
+    "depth": 2,
+    "id": "o-trabalho-e-por-que-eu-não-consegui-fazer-o-simples",
+    "text": "o trabalho (e por que eu não consegui fazer o simples)"
+   },
+   {
+    "depth": 3,
+    "id": "a-estrutura-do-projeto",
+    "text": "a estrutura do projeto"
+   },
+   {
+    "depth": 3,
+    "id": "o-sistema-de-traits",
+    "text": "o sistema de traits"
+   },
+   {
+    "depth": 2,
+    "id": "raw-sockets-onde-o-macos-para-de-ser-seu-amigo",
+    "text": "raw sockets: onde o macOS para de ser seu amigo"
+   },
+   {
+    "depth": 3,
+    "id": "l2-vs-l3-uma-distinção-que-importa",
+    "text": "L2 vs L3: uma distinção que importa"
+   },
+   {
+    "depth": 3,
+    "id": "o-problema-do-ip_hdrincl",
+    "text": "o problema do IP_HDRINCL"
+   },
+   {
+    "depth": 3,
+    "id": "a-saga-do-sin_len-e-sin_family",
+    "text": "a saga do sin_len e sin_family"
+   },
+   {
+    "depth": 2,
+    "id": "o-checksum-meu-nêmesis",
+    "text": "o checksum: meu nêmesis"
+   },
+   {
+    "depth": 3,
+    "id": "rfc-1071-e-o-pseudo-header",
+    "text": "RFC 1071 e o pseudo-header"
+   },
+   {
+    "depth": 3,
+    "id": "o-algoritmo-que-me-enlouqueceu",
+    "text": "o algoritmo (que me enlouqueceu)"
+   },
+   {
+    "depth": 3,
+    "id": "o-arco-de-debugging-por-força-bruta-com-wireshark",
+    "text": "o arco de debugging por força bruta com wireshark"
+   },
+   {
+    "depth": 3,
+    "id": "o-bug-que-sobreviveu-um-ano",
+    "text": "o bug que sobreviveu um ano"
+   },
+   {
+    "depth": 2,
+    "id": "a-cli-porque-por-que-não",
+    "text": "a CLI (porque por que não)"
+   },
+   {
+    "depth": 3,
+    "id": "clap-e-subcomandos",
+    "text": "clap e subcomandos"
+   },
+   {
+    "depth": 3,
+    "id": "logging-customizado",
+    "text": "logging customizado"
+   },
+   {
+    "depth": 3,
+    "id": "macros-utilitárias",
+    "text": "macros utilitárias"
+   },
+   {
+    "depth": 2,
+    "id": "fazendo-funcionar-com-nc--u",
+    "text": "fazendo funcionar com nc -u"
+   },
+   {
+    "depth": 2,
+    "id": "o-que-aprendi-e-o-que-faria-diferente",
+    "text": "o que aprendi (e o que faria diferente)"
+   },
+   {
+    "depth": 3,
+    "id": "endianness-não-é-opcional",
+    "text": "endianness não é opcional"
+   },
+   {
+    "depth": 3,
+    "id": "raw-sockets-são-minas-terrestres-específicas-por-plataforma",
+    "text": "raw sockets são minas terrestres específicas por plataforma"
+   },
+   {
+    "depth": 3,
+    "id": "documentos-rfc-valem-a-leitura-eventualmente",
+    "text": "documentos RFC valem a leitura (eventualmente)"
+   },
+   {
+    "depth": 3,
+    "id": "checksums-são-mais-difíceis-do-que-parecem",
+    "text": "checksums são mais difíceis do que parecem"
+   },
+   {
+    "depth": 2,
+    "id": "considerações-finais",
+    "text": "considerações finais"
+   }
+  ]
+ },
+ "upstreamer": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "building-a-reverse-proxy-in-rust",
+    "text": "building a reverse proxy in rust"
+   },
+   {
+    "depth": 2,
+    "id": "the-first-version",
+    "text": "the first version"
+   },
+   {
+    "depth": 2,
+    "id": "what-it-ended-up-doing",
+    "text": "what it ended up doing"
+   },
+   {
+    "depth": 2,
+    "id": "architecture",
+    "text": "architecture"
+   },
+   {
+    "depth": 3,
+    "id": "shared-state-with-arcswap",
+    "text": "shared state with arcswap"
+   },
+   {
+    "depth": 2,
+    "id": "load-balancing",
+    "text": "load balancing"
+   },
+   {
+    "depth": 2,
+    "id": "rate-limiting",
+    "text": "rate limiting"
+   },
+   {
+    "depth": 2,
+    "id": "kubernetes-discovery",
+    "text": "kubernetes discovery"
+   },
+   {
+    "depth": 2,
+    "id": "config-hot-reload",
+    "text": "config hot-reload"
+   },
+   {
+    "depth": 2,
+    "id": "profiling",
+    "text": "profiling"
+   },
+   {
+    "depth": 3,
+    "id": "the-profiling-pipeline-saga",
+    "text": "the profiling pipeline saga"
+   },
+   {
+    "depth": 3,
+    "id": "jemalloc",
+    "text": "jemalloc"
+   },
+   {
+    "depth": 3,
+    "id": "the-actual-numbers",
+    "text": "the actual numbers"
+   },
+   {
+    "depth": 3,
+    "id": "chasing-the-40ms-tail",
+    "text": "chasing the 40ms tail"
+   },
+   {
+    "depth": 3,
+    "id": "the-load-balancer-optimization",
+    "text": "the load balancer optimization"
+   },
+   {
+    "depth": 3,
+    "id": "perf-breakdown",
+    "text": "perf breakdown"
+   },
+   {
+    "depth": 3,
+    "id": "why-upstreamer-wins",
+    "text": "why upstreamer wins"
+   },
+   {
+    "depth": 2,
+    "id": "body-handling",
+    "text": "body handling"
+   },
+   {
+    "depth": 2,
+    "id": "end-to-end-testing",
+    "text": "end-to-end testing"
+   },
+   {
+    "depth": 2,
+    "id": "what-id-do-differently",
+    "text": "what i'd do differently"
+   },
+   {
+    "depth": 2,
+    "id": "looking-back",
+    "text": "looking back"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "construindo-um-reverse-proxy-em-rust",
+    "text": "construindo um reverse proxy em rust"
+   },
+   {
+    "depth": 2,
+    "id": "a-primeira-versão",
+    "text": "a primeira versão"
+   },
+   {
+    "depth": 2,
+    "id": "no-que-deu",
+    "text": "no que deu"
+   },
+   {
+    "depth": 2,
+    "id": "arquitetura",
+    "text": "arquitetura"
+   },
+   {
+    "depth": 3,
+    "id": "estado-compartilhado-com-arcswap",
+    "text": "estado compartilhado com arcswap"
+   },
+   {
+    "depth": 2,
+    "id": "load-balancing",
+    "text": "load balancing"
+   },
+   {
+    "depth": 2,
+    "id": "rate-limiting",
+    "text": "rate limiting"
+   },
+   {
+    "depth": 2,
+    "id": "discovery-no-kubernetes",
+    "text": "discovery no kubernetes"
+   },
+   {
+    "depth": 2,
+    "id": "config-hot-reload",
+    "text": "config hot-reload"
+   },
+   {
+    "depth": 2,
+    "id": "profiling",
+    "text": "profiling"
+   },
+   {
+    "depth": 3,
+    "id": "a-saga-do-pipeline-de-profiling",
+    "text": "a saga do pipeline de profiling"
+   },
+   {
+    "depth": 3,
+    "id": "jemalloc",
+    "text": "jemalloc"
+   },
+   {
+    "depth": 3,
+    "id": "os-números-de-verdade",
+    "text": "os números de verdade"
+   },
+   {
+    "depth": 3,
+    "id": "caçando-a-cauda-de-40ms",
+    "text": "caçando a cauda de 40ms"
+   },
+   {
+    "depth": 3,
+    "id": "a-otimização-do-load-balancer",
+    "text": "a otimização do load balancer"
+   },
+   {
+    "depth": 3,
+    "id": "breakdown-do-perf",
+    "text": "breakdown do perf"
+   },
+   {
+    "depth": 3,
+    "id": "por-que-o-upstreamer-ganha",
+    "text": "por que o upstreamer ganha"
+   },
+   {
+    "depth": 2,
+    "id": "body-handling",
+    "text": "body handling"
+   },
+   {
+    "depth": 2,
+    "id": "testes-end-to-end",
+    "text": "testes end-to-end"
+   },
+   {
+    "depth": 2,
+    "id": "o-que-eu-faria-diferente",
+    "text": "o que eu faria diferente"
+   },
+   {
+    "depth": 2,
+    "id": "em-retrospecto",
+    "text": "em retrospecto"
+   }
+  ]
+ }
+}

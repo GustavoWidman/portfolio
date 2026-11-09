@@ -1,5 +1,6 @@
 # CVE-2026-111497: nixpkgs may lag the patched upstream release.
-# Keep the build tool and standalone server on the same patched runtime.
+# The patched Bun that builds the site (packages.default, via bun2nix). The flake also
+# exports it as packages.<system>.bun and through overlays.default for host packages.
 pkgs:
 if pkgs.lib.versionAtLeast pkgs.bun.version "1.4.4" then
   pkgs.bun

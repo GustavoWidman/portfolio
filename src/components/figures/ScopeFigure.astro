@@ -1,0 +1,172 @@
+---
+import { text } from "../../data/types";
+import { t } from "../../i18n";
+import { paintOrder, scopeLayout } from "./scope-layout";
+import type { ScopeFigure } from "../../data/figure-types";
+import type { Language } from "../../lib/config";
+
+interface Props {
+  figure: ScopeFigure;
+  lang: Language;
+}
+
+const { figure, lang } = Astro.props;
+const h = t(lang).home.scope;
+const layout = scopeLayout(figure, lang);
+const last = layout.columns.length - 1;
+const subject = layout.traces.find((trace) => trace.tone === "subject");
+const next = layout.traces.find((trace) => trace.tone === "next");
+const baseline = layout.traces.find((trace) => trace.tone === "baseline");
+const drawn = paintOrder(layout.traces);
+const unit = ` ${figure.valueUnit}`;
+const at = (n: number): string => n.toFixed(3);
+const legend = [
+  subject && { tone: "subject", label: subject.label },
+  next && { tone: "next", label: `${next.label} (${h.nextBest})` },
+  { tone: "other", label: h.otherProxies },
+  baseline && { tone: "baseline", label: baseline.label },
+].filter((entry) => entry !== undefined);
+---
+
+<figure class="scope" data-scope aria-labelledby={`${figure.id}-cap`}>
+  <div class="scope__bar">
+    <span class="fig__n">{figure.n}</span>
+    <span class="scope__t">{text(figure.title, lang)}</span>
+    {figure.unit && <span class="scope__u">{text(figure.unit, lang)}</span>}
+  </div>
+  <div class="scope__plot" tabindex="0" role="group" aria-label={h.group}>
+    <div class="scope__y" aria-hidden="true">
+      {layout.yTicks.map((tick) => <span style={`--y:${at(tick.y)}`}>{tick.label}</span>)}
+    </div>
+    <div class="scope__area" aria-hidden="true">
+      <svg class="scope__grid" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
+        {
+          layout.yTicks.map((tick) => (
+            <line class={tick.y === 0 ? "g g0" : "g"} x1="0" x2="100" y1={at(100 - tick.y)} y2={at(100 - tick.y)} />
+          ))
+        }
+        {
+          [{ x: 0, last: false }, ...layout.columns.map((column, i) => ({ x: column.x, last: i === last }))].map(
+            (line) => <line class={line.last ? "g gc" : "g"} x1={at(line.x)} x2={at(line.x)} y1="0" y2="100" />,
+          )
+        }
+      </svg>
+      <svg class="scope__traces" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
+        {drawn.map((trace) => <polyline class={`tr tr--${trace.tone}`} points={trace.polyline} />)}
+      </svg>
+      {
+        subject?.points.map((point) => (
+          <span class="sc-pt" style={`--x:${at(point.x)};--y:${at(point.y)}`} />
+        ))
+      }
+      <i class="scope__scan"></i>
+      {
+        layout.columns.map((column, i) => (
+          <div class="sc-cur" data-i={i} data-x={at(column.x)} style={`--x:${at(column.x)}`}>
+            <i class="sc-cur__line"></i>
+            {drawn.map((trace) => (
+              <i class={`sc-cur__dot sc-cur__dot--${trace.tone}`} style={`--y:${at(trace.points[i].y)}`} />
+            ))}
+          </div>
+        ))
+      }
+    </div>
+    <div class="scope__ends" aria-hidden="true">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
+        {
+          layout.traces.map((trace) => (
+            <polyline
+              class={`ld ld--${trace.tone}`}
+              points={`0,${at(100 - trace.end.y)} 4,${at(100 - trace.end.y)} 9,${at(100 - trace.end.labelY)}`}
+            />
+          ))
+        }
+      </svg>
+      {
+        layout.traces.map((trace) => (
+          <span class={`sc-end sc-end--${trace.tone}`} style={`--y:${at(trace.end.labelY)}`}>
+            {trace.short}
+            <b>{trace.points[last].text}</b>
+          </span>
+        ))
+      }
+    </div>
+    <div class="scope__x" aria-hidden="true">
+      {layout.columns.map((column) => <span style={`--x:${at(column.x)}`}>{column.label}</span>)}
+    </div>
+    <div class="sc-box" aria-hidden="true">
+      {
+        layout.columns.map((column, i) => (
+          <dl class="sc-panel" data-i={i} data-on={i === last ? "" : undefined}>
+            <div class="sc-box__h">
+              <dt>{h.at}</dt>
+              {" "}
+              <dd>{column.label}</dd>
+            </div>
+            {layout.traces.map((trace) => (
+              <div class:list={[`is-${trace.tone}`, trace.tone === "other" || trace.tone === "baseline" ? "sc-more" : undefined]}>
+                <dt>{trace.short}</dt>
+                {" "}
+                <dd>
+                  {trace.points[i].text}
+                  {unit}
+                </dd>
+              </div>
+            ))}
+            <div class="sc-box__d">
+              <dt>{h.delta}</dt>
+              {" "}
+              <dd>{layout.deltas[i]}</dd>
+            </div>
+          </dl>
+        ))
+      }
+    </div>
+  </div>
+  <div class="visually-hidden">
+  <table>
+    <caption>{h.tableCaption}, {figure.valueUnit}</caption>
+    <thead>
+      <tr>
+        <th scope="col">{h.target}</th>
+        {layout.columns.map((column) => <th scope="col">{column.label}</th>)}
+        <th scope="col">{h.slowest}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        layout.traces.map((trace) => (
+          <tr>
+            <th scope="row">{trace.label}</th>
+            {trace.points.map((point) => <td>{point.text}</td>)}
+            <td>{trace.worst}</td>
+          </tr>
+        ))
+      }
+      <tr>
+        <th scope="row">{h.deltaRow}</th>
+        {layout.deltas.map((delta) => <td>{delta}</td>)}
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="visually-hidden" role="status" data-scope-status></p>
+  <figcaption class="scope__cap" id={`${figure.id}-cap`}>
+    <span class="scope__legend">
+      {
+        legend.map((entry) => (
+          <span>
+            <span class={`key key--${entry.tone}`} aria-hidden="true" />
+            {entry.label}
+          </span>
+        ))
+      }
+    </span>
+    <span class="scope__cond">{text(figure.conditions, lang)}</span>
+  </figcaption>
+</figure>
+
+<script>
+  import "../../scripts/features/scope-cursor";
+</script>

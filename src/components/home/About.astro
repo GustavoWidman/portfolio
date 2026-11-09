@@ -1,0 +1,61 @@
+---
+import { EXPERIENCE } from "../../data/experience";
+import { OPEN_SOURCE } from "../../data/open-source";
+import { text } from "../../data/types";
+import { t } from "../../i18n";
+import type { Language } from "../../lib/config";
+
+interface Props {
+  lang: Language;
+}
+
+const { lang } = Astro.props;
+const h = t(lang).home.about;
+---
+
+<div class="about">
+  <div class="about__hist">
+    <h3 class="label">{h.experience}</h3>
+    <table class="hist">
+      <caption class="visually-hidden">{h.experienceCaption}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{h.period}</th>
+          <th scope="col">{h.role}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          EXPERIENCE.map((job) => (
+            <tr class:list={[job.end === undefined && "is-now"]}>
+              <td class="hist__p">
+                <span>{job.start}</span>
+                <span>{job.end ?? h.now}</span>
+              </td>
+              <td>
+                <p class="hist__r">
+                  <b>{job.company}</b>
+                  {text(job.role, lang)}
+                </p>
+                <p class="hist__d">{text(job.summary, lang)}</p>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <div class="about__oss">
+    <h3 class="label">{h.openSource}</h3>
+    <ul class="oss">
+      {
+        OPEN_SOURCE.map((item) => (
+          <li>
+            <a class="ul" href={item.url}>{item.project}</a>
+            <span class="oss__d">{text(item.summary, lang)}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</div>

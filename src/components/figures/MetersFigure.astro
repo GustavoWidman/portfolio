@@ -1,0 +1,63 @@
+---
+import { formatNumber } from "../../data/format";
+import { text } from "../../data/types";
+import type { MetersFigure } from "../../data/figure-types";
+import type { Language } from "../../lib/config";
+
+interface Props {
+  figure: MetersFigure;
+  lang: Language;
+}
+
+const { figure, lang } = Astro.props;
+const sum = (parts: { value: number }[]): number => parts.reduce((total, part) => total + part.value, 0);
+---
+
+<figure class="fig" data-reveal="grow" aria-labelledby={`${figure.id}-cap`}>
+  <figcaption class="fig__head" id={`${figure.id}-cap`}>
+    <span class="fig__n">{figure.n}</span>
+    <span class="fig__t">{text(figure.title, lang)}</span>
+    {figure.unit && <span class="fig__u">{text(figure.unit, lang)}</span>}
+  </figcaption>
+  {
+    figure.meters.map((meter, meterIndex) => {
+      const used = sum(meter.parts);
+      const whole = meter.rest?.of ?? used;
+      const total = meter.rest
+        ? `${formatNumber(used, lang)} / ${formatNumber(whole, lang)} ${meter.unit}`
+        : `${formatNumber(whole, lang)} ${meter.unit}`;
+      return (
+        <div class="meter" style={`--i:${meterIndex}`}>
+          <p class="meter__l">
+            <span>{text(meter.label, lang)}</span>
+            <span class="num">{total}</span>
+          </p>
+          <div class="stack" aria-hidden="true">
+            {meter.parts.map((part) => (
+              <span class={`stack__${part.tone}`} style={`--w:${((part.value / whole) * 100).toFixed(2)}%`} />
+            ))}
+          </div>
+          <p class="meter__k">
+            {meter.parts.map((part) => (
+              <span>
+                <i class={`key key--${part.tone}`} aria-hidden="true" />
+                {text(part.label, lang)}{" "}
+                <span class="num">
+                  {meter.shown === "share"
+                    ? `${formatNumber((part.value / whole) * 100, lang, 1)}%`
+                    : `${formatNumber(part.value, lang)} ${meter.unit}`}
+                </span>
+              </span>
+            ))}
+            {meter.rest && (
+              <span>
+                <i class="key key--rest" aria-hidden="true" />
+                {text(meter.rest.label, lang)}
+              </span>
+            )}
+          </p>
+        </div>
+      );
+    })
+  }
+</figure>

@@ -1,0 +1,358 @@
+/* Boot screen and the 404 page. The console brings its own styles with its chunk. */
+
+/* ------------------------------------------------------------ boot screen
+ * Static markup, hidden unless the head script put `boot` on <html>. The whole sequence
+ * is CSS and ends by itself at 1.3 s: the screen fades and turns `visibility: hidden`,
+ * so it stops taking pointer events even when no script runs. Line `--i` appears at
+ * 140 + 110·i ms.
+ */
+.selftest {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html.boot .selftest {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: var(--gx);
+    background: var(--bg);
+    cursor: progress;
+    animation: selftest-off 250ms var(--ease-in-out) 1050ms both;
+  }
+}
+
+.selftest__panel {
+  width: min(100%, 520px);
+  border: 1px solid var(--rule-2);
+  background: var(--bg-sheet);
+  font-family: var(--mono);
+  animation: selftest-rise var(--dur-1) var(--ease-out) both;
+}
+
+.selftest__head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--rule);
+  font: 500 var(--fs-label) / 1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.selftest__led {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--signal);
+  animation: selftest-led 520ms steps(1, end) both;
+}
+
+.selftest__skip {
+  margin-left: auto;
+  color: var(--fg-3);
+}
+
+@media (max-width: 520px) {
+  .selftest__skip {
+    display: none;
+  }
+}
+
+.selftest__lines {
+  margin: 0;
+  padding: 6px 16px 10px;
+  list-style: none;
+}
+
+.selftest__lines li {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--rule);
+  animation: selftest-line var(--dur-1) var(--ease-out) calc(140ms + var(--i) * 110ms) both;
+}
+
+.selftest__lines li:last-child {
+  border-bottom: 0;
+}
+
+.selftest__key,
+.selftest__ok {
+  font-size: var(--fs-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.selftest__val {
+  font-size: var(--fs-ui);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+.selftest__ok {
+  animation: selftest-ok var(--dur-3) var(--ease-out) calc(200ms + var(--i) * 110ms) both;
+}
+
+.selftest__ready .selftest__key {
+  font-weight: 500;
+  color: var(--signal-ink);
+}
+
+/* Progress hairline: an ink track filled in signal amber up to READY. */
+.selftest__bar {
+  height: 2px;
+  background: var(--rule);
+}
+
+.selftest__bar::after {
+  content: "";
+  display: block;
+  height: 100%;
+  background: var(--signal);
+  transform-origin: left;
+  animation: selftest-bar 780ms cubic-bezier(0.4, 0, 0.6, 1) 120ms both;
+}
+
+@keyframes selftest-off {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes selftest-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Dark until power, two flickers, then on. */
+@keyframes selftest-led {
+  0% {
+    opacity: 0.12;
+  }
+  45% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.25;
+  }
+  70% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 0.4;
+  }
+  86% {
+    opacity: 1;
+  }
+}
+
+@keyframes selftest-line {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+/* The verdict lands in signal amber, then settles to ink. */
+@keyframes selftest-ok {
+  from {
+    opacity: 0;
+    color: var(--signal-ink);
+  }
+  25% {
+    opacity: 1;
+    color: var(--signal-ink);
+  }
+}
+
+@keyframes selftest-bar {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ------------------------------------------------------------ 404 */
+.nf {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--gut);
+  align-items: start;
+  padding-block: 64px 80px;
+}
+
+.nf__title {
+  max-width: 14ch;
+  margin: 14px 0 0;
+  font-size: var(--fs-display);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+}
+
+.nf__lede {
+  max-width: 52ch;
+  margin: 18px 0 0;
+  font-size: var(--fs-prose);
+  color: var(--fg-2);
+}
+
+.nf-scope {
+  margin: 6px 0 0;
+}
+
+.nf-scope__screen {
+  position: relative;
+  border: 1px solid var(--rule-2);
+  background: var(--bg-sheet);
+}
+
+.nf-scope svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.nf-scope line,
+.nf-scope path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.nf-scope__grid {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.nf-scope__axis {
+  stroke: var(--rule-2);
+  stroke-width: 1;
+}
+
+.nf-scope__trace {
+  stroke: var(--fg-2);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+}
+
+.nf-scope__ch,
+.nf-scope__code {
+  position: absolute;
+  top: 10px;
+  pointer-events: none;
+}
+
+.nf-scope__ch {
+  left: 12px;
+}
+
+.nf-scope__code {
+  right: 12px;
+}
+
+.nf-scope__msg {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  margin: 0;
+  padding: 6px 12px 5px;
+  border: 1px solid var(--fault);
+  background: var(--bg-sheet);
+  color: var(--fault);
+  font: 500 var(--fs-label) / 1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.nf-scope figcaption {
+  margin-top: 10px;
+  font-size: var(--fs-meta);
+  color: var(--fg-3);
+}
+
+.nf-scope figcaption .label {
+  display: inline;
+  margin-right: 8px;
+  color: var(--fg);
+}
+
+.nf__kv {
+  margin-top: 28px;
+}
+
+.nf__kv [hidden] {
+  display: none;
+}
+
+.nf__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 32px 0 0;
+}
+
+.nf__actions .btn {
+  min-height: 44px;
+}
+
+/* Touch: the nearest-page link gets a 40 px target without moving its underline. */
+@media (pointer: coarse) {
+  .nf__near {
+    display: inline-block;
+    padding-block: 10px;
+    margin-block: -10px;
+  }
+}
+
+@media (max-width: 960px) {
+  .nf {
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: 40px 56px;
+  }
+
+  .nf-scope {
+    margin-top: 36px;
+  }
+}
+
+/* The trace sweeps once from the left; the message blinks three times after it. */
+@media (prefers-reduced-motion: no-preference) {
+  .nf-scope__trace {
+    animation: nf-sweep var(--dur-4) cubic-bezier(0.3, 0, 0.7, 1) 120ms both;
+  }
+
+  .nf-scope__msg {
+    animation: nf-blink 600ms steps(1, end) 1000ms 3;
+  }
+}
+
+@keyframes nf-sweep {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes nf-blink {
+  50% {
+    opacity: 0;
+  }
+}

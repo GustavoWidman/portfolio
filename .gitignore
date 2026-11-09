@@ -1,47 +1,23 @@
-# Old vite code structure
-/_old_vite
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
+# dependencies
 node_modules
-/.pnp
-.pnp.js
+
+# build output
 dist
-dist-ssr
-*.local
+/dist-*/
+.astro
+result
+result-*
 
-# next.js
-/.next/
-/out/
+# logs
+*.log
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# Editor directories and files
+# editors and OS
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
 *.sw?
 
-# Folder for playing around with resumes
+# resume scratch builds
 /latex
 /typst/*.pdf
-
-# Generated OG Images
-public/og/
-.next
-.source
-out

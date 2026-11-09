@@ -1,0 +1,51 @@
+---
+import type { TocEntry } from "../lib/markdown/render";
+
+/**
+ * Numbered list of a post's sections: h2 entries, each with its h3 entries nested. The body
+ * h1 is the top of the article and is left out. Numbers come from the renderer, so they
+ * match the numbers in front of the headings.
+ */
+interface Props {
+  entries: TocEntry[];
+}
+
+interface Section {
+  entry: TocEntry;
+  children: TocEntry[];
+}
+
+const { entries } = Astro.props;
+const sections: Section[] = [];
+for (const entry of entries) {
+  if (!entry.number) continue;
+  const parent = sections.at(-1);
+  if (entry.depth === 3 && parent) parent.children.push(entry);
+  else sections.push({ entry, children: [] });
+}
+---
+
+<ol class="toc__list">
+  {
+    sections.map(({ entry, children }) => (
+      <li>
+        <a href={`#${entry.id}`}>
+          <span class="toc__n">{entry.number}</span>
+          <span set:html={entry.html} />
+        </a>
+        {children.length > 0 && (
+          <ol>
+            {children.map((child) => (
+              <li>
+                <a href={`#${child.id}`}>
+                  <span class="toc__n">{child.number}</span>
+                  <span set:html={child.html} />
+                </a>
+              </li>
+            ))}
+          </ol>
+        )}
+      </li>
+    ))
+  }
+</ol>

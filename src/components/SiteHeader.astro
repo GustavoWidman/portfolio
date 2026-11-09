@@ -1,0 +1,58 @@
+---
+import { htmlLang, LANGUAGES } from "../lib/config";
+import type { HostKind, Language } from "../lib/config";
+import { blogIndexHref, homeHref } from "../lib/urls";
+import { t } from "../i18n";
+
+interface Props {
+  lang: Language;
+  host: HostKind;
+  page: "home" | "blog" | "post" | "not-found";
+}
+
+const { lang, host, page } = Astro.props;
+const dict = t(lang);
+const home = homeHref(host);
+const writing = page === "blog" ? "page" : page === "post" ? "true" : undefined;
+---
+
+<header class="site-head">
+  <div class="frame site-head__in">
+    <a class="brand" href={home} aria-label={dict.nav.brand}>
+      <span class="brand__led" data-led aria-hidden="true"></span>
+      <span class="brand__name">{dict.site.title}</span>
+    </a>
+    <nav class="site-nav" aria-label={dict.nav.label}>
+      <ul>
+        <li><a href={`${home}#work`}>{dict.nav.work}</a></li>
+        <li><a href={`${home}#research`}>{dict.nav.research}</a></li>
+        <li><a href={blogIndexHref(host)} aria-current={writing}>{dict.nav.writing}</a></li>
+        <li><a href={`${home}#about`}>{dict.nav.about}</a></li>
+      </ul>
+    </nav>
+    <div class="site-tools">
+      <nav class="lang" aria-label={dict.nav.language}>
+        {
+          LANGUAGES.map((code) => (
+            <a
+              href={`?lang=${code}`}
+              hreflang={htmlLang(code)}
+              lang={htmlLang(code)}
+              aria-label={t(code).languageName}
+              aria-current={code === lang ? "true" : undefined}
+              data-lang-switch={code === lang ? undefined : code}
+            >
+              {code.toUpperCase()}
+            </a>
+          ))
+        }
+      </nav>
+      <button class="theme-btn" type="button" data-theme-toggle hidden aria-label={dict.nav.theme}>
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+          <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.25"></circle>
+          <path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>

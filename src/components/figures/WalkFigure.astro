@@ -1,0 +1,36 @@
+---
+import { text } from "../../data/types";
+import type { WalkFigure } from "../../data/figure-types";
+import type { Language } from "../../lib/config";
+
+interface Props {
+  figure: WalkFigure;
+  lang: Language;
+}
+
+const { figure, lang } = Astro.props;
+---
+
+<figure class="fig" data-reveal="grow" aria-labelledby={`${figure.id}-cap`}>
+  <figcaption class="fig__head" id={`${figure.id}-cap`}>
+    <span class="fig__n">{figure.n}</span>
+    <span class="fig__t">{text(figure.title, lang)}</span>
+    {figure.unit && <span class="fig__u">{text(figure.unit, lang)}</span>}
+  </figcaption>
+  <ol class="walk">
+    {
+      figure.steps.map((step, i) => (
+        <li class:list={[step.end && "walk__end"]} style={`--i:${i}`}>
+          <span class="walk__k">{step.key}</span>
+          <span class="walk__t">{step.title}</span>
+          <span class="walk__d">{text(step.detail, lang)}</span>
+        </li>
+      ))
+    }
+  </ol>
+  <p class="seq__h">{text(figure.sequenceTitle, lang)}</p>
+  <ol class="seq">
+    {figure.sequence.map((step, i) => <li style={`--i:${i}`}>{text(step, lang)}</li>)}
+  </ol>
+  {figure.note && <p class="fig__note">{text(figure.note, lang)}</p>}
+</figure>

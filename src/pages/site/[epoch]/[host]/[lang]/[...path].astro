@@ -1,0 +1,27 @@
+---
+import BlogIndexPage from "../../../../../components/pages/BlogIndexPage.astro";
+import HomePage from "../../../../../components/pages/HomePage.astro";
+import NotFoundPage from "../../../../../components/pages/NotFoundPage.astro";
+import PostPage from "../../../../../components/pages/PostPage.astro";
+import { htmlRoutes } from "../../../../../lib/routes";
+import type { PageRoute, RouteContext } from "../../../../../lib/routes";
+
+export const getStaticPaths = htmlRoutes;
+
+type Props = RouteContext & { page: PageRoute };
+
+const { epoch, host, lang, page } = Astro.props;
+---
+
+{
+  page.kind === "home" && (
+    <HomePage lang={lang} host={host} epoch={epoch} latest={page.latest} releasedSlugs={page.releasedSlugs} />
+  )
+}
+{
+  page.kind === "blog" && (
+    <BlogIndexPage lang={lang} host={host} epoch={epoch} released={page.released} scheduled={page.scheduled} />
+  )
+}
+{page.kind === "post" && <PostPage post={page.post} host={host} epoch={epoch} newer={page.newer} older={page.older} />}
+{page.kind === "not-found" && <NotFoundPage lang={lang} host={host} epoch={epoch} />}

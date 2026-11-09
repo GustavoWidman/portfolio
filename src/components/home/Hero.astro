@@ -1,0 +1,69 @@
+---
+import Figure from "../figures/Figure.astro";
+import Readouts from "./Readouts.astro";
+import { HERO_SCOPE } from "../../data/benchmark";
+import { PROFILE } from "../../data/profile";
+import { FEATURED_PAPER } from "../../data/research";
+import { pick, text } from "../../data/types";
+import { t } from "../../i18n";
+import { portfolioFileHref } from "../../lib/urls";
+import type { HostKind, Language } from "../../lib/config";
+
+interface Props {
+  lang: Language;
+  host: HostKind;
+}
+
+const { lang, host } = Astro.props;
+const h = t(lang).home;
+const paper = FEATURED_PAPER;
+---
+
+<section class="hero" aria-labelledby="hero-h">
+  <div class="frame hero__in">
+    <div class="hero__text">
+      <h1 class="hero__name" id="hero-h">{PROFILE.name}</h1>
+      <p class="hero__role">
+        {pick(PROFILE.heroRole, lang)}<span class="sep" aria-hidden="true">·</span>{PROFILE.city}
+      </p>
+      <p class="hero__motto">{pick(PROFILE.motto, lang)}</p>
+      <p class="hero__bio">{pick(PROFILE.bio, lang)}</p>
+      <div class="hero__cta">
+        <a class="btn btn--solid" href={`mailto:${PROFILE.contact.email}`}>{PROFILE.contact.email}</a>
+        <ul class="hero__links">
+          <li>
+            <a class="ul" href={PROFILE.contact.github}>{h.hero.github}<span class="arr" aria-hidden="true">↗</span></a>
+          </li>
+          <li>
+            <a class="ul" href={PROFILE.contact.linkedin}>{h.hero.linkedin}<span class="arr" aria-hidden="true">↗</span></a>
+          </li>
+          <li>
+            <a class="ul" href={portfolioFileHref(host, pick(PROFILE.contact.resume, lang))} hreflang={lang === "pt" ? "pt-BR" : "en"}>
+              {h.hero.resume}<span class="unit">{h.hero.resumeNote}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="hero__fig">
+      <Figure figure={HERO_SCOPE} lang={lang} />
+    </div>
+  </div>
+  <div class="frame">
+    <Readouts lang={lang} />
+    <p class="cite">
+      <span class="badge">{h.status[paper.status]}</span>
+      <a class="cite__t" href="#research">{text(paper.title, lang)}</a>
+      <span class="cite__m">
+        {paper.cite}<span class="sep" aria-hidden="true">·</span>{text(paper.statusNote, lang)}
+      </span>
+      {
+        paper.doi && (
+          <a class="cite__doi ul" href={`https://doi.org/${paper.doi}`}>
+            doi:{paper.doi}<span class="arr" aria-hidden="true">↗</span>
+          </a>
+        )
+      }
+    </p>
+  </div>
+</section>

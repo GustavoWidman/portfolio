@@ -1,0 +1,41 @@
+/** Strings of the blog index, post pages and post rows. */
+export const blog = {
+  blog: {
+    title: "Blog",
+    heading: "Writing",
+    description:
+      "Articles on Rust systems, networking from raw sockets up, edge/CDN infrastructure, NixOS and performance work.",
+    lede: "Things built from scratch and then measured: network stacks, a reverse proxy, a kernel, a Matter bridge and optimization loops, written in lowercase.",
+    count: (posts: number): string => (posts === 1 ? "1 post" : `${posts} posts`),
+    empty: "No posts yet.",
+    rss: "RSS",
+    allPosts: "All writing",
+    columns: { date: "Date", post: "Post", measured: "Measured" },
+  },
+  post: {
+    readingTimeLabel: "Reading",
+    readingTime: (minutes: number): string => `${minutes} min`,
+    published: "Published",
+    tags: "Tags",
+    breadcrumb: "Breadcrumb",
+    readIn: "Read in",
+    readInLabel: "Language of this post",
+    toc: "Contents",
+    tocLabel: "Table of contents",
+    sections: (count: number): string => (count === 1 ? "1 section" : `${count} sections`),
+    keyFigures: "Key figures",
+    previous: "Previous",
+    next: "Next",
+    moreWriting: "More writing",
+    backToBlog: "All writing",
+    copyCode: "Copy",
+    copiedCode: "Copied",
+    markdown: "Markdown source",
+  },
+  scheduled: {
+    badge: "Coming soon",
+    releasesOn: "Releases",
+    units: { days: "d", hours: "h", minutes: "m", seconds: "s" },
+    released: "Released. Reload the page to read it.",
+  },
+} as const;

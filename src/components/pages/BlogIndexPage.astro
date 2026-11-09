@@ -1,0 +1,81 @@
+---
+import { t } from "../../i18n";
+import Base from "../../layouts/Base.astro";
+import { LANGUAGES } from "../../lib/config";
+import { blogMeta } from "../../lib/seo";
+import { feedHref } from "../../lib/urls";
+import { monthRange } from "../blog/format";
+import PostCard from "../PostCard.astro";
+import ScheduledCard from "../ScheduledCard.astro";
+import type { HostKind, Language } from "../../lib/config";
+import type { Epoch } from "../../lib/epochs";
+import type { Post } from "../../lib/posts";
+
+interface Props {
+  lang: Language;
+  host: HostKind;
+  epoch: Epoch;
+  released: Post[];
+  scheduled: Post[];
+}
+
+const { lang, host, epoch, released, scheduled } = Astro.props;
+const dict = t(lang);
+const newest = released.at(0);
+const oldest = released.at(-1);
+---
+
+<Base lang={lang} host={host} epoch={epoch} meta={blogMeta(lang, released)} page="blog">
+  <section class="page-head" aria-labelledby="blog-h">
+    <div class="frame">
+      <div class="page-head__row">
+        <h1 class="page-head__t" id="blog-h">{dict.blog.heading}</h1>
+        <p class="page-head__meta">
+          {dict.blog.count(released.length)}
+          {
+            newest && oldest && (
+              <>
+                <span class="sep" aria-hidden="true">·</span>
+                {monthRange(oldest.published, newest.published, lang)}
+              </>
+            )
+          }
+          <span class="sep" aria-hidden="true">·</span>
+          {LANGUAGES.map((code) => code.toUpperCase()).join(" / ")}
+          <span class="sep" aria-hidden="true">·</span>
+          <a class="ul" href={feedHref(host)} type="application/rss+xml">{dict.blog.rss}</a>
+        </p>
+      </div>
+      <p class="page-head__lede">{dict.blog.lede}</p>
+    </div>
+  </section>
+  <section class="plist-sec">
+    <div class="frame">
+      {
+        released.length + scheduled.length > 0 ? (
+          <>
+            <div class="plist__head" aria-hidden="true">
+              <span>{dict.blog.columns.date}</span>
+              <span>{dict.blog.columns.post}</span>
+              <span>{dict.blog.columns.measured}</span>
+            </div>
+            <ol class="plist">
+              {scheduled.map((post) => (
+                <li>
+                  <ScheduledCard post={post} lang={lang} />
+                </li>
+              ))}
+              {released.map((post) => (
+                <li>
+                  <PostCard post={post} host={host} lang={lang} />
+                </li>
+              ))}
+            </ol>
+          </>
+        ) : (
+          <p class="plist-empty">{dict.blog.empty}</p>
+        )
+      }
+    </div>
+  </section>
+</Base>

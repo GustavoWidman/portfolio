@@ -1,0 +1,58 @@
+---
+import { postFigures } from "../data/post-figures";
+import { t } from "../i18n";
+import { htmlLang } from "../lib/config";
+import { preparePost } from "../lib/post-render";
+import { postHref } from "../lib/urls";
+import { isoDate } from "./blog/format";
+import type { HostKind, Language } from "../lib/config";
+import type { Post } from "../lib/posts";
+
+/**
+ * One row of a post listing (blog index, home page): date in the rail, title, excerpt and
+ * meta, and the post's measured figure when it has one. Put rows in `<ol class="plist">`,
+ * one `<li>` each. The whole row is clickable through the title link.
+ */
+interface Props {
+  post: Post;
+  host: HostKind;
+  /** Language of the page around the row; the post may be shown in another one. */
+  lang: Language;
+  /** Heading level of the title inside its list. */
+  level?: 2 | 3;
+}
+
+const { post, host, lang, level = 2 } = Astro.props;
+const Heading = `h${level}` as "h2" | "h3";
+const dict = t(lang);
+const textLang = post.lang === lang ? undefined : htmlLang(post.lang);
+const { readingMinutes } = await preparePost(post);
+const figure = postFigures(post.slug)?.list;
+---
+
+<article class="pr">
+  <time class="pr-date" datetime={post.published.toISOString()}>{isoDate(post.published)}</time>
+  <div class="pr-main">
+    <div class="pr-title" style={`view-transition-name: post-${post.slug}`}>
+      <Heading lang={textLang}><a href={postHref(host, post.slug)}>{post.title}</a></Heading>
+    </div>
+    <p class="pr-ex" lang={textLang}>{post.excerpt}</p>
+    <div class="pr-meta">
+      <span class="pr-min">{dict.post.readingTime(readingMinutes)}</span>
+      <ul class="pr-tags" aria-label={dict.post.tags}>
+        {post.tags.map((tag) => <li>{tag}</li>)}
+      </ul>
+    </div>
+  </div>
+  {
+    figure && (
+      <p class="pr-fig">
+        <span class="pr-fig__v">
+          {figure.value[lang]}
+          {figure.unit && <span class="unit">{figure.unit}</span>}
+        </span>{" "}
+        <span class="pr-fig__l">{figure.label[lang]}</span>
+      </p>
+    )
+  }
+</article>

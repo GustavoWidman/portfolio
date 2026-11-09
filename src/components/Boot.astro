@@ -1,0 +1,66 @@
+---
+import { LANGUAGES } from "../lib/config";
+import type { HostKind, Language } from "../lib/config";
+import { buildInfo } from "../lib/build-info";
+import type { Epoch } from "../lib/epochs";
+import { preparePost } from "../lib/post-render";
+import { getPosts } from "../lib/posts";
+import { scheduledPosts, servedPosts } from "../lib/release";
+import { t } from "../i18n";
+
+interface Props {
+  lang: Language;
+  host: HostKind;
+  epoch: Epoch;
+}
+
+/** One self-test line: what was checked and what the build found. */
+interface BootLine {
+  label: string;
+  value: string;
+}
+
+const { lang, epoch } = Astro.props;
+const b = t(lang).boot;
+const build = buildInfo();
+const posts = await getPosts();
+const served = servedPosts(posts, epoch, lang);
+const anchors = (await Promise.all(served.map(preparePost))).reduce(
+  (sum, prepared) => sum + prepared.toc.length,
+  0,
+);
+
+const lines: BootLine[] = [
+  { label: b.firmware, value: [`v${build.version}`, build.commit].filter(Boolean).join(" · ") },
+  { label: b.build, value: build.date },
+  { label: b.posts, value: b.postsValue(served.length) },
+  { label: b.queue, value: b.queueValue(scheduledPosts(posts, epoch, lang).length) },
+  { label: b.languages, value: LANGUAGES.map((code) => code.toUpperCase()).join(" · ") },
+  { label: b.anchors, value: b.anchorsValue(anchors) },
+];
+---
+
+<div class="selftest" data-boot aria-hidden="true">
+  <div class="selftest__panel">
+    <p class="selftest__head">
+      <span class="selftest__led"></span>
+      <span>{b.title}</span>
+      <span class="selftest__skip">{b.skip}</span>
+    </p>
+    <ol class="selftest__lines">
+      {
+        lines.map((line, i) => (
+          <li style={`--i: ${i}`}>
+            <span class="selftest__key">{line.label}</span>
+            <span class="selftest__val">{line.value}</span>
+            <span class="selftest__ok">{b.pass}</span>
+          </li>
+        ))
+      }
+      <li class="selftest__ready" style={`--i: ${lines.length}`}>
+        <span class="selftest__key">{b.ready}</span>
+      </li>
+    </ol>
+    <div class="selftest__bar"></div>
+  </div>
+</div>

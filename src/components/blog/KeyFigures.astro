@@ -1,0 +1,32 @@
+---
+import { t } from "../../i18n";
+import type { PostFigures } from "../../data/post-figures";
+import type { Language } from "../../lib/config";
+
+/** The Key figures box of a post: measured values and the conditions they hold under. */
+interface Props {
+  figures: NonNullable<PostFigures["key"]>;
+  lang: Language;
+}
+
+const { figures, lang } = Astro.props;
+const dict = t(lang);
+---
+
+<aside class="glance" aria-labelledby="glance-h">
+  <p class="label" id="glance-h">{dict.post.keyFigures}</p>
+  <ul style={`--cols: ${figures.rows.length}`}>
+    {
+      figures.rows.map((row, i) => (
+        <li class:list={{ "is-sig": row.signal }} data-reveal="rise" style={`--i: ${i}`}>
+          <span class="glance__v">
+            {row.value[lang]}
+            {row.unit && <span class="unit">{row.unit}</span>}
+          </span>{" "}
+          <span class="glance__l">{row.label[lang]}</span>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="glance__cond">{figures.conditions[lang]}</p>
+</aside>

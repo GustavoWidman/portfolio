@@ -1,0 +1,47 @@
+---
+import { formatNumber } from "../../data/format";
+import { text } from "../../data/types";
+import { t } from "../../i18n";
+import { inlineCodeHtml } from "../../lib/text";
+import type { ColumnsFigure } from "../../data/figure-types";
+import type { Language } from "../../lib/config";
+
+interface Props {
+  figure: ColumnsFigure;
+  lang: Language;
+}
+
+const { figure, lang } = Astro.props;
+const attempt = t(lang).home.columns.attempt;
+---
+
+<figure class="fig cols-fig" data-reveal="grow" aria-labelledby={`${figure.id}-cap`}>
+  <figcaption class="fig__head" id={`${figure.id}-cap`}>
+    <span class="fig__n">{figure.n}</span>
+    <span class="fig__t">{text(figure.title, lang)}</span>
+    {figure.unit && <span class="fig__u">{text(figure.unit, lang)}</span>}
+  </figcaption>
+  <table class="cols" role="table">
+    <caption class="visually-hidden">{text(figure.summary, lang)}</caption>
+    <tbody role="rowgroup">
+      {
+        figure.rows.map((row, i) => (
+          <tr role="row" class:list={[row.subject && "is-subject"]} style={`--i:${i}`}>
+            <th scope="row" role="rowheader">
+              <span class="cols__n">
+                <span class="visually-hidden">{attempt} </span>
+                {row.n}
+              </span>
+              <span class="visually-hidden">{text(row.label, lang)}</span>
+            </th>
+            <td role="cell">
+              <span class="cols__bar" style={`--h:${((row.value / figure.max) * 100).toFixed(2)}%`} />
+              <span class="cols__v">{formatNumber(row.value, lang)}</span>
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  {figure.note && <p class="fig__note" set:html={inlineCodeHtml(text(figure.note, lang))} />}
+</figure>

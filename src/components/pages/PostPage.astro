@@ -1,0 +1,191 @@
+---
+import { postFigures } from "../../data/post-figures";
+import { t } from "../../i18n";
+import Base from "../../layouts/Base.astro";
+import { htmlLang, LANGUAGES } from "../../lib/config";
+import { preparePost } from "../../lib/post-render";
+import { getPosts } from "../../lib/posts";
+import { isReleased } from "../../lib/release";
+import { postMeta } from "../../lib/seo";
+import { blogIndexHref, postHref, postMarkdownHref } from "../../lib/urls";
+import { isoDate } from "../blog/format";
+import KeyFigures from "../blog/KeyFigures.astro";
+import Toc from "../Toc.astro";
+import type { HostKind } from "../../lib/config";
+import type { Epoch } from "../../lib/epochs";
+import type { Post } from "../../lib/posts";
+
+interface Props {
+  post: Post;
+  host: HostKind;
+  epoch: Epoch;
+  /** Newer and older posts of the same tree. */
+  newer?: Post;
+  older?: Post;
+}
+
+const { post, host, epoch, newer, older } = Astro.props;
+const lang = post.lang;
+const dict = t(lang);
+const prepared = await preparePost(post);
+const meta = postMeta(post, postMarkdownHref(host, post.slug));
+const keyFigures = postFigures(post.slug)?.key;
+const sectionCount = prepared.toc.filter((entry) => entry.number).length;
+
+/** Languages this post is released in for this epoch, for the inline language control. */
+const versions = new Set(
+  (await getPosts())
+    .filter((other) => other.slug === post.slug && isReleased(other, epoch))
+    .map((other) => other.lang),
+);
+const languages = LANGUAGES.filter((code) => versions.has(code));
+
+const TAGS_SHOWN = 4;
+const shownTags = post.tags.slice(0, TAGS_SHOWN);
+const moreTags = post.tags.slice(TAGS_SHOWN);
+
+const neighbours = await Promise.all(
+  [
+    { post: older, rel: "prev", label: dict.post.previous },
+    { post: newer, rel: "next", label: dict.post.next },
+  ].map(async (item) =>
+    item.post
+      ? {
+          ...item,
+          post: item.post,
+          minutes: (await preparePost(item.post)).readingMinutes,
+        }
+      : undefined,
+  ),
+);
+---
+
+<Base lang={lang} host={host} epoch={epoch} meta={meta} page="post">
+  <div class="progress" aria-hidden="true"></div>
+  <article class="post" data-slug={post.slug}>
+    <header class="post-head">
+      <div class="frame">
+        <div class="post-head__top">
+          <nav class="crumbs" aria-label={dict.post.breadcrumb}>
+            <ol>
+              <li><a href={blogIndexHref(host)}>{dict.blog.heading}</a></li>
+              <li><span aria-current="page">{post.slug}</span></li>
+            </ol>
+          </nav>
+          {
+            languages.length > 1 && (
+              <nav class="lang-inline" aria-label={dict.post.readInLabel}>
+                <span class="lang-inline__k" aria-hidden="true">
+                  {dict.post.readIn}
+                </span>
+                {languages.map((code) => (
+                  <a
+                    href={`?lang=${code}`}
+                    hreflang={htmlLang(code)}
+                    lang={htmlLang(code)}
+                    aria-current={code === lang ? "true" : undefined}
+                    data-lang-switch={code === lang ? undefined : code}
+                  >
+                    {t(code).languageName}
+                  </a>
+                ))}
+              </nav>
+            )
+          }
+        </div>
+        <div class="post-head__t" style={`view-transition-name: post-${post.slug}`}>
+          <h1>{post.title}</h1>
+        </div>
+        <p class="post-head__ex">{post.excerpt}</p>
+        <dl class="post-meta">
+          <div>
+            <dt>{dict.post.published}</dt>
+            <dd><time datetime={post.published.toISOString()}>{isoDate(post.published)}</time></dd>
+          </div>
+          <div>
+            <dt>{dict.post.readingTimeLabel}</dt>
+            <dd>{dict.post.readingTime(prepared.readingMinutes)}</dd>
+          </div>
+          <div class="post-meta__tags">
+            <dt>{dict.post.tags}</dt>
+            <dd>
+              <ul class="tags">
+                {shownTags.map((tag) => <li>{tag}</li>)}
+                {
+                  moreTags.length > 0 && (
+                    <li class="tags__more" title={moreTags.join(", ")}>
+                      <span aria-hidden="true">+{moreTags.length}</span>
+                      <span class="visually-hidden">{moreTags.join(", ")}</span>
+                    </li>
+                  )
+                }
+              </ul>
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </header>
+    <div class="frame post-grid">
+      {
+        sectionCount > 0 && (
+          <div class="post-side">
+            <nav class="toc toc--side" aria-labelledby="toc-side-h">
+              <p class="label" id="toc-side-h">
+                {dict.post.toc}
+              </p>
+              <Toc entries={prepared.toc} />
+            </nav>
+          </div>
+        )
+      }
+      <div class="post-main">
+        {keyFigures && <KeyFigures figures={keyFigures} lang={lang} />}
+        {
+          sectionCount > 0 && (
+            <details class="toc toc--inline">
+              <summary>
+                <span class="label">{dict.post.toc}</span>
+                <span class="toc__count">{dict.post.sections(sectionCount)}</span>
+              </summary>
+              <nav aria-label={dict.post.tocLabel}>
+                <Toc entries={prepared.toc} />
+              </nav>
+            </details>
+          )
+        }
+        <div class="prose" set:html={prepared.html[host]} />
+        <footer class="post-end">
+          <nav class="pn" aria-label={dict.post.moreWriting}>
+            {
+              neighbours.map(
+                (item) =>
+                  item && (
+                    <a class={`pn__a pn__a--${item.rel}`} href={postHref(host, item.post.slug)} rel={item.rel}>
+                      <span class="label">
+                        {item.rel === "prev" && <span aria-hidden="true">←{" "}</span>}
+                        {item.label}
+                        {item.rel === "next" && <span aria-hidden="true">{" "}→</span>}
+                      </span>
+                      <span class="pn__t" lang={item.post.lang === lang ? undefined : htmlLang(item.post.lang)}>
+                        {item.post.title}
+                      </span>
+                      <span class="pn__d">
+                        {isoDate(item.post.published)}
+                        <span class="sep" aria-hidden="true">·</span>
+                        {dict.post.readingTime(item.minutes)}
+                      </span>
+                    </a>
+                  ),
+              )
+            }
+          </nav>
+          <p class="post-end__all">
+            <a class="ul" href={blogIndexHref(host)}>{dict.post.backToBlog}</a><span class="arr" aria-hidden="true">→</span>
+            <span class="sep" aria-hidden="true">·</span>
+            <a class="ul" href={postMarkdownHref(host, post.slug)} type="text/markdown">{dict.post.markdown}</a>
+          </p>
+        </footer>
+      </div>
+    </div>
+  </article>
+</Base>

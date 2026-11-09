@@ -1,0 +1,17 @@
+---
+interface Props {
+  n: string;
+  /** Id of the heading; the section is labelled by it. */
+  id: string;
+  title: string;
+  lede: string;
+}
+
+const { n, id, title, lede } = Astro.props;
+---
+
+<header class="sec__head">
+  <p class="sec__n">{n}</p>
+  <h2 class="sec__t" id={id}>{title}</h2>
+  <p class="sec__m">{lede}</p>
+</header>

@@ -1,0 +1,98 @@
+---
+import Base from "../../layouts/Base.astro";
+import PostCard from "../PostCard.astro";
+import About from "../home/About.astro";
+import Hero from "../home/Hero.astro";
+import Paper from "../home/Paper.astro";
+import SectionHead from "../home/SectionHead.astro";
+import SmallBuilds from "../home/SmallBuilds.astro";
+import SpecSheet from "../home/SpecSheet.astro";
+import { postRefs } from "../home/post-refs";
+import { PROFILE } from "../../data/profile";
+import { PAPERS } from "../../data/research";
+import { pick } from "../../data/types";
+import { SPEC_SHEETS } from "../../data/work";
+import { getPosts } from "../../lib/posts";
+import { servedPosts } from "../../lib/release";
+import { homeMeta } from "../../lib/seo";
+import { blogIndexHref } from "../../lib/urls";
+import { t } from "../../i18n";
+import type { HostKind, Language } from "../../lib/config";
+import type { Epoch } from "../../lib/epochs";
+import type { Post } from "../../lib/posts";
+
+interface Props {
+  lang: Language;
+  host: HostKind;
+  epoch: Epoch;
+  /** Latest posts as the `lang` tree serves them. */
+  latest: Post[];
+  /** Slugs available in this epoch; links to other posts are left out. */
+  releasedSlugs: string[];
+}
+
+const WRITING_ROWS = 4;
+
+const { lang, host, epoch, latest, releasedSlugs } = Astro.props;
+const h = t(lang).home;
+const refs = postRefs(servedPosts(await getPosts(), epoch, lang), host);
+const half = SPEC_SHEETS.filter((sheet) => sheet.size === "half");
+const full = SPEC_SHEETS.filter((sheet) => sheet.size === "full");
+---
+
+<Base lang={lang} host={host} epoch={epoch} meta={homeMeta(lang)} page="home">
+  <Hero lang={lang} host={host} />
+
+  <section class="sec sec--first" id="work" aria-labelledby="work-h">
+    <div class="frame">
+      <SectionHead n="01" id="work-h" title={h.sections.work.title} lede={h.sections.work.lede} />
+      <div class="sheets">
+        {full.map((sheet) => <SpecSheet sheet={sheet} lang={lang} refs={refs} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="research" aria-labelledby="research-h">
+    <div class="frame">
+      <SectionHead n="02" id="research-h" title={h.sections.research.title} lede={h.sections.research.lede} />
+      <div class="papers">
+        {PAPERS.map((paper) => <Paper paper={paper} lang={lang} refs={refs} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="more-work" aria-labelledby="more-work-h">
+    <div class="frame">
+      <SectionHead n="03" id="more-work-h" title={h.sections.more.title} lede={h.sections.more.lede} />
+      <div class="sheets__half">
+        {half.map((sheet) => <SpecSheet sheet={sheet} lang={lang} refs={refs} />)}
+      </div>
+      <SmallBuilds lang={lang} refs={refs} />
+    </div>
+  </section>
+
+  <section class="sec" id="writing" aria-labelledby="writing-h">
+    <div class="frame">
+      <SectionHead n="04" id="writing-h" title={h.sections.writing.title} lede={h.sections.writing.lede} />
+      <ol class="plist">
+        {
+          latest.slice(0, WRITING_ROWS).map((post) => (
+            <li>
+              <PostCard post={post} host={host} lang={lang} level={3} />
+            </li>
+          ))
+        }
+      </ol>
+      <p class="writing__more">
+        <a class="btn" href={blogIndexHref(host)}>{h.writing.all(releasedSlugs.length)}<span class="arr" aria-hidden="true">→</span></a>
+      </p>
+    </div>
+  </section>
+
+  <section class="sec" id="about" aria-labelledby="about-h">
+    <div class="frame">
+      <SectionHead n="05" id="about-h" title={h.sections.about.title} lede={pick(PROFILE.education, lang)} />
+      <About lang={lang} />
+    </div>
+  </section>
+</Base>

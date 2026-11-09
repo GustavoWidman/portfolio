@@ -1,0 +1,51 @@
+---
+import { readingParts } from "../../data/format";
+import { SMALL_BUILDS } from "../../data/work";
+import { text } from "../../data/types";
+import { t } from "../../i18n";
+import { inlineCodeHtml } from "../../lib/text";
+import type { Language } from "../../lib/config";
+import type { PostRefs } from "./post-refs";
+
+interface Props {
+  lang: Language;
+  refs: PostRefs;
+}
+
+const { lang, refs } = Astro.props;
+const h = t(lang).home.small;
+---
+
+<div class="more" id="more">
+  <h3 class="more__t label">{h.title}</h3>
+  <table class="small">
+    <caption class="visually-hidden">{h.caption}</caption>
+    <thead>
+      <tr>
+        <th scope="col">{h.project}</th>
+        <th scope="col">{h.what}</th>
+        <th scope="col" class="small__v">{h.figure}</th>
+        <th scope="col" class="small__c">{h.context}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        SMALL_BUILDS.map((build) => {
+          const href = "href" in build.link ? build.link.href : refs.get(build.link.slug)?.href;
+          const value = readingParts(build.value, lang);
+          return (
+            <tr>
+              <th scope="row">{href ? <a class="ul" href={href}>{build.name}</a> : build.name}</th>
+              <td class="small__w" set:html={inlineCodeHtml(text(build.what, lang))} />
+              <td class="small__v">
+                <span class="num">{value.value}</span>
+                {value.unit && <span class="unit">{value.unit}</span>}
+              </td>
+              <td class="small__c">{build.context && text(build.context, lang)}</td>
+            </tr>
+          );
+        })
+      }
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,37 @@
+---
+import BarsFigure from "./BarsFigure.astro";
+import BlocksFigure from "./BlocksFigure.astro";
+import BytesFigure from "./BytesFigure.astro";
+import ColumnsFigure from "./ColumnsFigure.astro";
+import MetersFigure from "./MetersFigure.astro";
+import ScopeFigure from "./ScopeFigure.astro";
+import WalkFigure from "./WalkFigure.astro";
+import type { Figure, FigureKind } from "../../data/figure-types";
+import type { Language } from "../../lib/config";
+
+interface Props {
+  figure: Figure;
+  lang: Language;
+}
+
+type View<K extends FigureKind> = (props: {
+  figure: Extract<Figure, { kind: K }>;
+  lang: Language;
+}) => unknown;
+
+/** One component per figure kind; a kind without a component fails type checking. */
+const VIEWS = {
+  scope: ScopeFigure,
+  bars: BarsFigure,
+  columns: ColumnsFigure,
+  blocks: BlocksFigure,
+  walk: WalkFigure,
+  meters: MetersFigure,
+  bytes: BytesFigure,
+} satisfies { [K in FigureKind]: View<K> };
+
+const { figure, lang } = Astro.props;
+const FigureView = VIEWS[figure.kind] as View<FigureKind>;
+---
+
+<FigureView figure={figure} lang={lang} />

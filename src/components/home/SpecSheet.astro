@@ -1,0 +1,130 @@
+---
+import Figure from "../figures/Figure.astro";
+import { readingParts } from "../../data/format";
+import { text } from "../../data/types";
+import { t } from "../../i18n";
+import { inlineCodeHtml } from "../../lib/text";
+import type { SpecSheet } from "../../data/figure-types";
+import type { Language } from "../../lib/config";
+import type { PostRefs } from "./post-refs";
+
+interface Props {
+  sheet: SpecSheet;
+  lang: Language;
+  refs: PostRefs;
+}
+
+const { sheet, lang, refs } = Astro.props;
+const h = t(lang).home.sheet;
+const writeups = (sheet.writeups ?? []).flatMap((writeup) => {
+  const ref = refs.get(writeup.slug);
+  return ref ? [{ ref, label: writeup.label ?? ref.date }] : [];
+});
+const hasCondition = sheet.rows.filter((row) => row.condition).length > sheet.rows.length / 2;
+const single = sheet.sources.length === 1;
+---
+
+<article class={`sheet sheet--${sheet.size}`} id={sheet.id} aria-labelledby={`${sheet.id}-h`} data-reveal="latch">
+  <header class="sheet__head">
+    <div class="sheet__id">
+      <p class="sheet__n">{sheet.part}</p>
+      <div>
+        <h3 class="sheet__name" id={`${sheet.id}-h`}>{sheet.name}</h3>
+        <p class="sheet__cls">{text(sheet.cls, lang)}</p>
+      </div>
+    </div>
+    <dl class="sheet__meta">
+      {
+        sheet.lang && (
+          <div>
+            <dt>{h.lang}</dt>
+            <dd>{text(sheet.lang, lang)}</dd>
+          </div>
+        )
+      }
+      {
+        sheet.target && (
+          <div>
+            <dt>{h.target}</dt>
+            <dd>{text(sheet.target, lang)}</dd>
+          </div>
+        )
+      }
+      {
+        writeups.length > 0 && (
+          <div class="sheet__post">
+            <dt>{h.writeup}</dt>
+            <dd>
+              {writeups.map((writeup, i) => (
+                <>
+                  {i > 0 && <span class="sep" aria-hidden="true">·</span>}
+                  <a class="ul" href={writeup.ref.href} aria-label={h.writeupAria(writeups.length > 1 ? writeup.label : sheet.name, writeup.ref.date)}>
+                    {writeup.label}
+                    {writeups.length === 1 && <span class="arr" aria-hidden="true">→</span>}
+                  </a>
+                </>
+              ))}
+            </dd>
+          </div>
+        )
+      }
+    </dl>
+    <div class="sheet__links">
+      {
+        sheet.sources.map((source) => (
+          <a class="ul sheet__src" href={source.href} aria-label={single ? h.sourceAria(sheet.name) : undefined}>
+            {text(source.label, lang)}
+            <span class="arr" aria-hidden="true">↗</span>
+          </a>
+        ))
+      }
+    </div>
+  </header>
+  <div class="sheet__body">
+    <div class="sheet__text">
+      <p class="sheet__desc" set:html={inlineCodeHtml(text(sheet.desc, lang))} />
+      {
+        sheet.features && (
+          <ul class="feat">
+            {sheet.features.map((feature) => (
+              <li>{text(feature, lang)}</li>
+            ))}
+          </ul>
+        )
+      }
+      <table class="spec">
+        <caption class="visually-hidden">{h.specs(sheet.name)}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{h.parameter}</th>
+            {hasCondition && <th scope="col" class="spec__c">{h.condition}</th>}
+            <th scope="col" class="spec__v">{h.value}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            sheet.rows.map((row) => {
+              const value = readingParts(row.value, lang);
+              return (
+                <tr class:list={[row.signal && "is-signal"]}>
+                  <th scope="row">
+                    {text(row.param, lang)}
+                    {row.condition && <span class:list={["spec__cm", !hasCondition && "spec__cm--on"]}>{text(row.condition, lang)}</span>}
+                  </th>
+                  {hasCondition && <td class="spec__c">{row.condition && text(row.condition, lang)}</td>}
+                  <td class:list={["spec__v", !value.numeric && "spec__v--t"]}>
+                    {value.value}
+                    {value.unit && <span class="unit">{value.unit}</span>}
+                  </td>
+                </tr>
+              );
+            })
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="sheet__fig">
+      {sheet.figures.map((figure) => <Figure figure={figure} lang={lang} />)}
+    </div>
+  </div>
+</article>

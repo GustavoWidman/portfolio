@@ -1,0 +1,43 @@
+import type { blog as en } from "../en/blog";
+import type { Widen } from "../types";
+
+export const blog: Widen<typeof en> = {
+  blog: {
+    title: "Blog",
+    heading: "Textos",
+    description:
+      "Artigos sobre sistemas em Rust, redes a partir de raw sockets, infraestrutura de edge/CDN, NixOS e trabalho de performance.",
+    lede: "Coisas construídas do zero e depois medidas: pilhas de rede, um reverse proxy, um kernel, uma bridge Matter e loops de otimização, tudo escrito em minúsculas.",
+    count: (posts: number): string => (posts === 1 ? "1 texto" : `${posts} textos`),
+    empty: "Nenhum texto ainda.",
+    rss: "RSS",
+    allPosts: "Todos os textos",
+    columns: { date: "Data", post: "Texto", measured: "Medido" },
+  },
+  post: {
+    readingTimeLabel: "Leitura",
+    readingTime: (minutes: number): string => `${minutes} min`,
+    published: "Publicado",
+    tags: "Tags",
+    breadcrumb: "Trilha",
+    readIn: "Ler em",
+    readInLabel: "Idioma deste texto",
+    toc: "Conteúdo",
+    tocLabel: "Sumário",
+    sections: (count: number): string => (count === 1 ? "1 seção" : `${count} seções`),
+    keyFigures: "Números-chave",
+    previous: "Anterior",
+    next: "Próximo",
+    moreWriting: "Mais textos",
+    backToBlog: "Todos os textos",
+    copyCode: "Copiar",
+    copiedCode: "Copiado",
+    markdown: "Fonte em Markdown",
+  },
+  scheduled: {
+    badge: "Em breve",
+    releasesOn: "Lançamento",
+    units: { days: "d", hours: "h", minutes: "min", seconds: "s" },
+    released: "Publicado. Recarregue a página para ler.",
+  },
+};

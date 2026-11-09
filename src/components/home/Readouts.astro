@@ -1,0 +1,54 @@
+---
+import { formatNumber } from "../../data/format";
+import { READOUTS } from "../../data/readouts";
+import { text } from "../../data/types";
+import { t } from "../../i18n";
+import type { Language } from "../../lib/config";
+
+interface Props {
+  lang: Language;
+}
+
+const { lang } = Astro.props;
+const h = t(lang).home;
+---
+
+<ul class="readouts" aria-label={h.hero.readouts}>
+  {
+    READOUTS.map((readout, i) => {
+      const value = readout.value;
+      const range = "from" in value;
+      const numbers = range ? [value.from, value.to] : [value.value];
+      const prefix = range ? "" : (value.prefix ?? "");
+      const unit = range || value.unit === undefined ? undefined : text(value.unit, lang);
+      return (
+        <li style={`--i:${i}`}>
+          <a href={`#${readout.target}`}>
+            <span class="ro__l">{text(readout.label, lang)}</span>
+            <span class="ro__v">
+              {prefix}
+              {numbers.map((number, k) => {
+                const shown = formatNumber(number, lang, value.dp);
+                return (
+                  <>
+                    {k > 0 && "–"}
+                    <span data-readout data-to={number} data-dp={value.dp ?? 0} style={`min-width:${shown.length}ch`}>
+                      {shown}
+                    </span>
+                  </>
+                );
+              })}
+              {value.suffix}
+              {unit && <span class="ro__u">{unit}</span>}
+            </span>
+            <span class="ro__c">{text(readout.caption, lang)}</span>
+          </a>
+        </li>
+      );
+    })
+  }
+</ul>
+
+<script>
+  import "../../scripts/features/readouts-count";
+</script>

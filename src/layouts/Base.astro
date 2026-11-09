@@ -1,0 +1,62 @@
+---
+import blogCss from "../styles/blog.css?inline";
+import globalCss from "../styles/global.css?inline";
+import homeCss from "../styles/home.css?inline";
+import postListCss from "../styles/post-list.css?inline";
+import quirksCss from "../styles/quirks.css?inline";
+import Boot from "../components/Boot.astro";
+import Head from "../components/Head.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import { htmlLang } from "../lib/config";
+import type { HostKind, Language } from "../lib/config";
+import type { Epoch } from "../lib/epochs";
+import type { PageMeta } from "../lib/seo";
+import { t } from "../i18n";
+
+interface Props {
+  lang: Language;
+  host: HostKind;
+  epoch: Epoch;
+  meta: PageMeta;
+  /** Page kind, exposed as `data-page` on <body> for styling. */
+  page: "home" | "blog" | "post" | "not-found";
+}
+
+const { lang, host, epoch, meta, page } = Astro.props;
+const dict = t(lang);
+
+/**
+ * Stylesheets per page kind, after the shared `global.css`, inlined into the page so the
+ * first paint waits for no request but the page itself. They are imported per page kind
+ * because every page is rendered by one route module, which would otherwise merge them into
+ * a single stylesheet for all pages. `quirks.css` styles the boot screen, the console and
+ * the 404 page, so it follows on every page.
+ */
+const PAGE_STYLES: Record<Props["page"], string[]> = {
+  home: [homeCss, postListCss],
+  blog: [blogCss, postListCss],
+  post: [blogCss],
+  "not-found": [],
+};
+const styles = [globalCss, ...PAGE_STYLES[page], quirksCss].join("");
+---
+
+<!doctype html>
+<html lang={htmlLang(lang)} data-host={host}>
+  <head>
+    <Head lang={lang} host={host} meta={meta} boot={page === "home"} styles={styles} />
+  </head>
+  <body data-page={page}>
+    {page === "home" && <Boot lang={lang} host={host} epoch={epoch} />}
+    <a class="skip-link" href="#content">{dict.site.skipToContent}</a>
+    <SiteHeader lang={lang} host={host} page={page} />
+    <main id="content">
+      <slot />
+    </main>
+    <SiteFooter lang={lang} host={host} epoch={epoch} />
+    <script>
+      import "../scripts/client.ts";
+    </script>
+  </body>
+</html>

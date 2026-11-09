@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [
+    "blog/**",
+    "scripts/fixtures/**",
+    ".bun.nix",
+    "bun.lock",
+    "flake.lock",
+    "typst/**"
+  ]
+}

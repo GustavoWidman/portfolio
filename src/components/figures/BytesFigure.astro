@@ -1,0 +1,37 @@
+---
+import { text } from "../../data/types";
+import type { BytesFigure } from "../../data/figure-types";
+import type { Language } from "../../lib/config";
+
+interface Props {
+  figure: BytesFigure;
+  lang: Language;
+}
+
+const { figure, lang } = Astro.props;
+---
+
+<figure class="fig" data-reveal="grow" aria-labelledby={`${figure.id}-cap`}>
+  <figcaption class="fig__head" id={`${figure.id}-cap`}>
+    <span class="fig__n">{figure.n}</span>
+    <span class="fig__t">{text(figure.title, lang)}</span>
+    {figure.unit && <span class="fig__u">{text(figure.unit, lang)}</span>}
+  </figcaption>
+  <table class="bytes">
+    <caption class="visually-hidden">{text(figure.summary, lang)}</caption>
+    <thead>
+      <tr>{figure.cells.map((_, i) => <th scope="col">+{i}</th>)}</tr>
+    </thead>
+    <tbody>
+      <tr>
+        {figure.cells.map((cell, i) => <td class:list={[cell.variable && "is-var"]} style={`--i:${i}`}>{cell.value}</td>)}
+      </tr>
+    </tbody>
+    <tfoot>
+      <tr>
+        {figure.groups.map((group) => <td colspan={group.span} class:list={[group.variable && "is-var"]}>{text(group.label, lang)}</td>)}
+      </tr>
+    </tfoot>
+  </table>
+  {figure.note && <p class="fig__note">{text(figure.note, lang)}</p>}
+</figure>

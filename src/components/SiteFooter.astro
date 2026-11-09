@@ -1,0 +1,96 @@
+---
+import { PROFILE } from "../data/profile";
+import { AUTHOR, SITE_TIMEZONE } from "../lib/config";
+import type { HostKind, Language } from "../lib/config";
+import { buildInfo } from "../lib/build-info";
+import type { Epoch } from "../lib/epochs";
+import { feedHref, portfolioFileHref, treeFiles } from "../lib/urls";
+import { t } from "../i18n";
+
+interface Props {
+  lang: Language;
+  host: HostKind;
+  epoch: Epoch;
+}
+
+const { lang, host, epoch } = Astro.props;
+const dict = t(lang);
+const f = dict.footer;
+const year = new Date(epoch.now).toLocaleDateString("en-US", { year: "numeric", timeZone: SITE_TIMEZONE });
+const build = buildInfo();
+const status = [`v${build.version}`, build.commit, f.built(build.date), f.typefaces].filter(
+  (item) => item !== undefined,
+);
+const handle = (url: string): string => new URL(url).pathname.replace(/^\/|\/$/g, "");
+---
+
+<footer class="site-foot" id="contact">
+  <div class="frame">
+    <div class="foot-grid">
+      <div class="foot-lead">
+        <p class="label">{f.contact}</p>
+        <h2 class="foot-title">{f.title}</h2>
+        <a class="foot-mail ul" href={`mailto:${AUTHOR.email}`}>{AUTHOR.email}</a>
+      </div>
+      <dl class="kv foot-kv">
+        <div>
+          <dt>GitHub</dt>
+          <dd><a class="ul" href={AUTHOR.github}>{handle(AUTHOR.github)}</a></dd>
+        </div>
+        <div>
+          <dt>LinkedIn</dt>
+          <dd><a class="ul" href={AUTHOR.linkedin}>{handle(AUTHOR.linkedin)}</a></dd>
+        </div>
+        <div>
+          <dt>{f.resume}</dt>
+          <dd>
+            <a class="ul" href={portfolioFileHref(host, PROFILE.contact.resume.en)} hreflang="en">{t("en").languageName}</a>{" "}
+            <span class="sep" aria-hidden="true">/</span>{" "}
+            <a class="ul" href={portfolioFileHref(host, PROFILE.contact.resume.pt)} hreflang="pt-BR">{t("pt").languageName}</a>{" "}
+            <span class="unit">{f.resumeNote}</span>
+          </dd>
+        </div>
+        <div>
+          <dt>{f.terminal}</dt>
+          <dd>
+            <button
+              class="curl"
+              type="button"
+              data-console-open={`/${treeFiles.console}?lang=${lang}`}
+              disabled
+            >
+              <span class="prompt" aria-hidden="true">$ </span>curl guswid.com
+            </button>{" "}
+            <span class="unit">{f.curlNote}</span>
+          </dd>
+        </div>
+      </dl>
+    </div>
+    <div class="foot-base">
+      <p>
+        <span>© {year} {AUTHOR.name}</span>{" "}
+        <span class="sep" aria-hidden="true">·</span>{" "}
+        <span>{f.location}</span>{" "}
+        <span class="sep" aria-hidden="true">·</span>{" "}
+        <a href={feedHref(host)}>{f.feed}</a>{" "}
+        <span class="sep" aria-hidden="true">·</span>{" "}
+        <a href="/llms.txt">{f.llms}</a>{" "}
+        <span class="sep" aria-hidden="true">·</span>{" "}
+        <a href={AUTHOR.source}>{f.source}</a>
+      </p>
+      <p class="foot-status">
+        {status.map((item, i) => (
+          <>
+            {i > 0 && (
+              <>
+                {" "}
+                <span class="sep" aria-hidden="true">·</span>{" "}
+              </>
+            )}
+            <span>{item}</span>
+          </>
+        ))}
+      </p>
+    </div>
+  </div>
+</footer>

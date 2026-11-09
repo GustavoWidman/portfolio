@@ -1,0 +1,40 @@
+---
+import { text } from "../../data/types";
+import { inlineCodeHtml } from "../../lib/text";
+import type { BlocksFigure } from "../../data/figure-types";
+import type { Language } from "../../lib/config";
+
+interface Props {
+  figure: BlocksFigure;
+  lang: Language;
+}
+
+const { figure, lang } = Astro.props;
+---
+
+<figure class="fig" data-reveal="grow" aria-labelledby={`${figure.id}-cap`}>
+  <figcaption class="fig__head" id={`${figure.id}-cap`}>
+    <span class="fig__n">{figure.n}</span>
+    <span class="fig__t">{text(figure.title, lang)}</span>
+    {figure.unit && <span class="fig__u">{text(figure.unit, lang)}</span>}
+  </figcaption>
+  <div class="blocks">
+    {
+      figure.layers.map((layer, layerIndex) => (
+        <div class="blocks__layer">
+          {layer.map((block) => (
+            <div
+              class:list={["blk", block.own ? "blk--own" : "blk--ext", block.span === 2 && "blk--wide"]}
+              style={`--i:${figure.layers.length - 1 - layerIndex}`}
+            >
+              <span class="blk__k">{text(block.tag, lang)}</span>
+              <span class="blk__t">{text(block.title, lang)}</span>
+              {block.detail && <span class="blk__d" set:html={inlineCodeHtml(text(block.detail, lang))} />}
+            </div>
+          ))}
+        </div>
+      ))
+    }
+  </div>
+  {figure.note && <p class="fig__note">{text(figure.note, lang)}</p>}
+</figure>

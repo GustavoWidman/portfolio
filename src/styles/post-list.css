@@ -1,0 +1,258 @@
+/*
+ * Post listings (blog index and home page): a table-like list of rows with the date in the
+ * rail, the post in the middle and its measured figure on the right edge. Rows are
+ * `article.pr` inside `ol.plist > li`; the title link covers the whole row.
+ */
+
+.plist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule-2);
+}
+
+.plist__head {
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr) 190px;
+  column-gap: var(--gap);
+  padding-bottom: 8px;
+  font: 500 var(--fs-label) / 1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.plist__head span:last-child {
+  text-align: right;
+}
+
+.plist__head + .plist {
+  border-top-color: var(--rule-3);
+}
+
+.pr {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr) 190px;
+  column-gap: var(--gap);
+  padding: 20px 0 21px;
+  border-bottom: 1px solid var(--rule);
+  transition:
+    background-color var(--dur-1),
+    border-color var(--dur-1);
+}
+
+/* The row lights like a crosshair under the pointer. */
+.pr:has(a:hover),
+.pr:has(a:focus-visible) {
+  background-color: var(--hover);
+  border-bottom-color: var(--fg-3);
+}
+
+.pr-date {
+  grid-column: 1;
+  padding-top: 3px;
+  font: 400 var(--fs-meta) / 1.4 var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-3);
+  transition: color var(--dur-1);
+}
+
+.pr:has(a:hover) .pr-date,
+.pr:has(a:focus-visible) .pr-date {
+  color: var(--fg);
+}
+
+.pr-main {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pr-title {
+  view-transition-class: post-title;
+}
+
+.pr-title :is(h2, h3) {
+  margin: 0;
+  font-size: var(--fs-prose);
+  line-height: 1.35;
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  color: var(--fg);
+}
+
+.pr-title a {
+  text-decoration: underline 1px transparent;
+  text-underline-offset: 4px;
+  transition: text-decoration-color var(--dur-2) var(--ease-out);
+}
+
+.pr-title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.pr-title a:hover,
+.pr-title a:focus-visible {
+  text-decoration-color: currentcolor;
+}
+
+.pr-title a:focus-visible {
+  outline: none;
+}
+
+.pr:has(a:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.pr-ex {
+  margin: 5px 0 0;
+  max-width: 72ch;
+  font-size: var(--fs-ui);
+  line-height: 1.55;
+  color: var(--fg-2);
+}
+
+.pr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  margin: 10px 0 0;
+  font: 400 var(--fs-meta) / 1.4 var(--mono);
+  color: var(--fg-3);
+}
+
+.pr-min {
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+.pr-min::after {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 10px;
+  margin-left: 14px;
+  background: var(--rule-2);
+}
+
+.pr-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pr-tags li {
+  white-space: nowrap;
+}
+
+.pr-tags li:not(:last-child)::after {
+  content: "·";
+  padding: 0 6px;
+}
+
+.pr-fig {
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin: 0;
+  padding-top: 1px;
+  text-align: right;
+}
+
+.pr-fig__v {
+  font: 500 var(--fs-lead) / 1.2 var(--mono);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.pr-fig__l {
+  margin-top: 3px;
+  font-size: var(--fs-meta);
+  line-height: 1.35;
+  color: var(--fg-3);
+}
+
+/* Coming soon: no link, a live countdown, the badge in the figure column. */
+.pr--soon .pr-title :is(h2, h3) {
+  color: var(--fg-2);
+}
+
+.countdown time {
+  color: var(--fg-2);
+}
+
+.countdown-live {
+  display: inline-flex;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.countdown-cell span {
+  color: var(--signal-ink);
+}
+
+/* Title morph between a listing row and its post page. */
+::view-transition-group(.post-title) {
+  animation-duration: var(--dur-3);
+  animation-timing-function: var(--ease-in-out);
+}
+
+@media (max-width: 720px) {
+  .plist__head {
+    display: none;
+  }
+
+  .pr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px 16px;
+    padding: 18px 0;
+  }
+
+  .pr-date {
+    grid-row: 1;
+    grid-column: 1;
+    padding-top: 0;
+  }
+
+  .pr-fig {
+    grid-row: 1;
+    grid-column: 2;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .pr-fig__v {
+    font-size: var(--fs-ui);
+    letter-spacing: 0;
+  }
+
+  .pr-fig__l {
+    display: none;
+  }
+
+  .pr-main {
+    grid-column: 1 / -1;
+  }
+
+  .pr-meta {
+    gap: 4px 12px;
+  }
+
+  .pr-min::after {
+    display: none;
+  }
+}

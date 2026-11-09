@@ -1,0 +1,64 @@
+---
+import Figure from "../figures/Figure.astro";
+import { text } from "../../data/types";
+import { t } from "../../i18n";
+import type { Paper } from "../../data/research";
+import type { Language } from "../../lib/config";
+import type { PostRefs } from "./post-refs";
+
+interface Props {
+  paper: Paper;
+  lang: Language;
+  refs: PostRefs;
+}
+
+const { paper, lang, refs } = Astro.props;
+const h = t(lang).home;
+const post = paper.post === undefined ? undefined : refs.get(paper.post);
+const rows = [
+  paper.doi && { key: h.research.doi, href: `https://doi.org/${paper.doi}`, label: paper.doi },
+  paper.code && { key: h.research.code, href: paper.code, label: paper.code.replace("https://github.com/", "") },
+  post && { key: h.research.essay, href: post.href, label: post.title },
+].filter((row) => !!row);
+const list = paper.doi !== undefined || paper.code !== undefined;
+---
+
+<article class:list={["paper", paper.figure && "paper--lead"]} aria-labelledby={`${paper.id}-h`}>
+  <div class="paper__text">
+    <p class="paper__status">
+      <span class:list={["badge", paper.status === "progress" && "badge--dim"]}>{h.status[paper.status]}</span>
+      <span>{text(paper.statusNote, lang)}</span>
+    </p>
+    <h3 class="paper__t" id={`${paper.id}-h`}>
+      <span class="paper__name">{paper.name}</span>
+      {" "}
+      {text(paper.title, lang)}
+    </h3>
+    {paper.authors && <p class="paper__auth">{paper.authors}</p>}
+    <p class="paper__d">{text(paper.summary, lang)}</p>
+    {
+      list ? (
+        <dl class="kv paper__kv">
+          {rows.map((row) => (
+            <div>
+              <dt>{row.key}</dt>
+              <dd>
+                <a href={row.href}>{row.label}</a>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        post && (
+          <p class="paper__link">
+            <a class="ul" href={post.href}>
+              {post.title}
+              <span class="arr" aria-hidden="true">→</span>
+            </a>
+          </p>
+        )
+      )
+    }
+  </div>
+  {paper.figure && <div class="paper__fig"><Figure figure={paper.figure} lang={lang} /></div>}
+</article>

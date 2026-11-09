@@ -1,100 +1,83 @@
 # portfolio
 
-my personal portfolio website. built with next.js 15 and react 19, featuring a blog powered by fumadocs-mdx, dark mode support, multi-language content (english/portuguese), smooth scroll animations, and an interactive terminal gimmick. includes sections for about, experience, technical stack, projects, and contact.
+my personal portfolio and blog. a fully static site built with astro and served straight from caddy: no app server, no framework javascript, every page in english and portuguese at the same url, light and dark themes, and a `curl guswid.com` easter egg.
 
 ## stack
 
-- **next.js** v16 — app router with static export
-- **react** v19 — ui framework with hooks for state management
-- **typescript** — static typing throughout the codebase
-- **tailwind css** v4 — utility-first styling with custom theme
-- **fumadocs-mdx** — blog/documentation system with mdx support
-- **bun** — package manager and runtime
-- **nix** — reproducible production builds via flakes
-- **lucide-react** & **react-icons** — comprehensive icon libraries
-- **next-themes** — dark mode with persistent state
-- **zod** — schema validation for mdx frontmatter
+- **astro** v7: static output, content collection for the blog
+- **unified / remark-gfm**: commonmark + gfm rendering of the posts in `blog/`
+- **shiki**: code highlighting with light/dark themes as css variables
+- **sharp**: avif/webp image variants at build time
+- **typescript**: strict, everywhere
+- **bun**: package manager and script runner
+- **nix**: reproducible production builds via flakes
+- **caddy**: serves `dist/` (epoch selection, language negotiation, markdown for agents)
 
 ## getting started
-
-### development
 
 ```bash
 bun install
 bun run dev
 ```
 
-the dev server will start at `http://localhost:3000`. changes are hot-reloaded automatically as you work.
+the dev server maps the public urls (`/`, `/blog`, `/blog/<slug>`, `/llms.txt`, ...) onto the generated routes.
 
-### preview
-
-```bash
-bun run preview
-```
-
-this will generate a production build and serve the `out` directory at `http://localhost:3000` for testing before deployment.
-
-### building
+## building
 
 ```bash
 bun run build
 ```
 
-runs og image generation, next.js build, and locale-specific html generation. outputs the compiled site to `out/`. ready for static hosting.
+outputs `dist/`:
 
-### linting
+- `dist/_astro/`: hashed css, the client module and optimized images
+- `dist/static/`: favicon, résumés, robots.txt
+- `dist/site/<epoch>/og/`: open graph images (1200x630, satori + resvg) of the pages released in that epoch
+- `dist/site/<epoch>/<host>/<lang>/`: one complete tree per release epoch (scheduled posts appear in later epochs), host (`main` with the blog under `/blog`, `blog` for blog.guswid.com) and language, including sitemap, rss, llms.txt, llms-full.txt, markdown versions of every post and the curl card
+- `dist/site/manifest.json`: epochs, file names and og images for the web server config
+- `dist/caddy/portfolio.caddy`: the generated caddy snippet (`import <dist>/caddy/portfolio.caddy <dist> main|blog`) and `dist/caddy/Caddyfile.local` to preview the build:
 
 ```bash
+caddy run --config dist/caddy/Caddyfile.local   # main host on 127.0.0.1:4801, blog host on :4802
+```
+
+the build reference time comes from `PORTFOLIO_BUILD_TIME` (unix seconds) or the last commit; it never reads the wall clock.
+
+## checks
+
+```bash
+bun run check            # astro check (types)
+bun run check:dates      # publication date, epoch and per-language release assertions
+bun run check:headings   # heading ids of every post vs scripts/fixtures (after a build)
+bun run check:meta       # head tags, json-ld and og images of every page (after a build)
+bun run check:routes     # every route through caddy, incl. both sides of a release gate (after a build)
+bun run og:preview       # render all og cards into dist-og/ to review src/og/template.ts
 bun run lint
-```
-
-uses oxlint for code quality checks.
-
-### formatting
-
-```bash
 bun run format
-```
-
-uses oxfmt for code formatting.
-
-## features
-
-- **responsive design** — works across desktop, tablet, and mobile
-- **dark mode** — theme toggle with persistent state (defaults to dark)
-- **internationalization** — english and portuguese support
-- **blog** — mdx-powered blog with syntax highlighting and search
-- **scheduled posts** — future-dated posts show countdown timers
-- **smooth interactions** — scroll-triggered animations and parallax effects
-- **intro sequence** — animated terminal-style introduction on first visit
-- **interactive terminal** — command-line gimmick with easter eggs
-- **version footer** — shows version, commit hash, and dev mode indicator
-- **type-safe** — fully typed components and data structures
-- **og images** — auto-generated open graph images for social sharing
-
-## directory structure
-
-```
-app/                 # next.js app router pages and layouts
-blog/                # mdx blog posts (per-language files)
-components/          # react components (portfolio/ and blog/)
-lib/                 # utilities, types, config, and content data
-scripts/             # build scripts (og generation, locale html)
 ```
 
 ## nix
 
-to build with nix:
-
 ```bash
-nix build
+nix build -L .                 # result/ is the static dist/, checks included
+nix flake check                # also validates the generated caddy snippet
 ```
 
-the build process compiles the site using bun and outputs static assets. the output is available in `./result` and ready for deployment.
+the build reference time is the commit time of the flake source (`self.lastModified`). dependency metadata for nix lives in `.bun.nix`, regenerated by `bun install` (postinstall runs `bun2nix`).
 
-the flake uses `bun2nix` to manage dependencies reproducibly, with dependency metadata kept in `.bun.nix`. this is regenerated automatically when dependencies change.
+the nixos module only configures caddy:
 
-the commit hash is embedded at build time via `SOURCE_COMMIT` environment variable, enabling deployment tracking.
+```nix
+services.portfolio = {
+  enable = true;
+  # defaults:
+  # domains = [ "guswid.com" "www.guswid.com" "r3dlust.com" "www.r3dlust.com" ];
+  # blogDomains = [ "blog.guswid.com" "blog.r3dlust.com" ];
+  # virtualHostConfig = "";   # extra caddy directives for every host
+};
+# per-host directives (tls, ...) merge into the same virtual hosts:
+services.caddy.virtualHosts."guswid.com".extraConfig = "tls /var/lib/acme/guswid.com/cert.pem /var/lib/acme/guswid.com/key.pem";
+```
 
 ## deployment
 

@@ -1,4 +1,6 @@
 {
+  description = "Gustavo Widman's portfolio and blog: a static site and the Caddy config that serves it";
+
   inputs = {
     bun2nix = {
       url = "github:baileyluTCD/bun2nix";
@@ -10,86 +12,136 @@
 
   outputs =
     {
+      self,
       nixpkgs,
       bun2nix,
       flake-utils,
-      self,
       ...
     }:
     let
-      commitHash = if self ? rev then self.rev else "dirty";
+      # Reference time of the build (unix seconds): the commit time of the flake source.
+      # Release epochs of scheduled posts are computed against it, never the wall clock.
+      buildTime = toString self.lastModified;
+
+      # Commit shown in the footer and the console: the flake's revision. A dirty tree builds
+      # from its parent commit, which is also what a local build reports (`jj log -r @-`).
+      commit = self.rev or (if self ? dirtyRev then nixpkgs.lib.removeSuffix "-dirty" self.dirtyRev else null);
+
+      # How a Caddy site block serves the site: `import <snippet> <root> <main|blog>`.
+      caddyImport = package: kind: "import ${package}/caddy/portfolio.caddy ${package} ${kind}";
+
+      # nixpkgs no longer evaluates for x86_64-darwin.
+      systems = [
+        "aarch64-darwin"
+        "aarch64-linux"
+        "x86_64-linux"
+      ];
     in
-    flake-utils.lib.eachDefaultSystem (
+    flake-utils.lib.eachSystem systems (
       system:
       let
         pkgs = import nixpkgs {
           inherit system;
-          overlays = [ self.overlays.default ];
+          overlays = [
+            self.overlays.default
+            bun2nix.overlays.default
+          ];
         };
+        inherit (pkgs) lib;
       in
       {
         packages.bun = pkgs.bun;
-        packages.default = bun2nix.packages.${system}.default.mkDerivation {
-          packageJson = ./package.json; # inherit `name` and `version` from package.json
-          src = ./.;
 
-          dontPatchShebangs = true;
-          nativeBuildInputs = [
-            pkgs.bun
-            pkgs.makeWrapper
-          ];
-          buildInputs = [
-            pkgs.vips
-            pkgs.stdenv.cc.cc.lib
-          ];
-          bunDeps = bun2nix.packages.${system}.default.fetchBunDeps {
-            bunNix = ./.bun.nix;
+        # The static site: `dist/` of `astro build`. Bun and sharp are only used here.
+        packages.default = pkgs.bun2nix.mkDerivation {
+          packageJson = ./package.json;
+          src = lib.fileset.toSource {
+            root = ./.;
+            fileset = lib.fileset.unions [
+              ./package.json
+              ./bun.lock
+              ./astro.config.ts
+              ./tsconfig.json
+              ./src
+              ./blog
+              ./public
+              ./scripts
+            ];
           };
-          buildPhase = ''
-            export NEXT_TELEMETRY_DISABLED=1
-            export SOURCE_COMMIT="${commitHash}"
 
-            ${pkgs.bun}/bin/bun run build
+          bunDeps = pkgs.bun2nix.fetchBunDeps { bunNix = ./.bun.nix; };
+          # Dependencies ship prebuilt binaries; the only lifecycle script is the root
+          # postinstall, which regenerates `.bun.nix`.
+          dontRunLifecycleScripts = true;
+
+          env = {
+            ASTRO_TELEMETRY_DISABLED = "1";
+            PORTFOLIO_BUILD_TIME = buildTime;
+          }
+          // lib.optionalAttrs (commit != null) { PORTFOLIO_COMMIT = commit; }
+          // lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+            # Prebuilt native modules (sharp, resvg) link libstdc++ and libgcc_s.
+            LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.stdenv.cc.cc.lib ];
+          };
+
+          buildPhase = ''
+            runHook preBuild
+            bun --bun run build
+            runHook postBuild
+          '';
+
+          doCheck = true;
+          checkPhase = ''
+            runHook preCheck
+            bun run check:headings
+            bun run check:meta
+            bun run check:dates
+            runHook postCheck
           '';
 
           installPhase = ''
+            runHook preInstall
             mkdir -p $out
-            mv .next/standalone $out/share
-            mv .next/static $out/share/.next/static
-            mv public $out/share/public
-
-            cp -r blog $out/share/blog
-
-            rm -rf $out/share/.next/cache
-            ln -s /var/cache/portfolio $out/share/.next/cache
-
-            mkdir -p $out/bin
-            cat > $out/bin/portfolio << EOF
-            #!/bin/sh
-
-            export NEXT_TELEMETRY_DISABLED=1
-            export NODE_ENV=production
-            export SOURCE_COMMIT="${commitHash}"
-
-            cd $out/share
-            exec ${pkgs.bun}/bin/bun $out/share/server.js
-            EOF
-            chmod +x $out/bin/portfolio
-            wrapProgram $out/bin/portfolio \
-              --prefix LD_LIBRARY_PATH : ${
-                pkgs.lib.makeLibraryPath [
-                  pkgs.vips
-                  pkgs.stdenv.cc.cc.lib
-                ]
-              }
+            cp -r dist/. $out/
+            runHook postInstall
           '';
 
-          meta = with pkgs.lib; {
-            description = "Gustavo Widman's personal portfolio website";
-            license = licenses.mit;
-            platforms = platforms.unix;
+          dontFixup = true;
+
+          passthru = { inherit buildTime commit; };
+
+          meta = {
+            description = "Gustavo Widman's portfolio and blog (static files and Caddy snippet)";
+            homepage = "https://guswid.com";
+            license = lib.licenses.mit;
+            platforms = lib.platforms.unix;
           };
         };
+
+        # Parses and provisions the generated Caddy snippet the way the NixOS module
+        # imports it, for both host kinds.
+        checks.caddy-config =
+          let
+            site = self.packages.${system}.default;
+            caddyfile = pkgs.writeText "Caddyfile" ''
+              {
+                admin off
+                auto_https off
+                persist_config off
+              }
+              http://guswid.com {
+                ${caddyImport site "main"}
+              }
+              http://blog.guswid.com {
+                ${caddyImport site "blog"}
+              }
+            '';
+          in
+          pkgs.runCommand "portfolio-caddy-config" { nativeBuildInputs = [ pkgs.caddy ]; } ''
+            export HOME=$TMPDIR XDG_DATA_HOME=$TMPDIR XDG_CONFIG_HOME=$TMPDIR
+            caddy validate --adapter caddyfile --config ${caddyfile}
+            touch $out
+          '';
       }
     )
     // {
@@ -102,78 +154,83 @@
           pkgs,
           ...
         }:
-        with lib;
         let
           cfg = config.services.portfolio;
+          removed = option: [
+            "services"
+            "portfolio"
+            option
+          ];
+          removedReason = ''
+            The portfolio is static files served by Caddy; there is no application server.
+            Drop the reverse_proxy virtual hosts and list the hosts in
+            services.portfolio.domains and services.portfolio.blogDomains.
+          '';
+          vhost = kind: {
+            extraConfig = ''
+              ${cfg.virtualHostConfig}
+              ${caddyImport cfg.package kind}
+            '';
+          };
         in
         {
+          imports = [
+            (lib.mkRemovedOptionModule (removed "port") removedReason)
+            (lib.mkRemovedOptionModule (removed "host") removedReason)
+          ];
+
           options.services.portfolio = {
-            enable = lib.mkEnableOption "Enable portfolio service";
+            enable = lib.mkEnableOption "the portfolio and blog virtual hosts in Caddy";
 
             package = lib.mkOption {
               type = lib.types.package;
-              default = self.packages.${pkgs.system}.default;
-              description = "portfolio package to use";
+              default = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
+              defaultText = lib.literalExpression "portfolio.packages.\${system}.default";
+              description = "The built site (static files and `caddy/portfolio.caddy`).";
             };
 
-            port = mkOption {
-              type = types.port;
-              default = 3000;
-              description = "Port number for the Next.js server to listen on";
+            domains = lib.mkOption {
+              type = lib.types.listOf lib.types.str;
+              default = [
+                "guswid.com"
+                "www.guswid.com"
+                "r3dlust.com"
+                "www.r3dlust.com"
+              ];
+              description = "Hosts serving the portfolio at `/` and the blog under `/blog`.";
             };
 
-            host = mkOption {
-              type = types.str;
-              default = "127.0.0.1";
-              description = "Host address for the Next.js server to bind to";
+            blogDomains = lib.mkOption {
+              type = lib.types.listOf lib.types.str;
+              default = [
+                "blog.guswid.com"
+                "blog.r3dlust.com"
+              ];
+              description = "Hosts serving the blog at `/`; `/blog/*` redirects to `/*`.";
+            };
+
+            virtualHostConfig = lib.mkOption {
+              type = lib.types.lines;
+              default = "";
+              example = ''
+                log {
+                  output file /var/log/caddy/portfolio.log
+                }
+              '';
+              description = ''
+                Caddy directives added to every portfolio and blog virtual host. Directives
+                for a single host (such as `tls`) can be added to
+                `services.caddy.virtualHosts.<host>.extraConfig`, which is merged with the
+                configuration of this module.
+              '';
             };
           };
 
           config = lib.mkIf cfg.enable {
-            systemd.services.portfolio = {
-              description = "portfolio service";
-              wantedBy = [ "multi-user.target" ];
-              after = [ "network.target" ];
-
-              serviceConfig = {
-                Type = "simple";
-                ExecStart = "${cfg.package}/bin/portfolio";
-                Restart = "on-failure";
-                RestartSec = 5;
-                Environment = [
-                  "PORT=${toString cfg.port}"
-                  "HOSTNAME=${cfg.host}"
-                ];
-
-                DynamicUser = true;
-                CacheDirectory = "portfolio";
-
-                ProtectKernelTunables = true;
-                ProtectKernelModules = true;
-                ProtectKernelLogs = true;
-                ProtectControlGroups = true;
-                ProtectClock = true;
-                ProtectHostname = true;
-
-                RestrictAddressFamilies = [
-                  "AF_INET"
-                  "AF_INET6"
-                  "AF_UNIX"
-                ];
-                CapabilityBoundingSet = "";
-                SystemCallFilter = [ "@system-service" ];
-                SystemCallArchitectures = "native";
-                SystemCallErrorNumber = "EPERM";
-                RestrictNamespaces = true;
-                RestrictRealtime = true;
-                RestrictSUIDSGID = true;
-                LockPersonality = true;
-
-                NoNewPrivileges = true;
-                PrivateTmp = true;
-                ProtectSystem = "strict";
-                ProtectHome = true;
-              };
+            services.caddy = {
+              enable = lib.mkDefault true;
+              virtualHosts =
+                lib.genAttrs cfg.domains (_: vhost "main") // lib.genAttrs cfg.blogDomains (_: vhost "blog");
             };
           };
         };

@@ -1,0 +1,50 @@
+---
+import { formatDateTime, t } from "../i18n";
+import { htmlLang } from "../lib/config";
+import { isoDate } from "./blog/format";
+import type { Language } from "../lib/config";
+import type { Post } from "../lib/posts";
+
+/**
+ * A post that is not released yet, as a "coming soon" row of a post listing: release date,
+ * title and a live countdown (`features/countdown.ts`) that reloads the page at zero.
+ * Without JavaScript the row shows the release date and time.
+ */
+interface Props {
+  post: Post;
+  /** Language of the page around the row; the post may be shown in another one. */
+  lang: Language;
+  level?: 2 | 3;
+}
+
+const { post, lang, level = 2 } = Astro.props;
+const dict = t(lang);
+const Heading = `h${level}` as "h2" | "h3";
+const release = post.published.toISOString();
+const units = ["days", "hours", "minutes", "seconds"] as const;
+---
+
+<article class="pr pr--soon">
+  <time class="pr-date" datetime={release}>{isoDate(post.published)}</time>
+  <div class="pr-main">
+    <div class="pr-title">
+      <Heading lang={post.lang === lang ? undefined : htmlLang(post.lang)}>{post.title}</Heading>
+    </div>
+    <p class="pr-meta countdown" data-countdown data-release={release}>
+      <span>{dict.scheduled.releasesOn}</span>{" "}
+      <time datetime={release}>{formatDateTime(post.published, lang)}</time>{" "}
+      <span class="countdown-live" data-countdown-live role="timer" hidden>
+        {
+          units.map((unit) => (
+            <span class="countdown-cell">
+              <span data-unit={unit}>--</span>
+              {dict.scheduled.units[unit]}
+            </span>
+          ))
+        }
+      </span>{" "}
+      <span data-countdown-done hidden>{dict.scheduled.released}</span>
+    </p>
+  </div>
+  <p class="pr-fig"><span class="badge">{dict.scheduled.badge}</span></p>
+</article>

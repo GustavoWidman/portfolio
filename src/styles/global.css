@@ -1,0 +1,1039 @@
+/*
+ * Shared layer of every page: tokens, fonts, base elements, shared pieces (labels, links,
+ * buttons, key/value lists, tables), the header and footer, and motion.
+ *
+ * One accent ("signal") has three jobs: the subject series of a figure, at most one key
+ * value per sheet, and focus. Everything else is ink, hairlines and tabular figures.
+ *
+ * Colors are tokens on :root, redefined for dark mode either by an explicit choice
+ * (`data-theme`, set by the head script) or by prefers-color-scheme.
+ */
+
+/* ------------------------------------------------------------ fonts */
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2")
+    format("woff2-variations");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2")
+    format("woff2-variations");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/*
+ * Local fonts scaled to the width Geist gives the site's own text (size-adjust) and to its
+ * vertical metrics (ascent 1005, descent 295 per 1000), shown until the web fonts arrive:
+ * text keeps its width and line breaks when they swap in. Arial stands in for Geist 400 and
+ * 500, Arial Bold for 600 and up, Menlo for Geist Mono. Where these fonts are missing the stack goes on unchanged.
+ */
+@font-face {
+  font-family: "Geist Fallback";
+  font-weight: 100 449;
+  src: local("Arial"), local("ArialMT");
+  size-adjust: 103%;
+  ascent-override: 97.6%;
+  descent-override: 28.6%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Geist Fallback";
+  font-weight: 450 549;
+  src: local("Arial"), local("ArialMT");
+  size-adjust: 105.7%;
+  ascent-override: 95.1%;
+  descent-override: 27.9%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Geist Fallback";
+  font-weight: 550 900;
+  src: local("Arial Bold"), local("Arial-BoldMT");
+  size-adjust: 100.5%;
+  ascent-override: 100%;
+  descent-override: 29.4%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Geist Mono Fallback";
+  font-weight: 100 549;
+  src: local("Menlo Regular"), local("Menlo-Regular");
+  size-adjust: 99.65%;
+  ascent-override: 100.9%;
+  descent-override: 29.6%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Geist Mono Fallback";
+  font-weight: 550 900;
+  src: local("Menlo Bold"), local("Menlo-Bold");
+  size-adjust: 99.65%;
+  ascent-override: 100.9%;
+  descent-override: 29.6%;
+  line-gap-override: 0%;
+}
+
+/* ------------------------------------------------------------ tokens */
+:root {
+  color-scheme: light dark;
+  --sans:
+    "Geist", "Geist Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* Type scale: every font-size on the site is one of these. */
+  --fs-label: 11px; /* uppercase mono labels, axis ticks, table heads */
+  --fs-meta: 12.5px; /* captions, conditions, units, tags, dates */
+  --fs-ui: 14px; /* tables, navigation, code */
+  --fs-body: 16px; /* descriptions, excerpts */
+  --fs-prose: 18px; /* long-form, row titles */
+  --fs-lead: 20px;
+  --fs-h3: 22px;
+  --fs-h2: 28px;
+  --fs-sec: 34px; /* section titles */
+  --fs-title: clamp(32px, 4.2vw, 52px);
+  --fs-display: clamp(40px, 6.4vw, 64px);
+
+  /* Grid: three verticals carry a page (frame edge, rail, midline). */
+  --maxw: 1200px;
+  --gx: 32px; /* frame gutter */
+  --rail: 136px; /* left column of numbers, dates and keys */
+  --gap: 24px; /* gap after the rail */
+  --gut: 48px; /* gap between the two halves at the midline */
+
+  /* Motion. */
+  --dur-1: 120ms;
+  --dur-2: 240ms;
+  --dur-3: 480ms;
+  --dur-4: 900ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.6, 0, 0.2, 1);
+
+  /* Light: datasheet paper. */
+  --bg: #f6f6f3;
+  --bg-sheet: #ffffff;
+  --bg-code: #ffffff;
+  --bg-inset: #ecece7;
+  --grid: rgb(18 19 22 / 0.055);
+  --hatch: rgb(18 19 22 / 0.13);
+  --hover: rgb(18 19 22 / 0.04);
+  --rule: #dcdcd6;
+  --rule-2: #bdbeb8;
+  --rule-3: #121316;
+  --fg: #121316;
+  --fg-prose: #24272c;
+  --fg-2: #3d4148;
+  --fg-3: #5c6169;
+  --bar: #7a7f87;
+  --track: #ecece7;
+  --signal: #c97a00;
+  --signal-ink: #975400;
+  --signal-wash: rgb(201 122 0 / 0.12);
+  --fault: #b42318;
+  --focus: #975400;
+  --img-filter: none;
+
+  --t-kw: #2e4a8e;
+  --t-ty: #0e6159;
+  --t-fn: #121316;
+  --t-str: #3a6a1e;
+  --t-num: #7b3daa;
+  --t-com: #5c6169;
+  --t-attr: #a33a3a;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* Dark tokens are for screens only: a page always prints dark ink on white paper. */
+@media screen {
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0c0d0f;
+    --bg-sheet: #111215;
+    --bg-code: #15171b;
+    --bg-inset: #1a1c20;
+    --grid: rgb(255 255 255 / 0.04);
+    --hatch: rgb(255 255 255 / 0.12);
+    --hover: rgb(255 255 255 / 0.05);
+    --rule: #24272c;
+    --rule-2: #383c43;
+    --rule-3: #ecedef;
+    --fg: #ecedef;
+    --fg-prose: #d4d7dc;
+    --fg-2: #b2b7be;
+    --fg-3: #8d939c;
+    --bar: #646a73;
+    --track: #1a1c20;
+    --signal: #ffb224;
+    --signal-ink: #ffb224;
+    --signal-wash: rgb(255 178 36 / 0.1);
+    --fault: #f97066;
+    --focus: #ffb224;
+    --img-filter: brightness(0.82) contrast(1.06);
+
+    --t-kw: #8fb2f0;
+    --t-ty: #79cfc2;
+    --t-fn: #ecedef;
+    --t-str: #a9d18e;
+    --t-num: #c9a6f2;
+    --t-com: #868c95;
+    --t-attr: #e59a9a;
+  }
+}
+
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c0d0f;
+    --bg-sheet: #111215;
+    --bg-code: #15171b;
+    --bg-inset: #1a1c20;
+    --grid: rgb(255 255 255 / 0.04);
+    --hatch: rgb(255 255 255 / 0.12);
+    --hover: rgb(255 255 255 / 0.05);
+    --rule: #24272c;
+    --rule-2: #383c43;
+    --rule-3: #ecedef;
+    --fg: #ecedef;
+    --fg-prose: #d4d7dc;
+    --fg-2: #b2b7be;
+    --fg-3: #8d939c;
+    --bar: #646a73;
+    --track: #1a1c20;
+    --signal: #ffb224;
+    --signal-ink: #ffb224;
+    --signal-wash: rgb(255 178 36 / 0.1);
+    --fault: #f97066;
+    --focus: #ffb224;
+    --img-filter: brightness(0.82) contrast(1.06);
+
+    --t-kw: #8fb2f0;
+    --t-ty: #79cfc2;
+    --t-fn: #ecedef;
+    --t-str: #a9d18e;
+    --t-num: #c9a6f2;
+    --t-com: #868c95;
+    --t-attr: #e59a9a;
+  }
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --gx: 24px;
+  }
+}
+
+@media (max-width: 960px) {
+  :root {
+    --rail: 104px;
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --gx: 16px;
+    --fs-prose: 17px;
+    --fs-lead: 18px;
+    --fs-h3: 20px;
+    --fs-h2: 24px;
+    --fs-sec: 28px;
+  }
+}
+
+/* ------------------------------------------------------------ base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 var(--fs-body) / 1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-wrap: break-word;
+  overflow-x: clip;
+  /* The footer sits at the bottom of the window on short pages. */
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+main {
+  flex: 1 0 auto;
+  /* A flex item with auto inline margins would otherwise shrink-wrap wide content. */
+  width: 100%;
+}
+
+::selection {
+  background: var(--signal-wash);
+  color: var(--fg);
+}
+
+img,
+svg,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--rule-2);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition:
+    color var(--dur-1),
+    text-decoration-color var(--dur-1);
+}
+
+a:hover {
+  text-decoration-color: currentcolor;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--mono);
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  transition:
+    color var(--dur-1),
+    background-color var(--dur-1),
+    border-color var(--dur-1);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 10;
+  padding: 8px 14px;
+  background: var(--fg);
+  color: var(--bg);
+  font: 500 var(--fs-meta) / 1.4 var(--mono);
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+/* ------------------------------------------------------------ shared pieces */
+
+/* The content column: `--maxw` wide, with the frame gutter on both sides. */
+.frame {
+  width: 100%;
+  max-width: calc(var(--maxw) + 2 * var(--gx));
+  margin-inline: auto;
+  padding-inline: var(--gx);
+}
+
+.label {
+  margin: 0;
+  font: 500 var(--fs-label) / 1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.sep {
+  color: var(--fg-3);
+  padding-inline: 0.25em;
+}
+
+.unit {
+  margin-left: 0.35em;
+  font: 400 max(0.78em, var(--fs-label)) / 1 var(--mono);
+  letter-spacing: 0;
+  color: var(--fg-3);
+}
+
+.num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.arr {
+  margin-left: 0.45em;
+  font-family: var(--mono);
+  color: var(--fg-3);
+}
+
+/* Link with a hairline that an ink line draws over on hover. For links on one line. */
+.ul {
+  position: relative;
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule-2);
+}
+
+.ul::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 1px;
+  background: var(--fg);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.ul:hover::after,
+.ul:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1px solid var(--rule-2);
+  background: var(--bg-sheet);
+  color: var(--fg);
+  font: 500 var(--fs-meta) / 1.2 var(--mono);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color var(--dur-1),
+    background-color var(--dur-1),
+    border-color var(--dur-1);
+}
+
+.btn:hover {
+  border-color: var(--fg);
+}
+
+.btn--solid {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+.btn--solid:hover {
+  background: var(--fg-2);
+  border-color: var(--fg-2);
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 7px 3px;
+  border: 1px solid var(--rule-2);
+  font: 500 var(--fs-label) / 1.2 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+.badge--dim {
+  border-style: dashed;
+}
+
+/* Key/value list: keys in the rail, values after it. */
+.kv {
+  margin: 0;
+}
+
+.kv > div {
+  display: grid;
+  grid-template-columns: var(--rail) minmax(0, 1fr);
+  column-gap: var(--gap);
+  align-items: baseline;
+  padding: 9px 0;
+  border-top: 1px solid var(--rule);
+}
+
+.kv > div:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+.kv dt {
+  font: 500 var(--fs-label) / 1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.kv dd {
+  margin: 0;
+  min-width: 0;
+  font: 400 var(--fs-ui) / 1.45 var(--mono);
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+
+/* Data table: label heads, hairline rows, and the row under the pointer lit like a crosshair. */
+.table-wrap table {
+  width: 100%;
+  font-size: var(--fs-ui);
+  line-height: 1.45;
+}
+
+.table-wrap table thead th {
+  padding: 0 var(--gap) 8px 0;
+  border-bottom: 1px solid var(--rule-3);
+  text-align: left;
+  font: 500 var(--fs-label) / 1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.table-wrap table :is(tbody th, td) {
+  padding: 10px var(--gap) 10px 0;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: baseline;
+  transition:
+    background-color var(--dur-1),
+    border-color var(--dur-1);
+}
+
+.table-wrap table tbody tr:hover > * {
+  background: var(--hover);
+  border-bottom-color: var(--fg-3);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+/* ------------------------------------------------------------ header */
+.site-head {
+  border-bottom: 1px solid var(--rule);
+  view-transition-name: site-head;
+}
+
+.site-head__in {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  min-height: 60px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.brand__led {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--signal);
+  box-shadow: 0 0 0 3px var(--signal-wash);
+  animation: led-breathe 3.6s var(--ease-in-out) infinite alternate;
+}
+
+/* Three fast blinks, then the breathing starts over. */
+.brand__led[data-blink] {
+  animation:
+    led-blink 140ms steps(2, jump-none) 3,
+    led-breathe 3.6s var(--ease-in-out) 420ms infinite alternate;
+}
+
+[data-page="not-found"] .brand__led {
+  background: var(--fault);
+  box-shadow: none;
+  opacity: 0.6;
+  animation: none;
+}
+
+@keyframes led-breathe {
+  to {
+    opacity: 0.4;
+  }
+}
+
+@keyframes led-blink {
+  to {
+    opacity: 0.1;
+  }
+}
+
+.site-nav {
+  margin-left: auto;
+}
+
+.site-nav ul {
+  display: flex;
+  gap: 28px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-nav a {
+  position: relative;
+  display: block;
+  padding: 19px 0 20px;
+  font-size: var(--fs-ui);
+  color: var(--fg-2);
+  text-decoration: none;
+}
+
+.site-nav a::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 2px;
+  background: var(--fg-3);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+.site-nav a:hover,
+.site-nav a[aria-current] {
+  color: var(--fg);
+}
+
+.site-nav a:hover::after,
+.site-nav a[aria-current]::after {
+  transform: scaleX(1);
+}
+
+.site-nav a[aria-current]::after {
+  background: var(--fg);
+}
+
+.site-nav a:focus-visible {
+  outline-offset: -2px;
+}
+
+.site-tools {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  gap: 10px;
+  padding-left: 24px;
+  border-left: 1px solid var(--rule);
+}
+
+.lang {
+  display: inline-flex;
+  border: 1px solid var(--rule-2);
+}
+
+.lang a {
+  display: grid;
+  place-items: center;
+  padding: 7px 8px;
+  font: 500 var(--fs-label) / 1 var(--mono);
+  letter-spacing: 0.06em;
+  color: var(--fg-3);
+  text-decoration: none;
+  transition:
+    color var(--dur-1),
+    background-color var(--dur-1);
+}
+
+.lang a + a {
+  border-left: 1px solid var(--rule-2);
+}
+
+.lang a[aria-current] {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.lang a:not([aria-current]):hover {
+  color: var(--fg);
+}
+
+.theme-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--rule-2);
+  background: transparent;
+  color: var(--fg-2);
+  cursor: pointer;
+}
+
+.theme-btn[hidden] {
+  display: none;
+}
+
+.theme-btn:hover {
+  color: var(--fg);
+  border-color: var(--fg-3);
+}
+
+.theme-btn svg {
+  transition: transform var(--dur-3) var(--ease-out);
+}
+
+.theme-btn[aria-pressed="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* ------------------------------------------------------------ footer */
+.site-foot {
+  margin-top: 136px;
+  padding: 56px 0 28px;
+  border-top: 1px solid var(--rule-2);
+  background: var(--bg-sheet);
+}
+
+.foot-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--gut);
+  align-items: start;
+}
+
+.foot-title {
+  margin: 12px 0 14px;
+  font-size: var(--fs-sec);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.foot-mail {
+  font: 500 var(--fs-prose) / 1.3 var(--mono);
+  overflow-wrap: anywhere;
+}
+
+.foot-kv .unit {
+  margin-left: 8px;
+}
+
+.curl {
+  padding: 3px 8px;
+  border: 1px solid var(--rule);
+  background: var(--bg-inset);
+  color: var(--fg);
+  font: 400 var(--fs-meta) / 1.5 var(--mono);
+  white-space: nowrap;
+  user-select: text;
+}
+
+.curl:enabled {
+  cursor: pointer;
+}
+
+.curl:enabled:hover {
+  border-color: var(--fg-3);
+}
+
+.prompt {
+  color: var(--fg-3);
+}
+
+.foot-base {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-top: 56px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+  font: 400 var(--fs-meta) / 1.5 var(--mono);
+  color: var(--fg-3);
+}
+
+.foot-base p {
+  margin: 0;
+}
+
+.foot-base a:hover {
+  color: var(--fg);
+}
+
+/* ------------------------------------------------------------ motion */
+
+/*
+ * Entrance reveal: an element with `data-reveal` gets `data-in` the first time it enters
+ * the viewport. Start states are keyed off `.js [data-reveal]:not([data-in])`, so without
+ * JavaScript everything is in its final state. `--i` staggers siblings by 40 ms each.
+ * `data-reveal="rise"` is the shared default.
+ */
+@media screen and (prefers-reduced-motion: no-preference) {
+  .js [data-reveal="rise"] {
+    transition:
+      opacity var(--dur-3) var(--ease-out),
+      transform var(--dur-3) var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 40ms);
+  }
+
+  .js [data-reveal="rise"]:not([data-in]) {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  /*
+   * Until the client module marks <html> `live`, every start state ends on its own after 2 s,
+   * so content never stays hidden behind a module that failed to load.
+   */
+  .js:not(.live) [data-reveal="rise"]:not([data-in]) {
+    animation: reveal-fallback 0s 2s forwards;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Page to page: the header stays put, the rest cross-fades. */
+  @view-transition {
+    navigation: auto;
+  }
+}
+
+@keyframes reveal-fallback {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-2);
+  animation-timing-function: var(--ease-in-out);
+}
+
+/*
+ * Theme switch: the new theme is revealed in a circle growing from `--vt-x`/`--vt-y` until
+ * it covers the viewport from any origin (142vmax). `data-vt="theme"` is on <html> for the length of that transition;
+ * the whole page is captured as one image, so named parts do not move on their own.
+ */
+:root[data-vt="theme"] * {
+  view-transition-name: none !important;
+}
+
+:root[data-vt="theme"]::view-transition-old(root),
+:root[data-vt="theme"]::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation: none;
+}
+
+:root[data-vt="theme"]::view-transition-new(root) {
+  animation: theme-reveal var(--dur-3) var(--ease-in-out) both;
+}
+
+@keyframes theme-reveal {
+  from {
+    clip-path: circle(0 at var(--vt-x) var(--vt-y));
+  }
+
+  to {
+    clip-path: circle(142vmax at var(--vt-x) var(--vt-y));
+  }
+}
+
+/* The one place that turns motion off. View-transition pseudo-elements need their own rule. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* ------------------------------------------------------------ small screens */
+@media (max-width: 960px) {
+  .foot-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 36px;
+  }
+}
+
+@media (max-width: 720px) {
+  /* Header in two rows, with 40px tap targets. */
+  .site-head__in {
+    flex-wrap: wrap;
+    gap: 0 16px;
+    min-height: 0;
+  }
+
+  .brand {
+    height: 56px;
+  }
+
+  .site-tools {
+    align-self: center;
+    gap: 8px;
+    margin-left: auto;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .lang a {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .theme-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .site-nav {
+    order: 3;
+    width: 100%;
+    margin: 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .site-nav ul {
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .site-nav a {
+    min-width: 40px;
+    padding: 12px 0 13px;
+    text-align: center;
+  }
+
+  .site-foot {
+    margin-top: 96px;
+    padding-top: 44px;
+  }
+
+  /* Rows 40px apart, so the hit areas of links in neighbouring rows do not overlap. */
+  .kv > div {
+    grid-template-columns: 84px minmax(0, 1fr);
+    column-gap: 12px;
+    padding-block: 10px;
+  }
+
+  /* A hit area at least 40px each way; padding would move the hairline. */
+  .ul::before {
+    content: "";
+    position: absolute;
+    top: -12px;
+    bottom: -12px;
+    left: 50%;
+    width: max(100%, 40px);
+    translate: -50% 0;
+  }
+
+  /* Within a key/value row only, so neighbouring rows do not share a strip. */
+  .kv .ul::before {
+    top: -11px;
+    bottom: -11px;
+  }
+
+  .foot-base a {
+    display: inline-block;
+    padding: 11px 9px;
+    margin: -11px -9px;
+  }
+
+  .curl:enabled {
+    min-height: 40px;
+    padding-inline: 12px;
+  }
+
+  .foot-base {
+    flex-direction: column;
+    margin-top: 40px;
+    row-gap: 14px;
+  }
+
+  /* Items wrap as whole units, so no separator is left hanging at a line end. */
+  .foot-base p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 18px;
+  }
+
+  .foot-base .sep {
+    display: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .brand__name {
+    font-size: var(--fs-ui);
+  }
+}
+
+/* ------------------------------------------------------------ print */
+@media print {
+  .skip-link,
+  .site-head,
+  .site-foot,
+  [data-boot],
+  dialog {
+    display: none !important;
+  }
+
+  body {
+    background: none;
+  }
+}

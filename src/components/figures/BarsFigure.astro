@@ -1,0 +1,52 @@
+---
+import { formatNumber } from "../../data/format";
+import { text } from "../../data/types";
+import { inlineCodeHtml } from "../../lib/text";
+import type { BarsFigure } from "../../data/figure-types";
+import type { Language } from "../../lib/config";
+
+interface Props {
+  figure: BarsFigure;
+  lang: Language;
+}
+
+const { figure, lang } = Astro.props;
+const share = (value: number): string => ((value / figure.max) * 100).toFixed(3);
+const title = text(figure.title, lang);
+---
+
+<figure class="fig" data-reveal="grow" aria-labelledby={`${figure.id}-cap`}>
+  <figcaption class="fig__head" id={`${figure.id}-cap`}>
+    <span class="fig__n">{figure.n}</span>
+    <span class="fig__t">{title}</span>
+    {figure.unit && <span class="fig__u">{text(figure.unit, lang)}</span>}
+  </figcaption>
+  <table class="bars">
+    <caption class="visually-hidden">{title}, {figure.unit && text(figure.unit, lang)}. {text(figure.summary, lang)}</caption>
+    <tbody>
+      {
+        figure.rows.map((row, i) => (
+          <tr class={row.tone && `is-${row.tone}`} style={`--i:${i}`}>
+            <th scope="row">{text(row.label, lang)}</th>
+            <td class="bars__track" aria-hidden="true">
+              <span class="bars__grid">{figure.ticks.map(([value]) => <i style={`--x:${share(value)}`} />)}</span>
+              {figure.reference !== undefined && <b class="bars__ref" style={`--x:${share(figure.reference)}`} />}
+              <span class="bars__bar" style={`--w:${share(row.value)}%`} />
+            </td>
+            <td class="bars__v">
+              {row.shown ? text(row.shown, lang) : `${formatNumber(row.value, lang, figure.dp)}${figure.suffix ?? ""}`}
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+    <tfoot aria-hidden="true">
+      <tr>
+        <td></td>
+        <td class="bars__axis">{figure.ticks.map(([value, label]) => <span style={`--x:${share(value)}`}>{label}</span>)}</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+  {figure.note && <p class="fig__note" set:html={inlineCodeHtml(text(figure.note, lang))} />}
+</figure>

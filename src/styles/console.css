@@ -1,0 +1,300 @@
+/* Serial console, injected by its chunk on first open. `--kb` is the height an on-screen keyboard covers. */
+.con {
+  position: fixed;
+  inset: auto 0 var(--kb, 0px);
+  width: min(100% - 2 * var(--gx), 960px);
+  max-width: none;
+  height: min(460px, 64dvh);
+  max-height: calc(100dvh - var(--kb, 0px) - 16px);
+  margin: 0 auto;
+  padding: 0;
+  border: 1px solid var(--rule-2);
+  border-bottom: 0;
+  background: var(--bg-sheet);
+  color: var(--fg);
+  font: 400 var(--fs-ui) / 1.55 var(--mono);
+  transform: translateY(105%);
+  transition:
+    transform var(--dur-2) var(--ease-out),
+    overlay var(--dur-2) allow-discrete,
+    display var(--dur-2) allow-discrete;
+}
+
+.con[open] {
+  display: flex;
+  flex-direction: column;
+  transform: none;
+}
+
+@starting-style {
+  .con[open] {
+    transform: translateY(105%);
+  }
+}
+
+.con::backdrop {
+  background: rgb(12 13 15 / 0);
+  transition:
+    background-color var(--dur-2),
+    overlay var(--dur-2) allow-discrete,
+    display var(--dur-2) allow-discrete;
+}
+
+.con[open]::backdrop {
+  background: rgb(12 13 15 / 0.3);
+}
+
+@starting-style {
+  .con[open]::backdrop {
+    background: rgb(12 13 15 / 0);
+  }
+}
+
+.con__bar {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: none;
+  padding-left: 16px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.con__led {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--signal);
+}
+
+.con__led[data-blink] {
+  animation: con-blink 90ms steps(2, jump-none) 2;
+}
+
+.con__title {
+  margin: 0;
+  font: 500 var(--fs-label) / 1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.con__host {
+  font-size: var(--fs-meta);
+  color: var(--fg-3);
+}
+
+.con__close {
+  min-width: 48px;
+  height: 40px;
+  margin-left: auto;
+  padding: 0 14px;
+  border: 0;
+  border-left: 1px solid var(--rule);
+  background: none;
+  font: 500 var(--fs-label) / 1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  cursor: pointer;
+}
+
+.con__close:hover {
+  color: var(--fg);
+}
+
+.con__close:focus-visible {
+  outline-offset: -2px;
+}
+
+.con__out {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 16px;
+  color: var(--fg-2);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.con__out:focus {
+  outline: 0;
+}
+
+.con__row {
+  min-height: 1.55em;
+}
+
+.con__row--cmd {
+  margin-top: 6px;
+  color: var(--fg);
+}
+
+.con__row--dim {
+  color: var(--fg-3);
+}
+
+.con__row--err {
+  color: var(--fault);
+}
+
+.con__tbl {
+  display: grid;
+  column-gap: 2ch;
+}
+
+.con__tr {
+  display: contents;
+}
+
+.con__args {
+  color: var(--fg-3);
+}
+
+.con__prompt {
+  flex: none;
+  color: var(--fg-3);
+}
+
+.con__cmd {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--fg);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-2);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.con__cmd:hover,
+.con__out a:hover {
+  text-decoration-color: currentcolor;
+}
+
+.con__out a {
+  color: var(--fg);
+}
+
+.con__line {
+  display: flex;
+  align-items: center;
+  gap: 1ch;
+  flex: none;
+  min-height: 44px;
+  padding: 0 16px;
+  border-top: 1px solid var(--rule);
+}
+
+.con__line:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.con__in {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--fg);
+  caret-color: var(--signal);
+}
+
+.con__in:focus {
+  outline: 0;
+}
+
+/* Touch: 16 px input text keeps mobile browsers from zooming in; links and commands get 40 px rows. */
+@media (pointer: coarse) {
+  .con__in {
+    font-size: var(--fs-body);
+  }
+
+  .con__cmd,
+  .con__out a {
+    display: inline-block;
+    min-height: 40px;
+    line-height: 40px;
+  }
+}
+
+@media (max-width: 720px) {
+  .con {
+    width: 100%;
+    height: min(520px, 72dvh);
+    border-inline: 0;
+  }
+
+  .con__host {
+    display: none;
+  }
+}
+
+/* Kernel panic: the page tears and drops out, the panel turns to fault red, then the page reboots. */
+:root[data-panic] body > :not(.con) {
+  animation:
+    con-tear 280ms steps(1, end) 3,
+    con-dark 360ms var(--ease-in-out) 900ms both;
+}
+
+:root[data-panic] .con {
+  border-color: var(--fault);
+  animation: con-shake 90ms steps(2, jump-none) 4 160ms;
+}
+
+:root[data-panic] .con__led {
+  background: var(--fault);
+}
+
+:root[data-panic] .con__line {
+  outline-color: var(--fault);
+}
+
+:root[data-panic] .con::backdrop {
+  background: rgb(12 13 15 / 0.6);
+}
+
+@keyframes con-blink {
+  to {
+    opacity: 0.15;
+  }
+}
+
+@keyframes con-tear {
+  0% {
+    transform: translate(-4px, 0);
+  }
+  20% {
+    transform: translate(7px, 2px) skewX(-3deg);
+    clip-path: inset(0 0 46% 0);
+  }
+  40% {
+    transform: translate(-2px, -1px);
+    clip-path: inset(31% 0 0 0);
+  }
+  60% {
+    transform: translate(3px, 0) skewX(2deg);
+    clip-path: inset(0);
+  }
+  80% {
+    transform: translate(-7px, 0);
+    clip-path: inset(0 0 12% 0);
+  }
+}
+
+@keyframes con-dark {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes con-shake {
+  0% {
+    transform: translateX(-3px);
+  }
+  100% {
+    transform: translateX(3px);
+  }
+}

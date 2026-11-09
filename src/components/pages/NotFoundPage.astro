@@ -1,0 +1,128 @@
+---
+import Base from "../../layouts/Base.astro";
+import type { HostKind, Language } from "../../lib/config";
+import type { Epoch } from "../../lib/epochs";
+import { getPosts } from "../../lib/posts";
+import { servedPosts } from "../../lib/release";
+import { notFoundMeta } from "../../lib/seo";
+import { blogIndexHref, homeHref, postHref } from "../../lib/urls";
+import { t } from "../../i18n";
+
+interface Props {
+  lang: Language;
+  host: HostKind;
+  epoch: Epoch;
+}
+
+const { lang, host, epoch } = Astro.props;
+const nf = t(lang).notFound;
+/** Released posts as `[slug, title, href]`, for the nearest-post suggestion. */
+const posts = servedPosts(await getPosts(), epoch, lang).map((post) => [
+  post.slug,
+  post.title,
+  postHref(host, post.slug),
+]);
+
+/** Graticule of the scope: 10 by 8 divisions on an 800 by 280 screen. */
+const W = 800;
+const H = 280;
+const COLS = 10;
+const ROWS = 8;
+const verticals = Array.from({ length: COLS - 1 }, (_, i) => ((i + 1) * W) / COLS);
+const horizontals = Array.from({ length: ROWS - 1 }, (_, i) => ((i + 1) * H) / ROWS);
+const ticks = Array.from({ length: COLS * 5 - 1 }, (_, i) => ((i + 1) * W) / (COLS * 5));
+const mid = H / 2;
+/** One small blip where the request came in, then nothing. */
+const trace = `M0 ${mid}H88l5-22 6 40 6-30 5 12h4H${W}`;
+---
+
+<Base lang={lang} host={host} epoch={epoch} meta={notFoundMeta(lang)} page="not-found">
+  <section class="nf frame" aria-labelledby="nf-title">
+    <div class="nf__text">
+      <p class="label">{nf.eyebrow}</p>
+      <h1 class="nf__title" id="nf-title">{nf.heading}</h1>
+      <p class="nf__lede">{nf.message}</p>
+      <p class="nf__actions">
+        <a class="btn btn--solid" href={homeHref(host)}>{nf.home}<span class="arr" aria-hidden="true">→</span></a>{" "}
+        <a class="btn" href={blogIndexHref(host)}>{nf.blog}<span class="arr" aria-hidden="true">→</span></a>
+      </p>
+    </div>
+    <div class="nf__fig">
+
+    <figure class="nf-scope">
+      <div class="nf-scope__screen">
+        <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" focusable="false">
+          <g class="nf-scope__grid">
+            {verticals.map((x) => <line x1={x} x2={x} y1="0" y2={H} />)}
+            {horizontals.map((y) => <line x1="0" x2={W} y1={y} y2={y} />)}
+          </g>
+          <g class="nf-scope__axis">
+            <line x1="0" x2={W} y1={mid} y2={mid} />
+            <line x1={W / 2} x2={W / 2} y1="0" y2={H} />
+            {ticks.map((x) => <line x1={x} x2={x} y1={mid - 4} y2={mid + 4} />)}
+          </g>
+          <path class="nf-scope__trace" d={trace} pathLength="1" />
+        </svg>
+        <span class="nf-scope__ch label" aria-hidden="true">CH1</span>
+        <span class="nf-scope__code label" aria-hidden="true">404</span>
+        <p class="nf-scope__msg">{nf.scope}</p>
+      </div>
+      <figcaption><span class="label">{nf.figure}</span> {nf.caption}</figcaption>
+    </figure>
+
+    <dl class="kv nf__kv">
+      <div>
+        <dt>{nf.status}</dt>
+        <dd>{nf.statusValue}</dd>
+      </div>
+      <div data-nf-path hidden>
+        <dt>{nf.path}</dt>
+        <dd></dd>
+      </div>
+      <div data-nf-near hidden>
+        <dt>{nf.nearest}</dt>
+        <dd><a class="nf__near"></a></dd>
+      </div>
+    </dl>
+    </div>
+  </section>
+  {
+    /* The page is served for every missing path, so the path and the nearest post are read in
+       the browser. */
+  }
+  <script is:inline type="application/json" id="nf-posts" set:html={JSON.stringify(posts).replace(/</g, "\\u003c")} />
+  <script is:inline>
+    document.addEventListener("DOMContentLoaded", function () {
+      var d = document, row = d.querySelector("[data-nf-path]"), path = location.pathname, seg;
+      try { path = decodeURI(path); } catch (e) {}
+      row.lastElementChild.textContent = path;
+      row.hidden = false;
+      seg = (path.split("/").filter(Boolean).pop() || "").toLowerCase();
+      var data = d.getElementById("nf-posts"), best, bestCost = 1e9;
+      if (!seg || !data) return;
+      function cost(a, b) {
+        var prev = [], cur, i, j;
+        for (j = 0; j <= b.length; j++) prev[j] = j;
+        for (i = 1; i <= a.length; i++) {
+          cur = [i];
+          for (j = 1; j <= b.length; j++)
+            cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1));
+          prev = cur;
+        }
+        return prev[b.length];
+      }
+      JSON.parse(data.textContent).forEach(function (post) {
+        var c = post[0].indexOf(seg) >= 0 && seg.length > 2 ? 0 : cost(seg, post[0]);
+        if (c < bestCost && c <= Math.max(2, post[0].length / 3)) {
+          best = post;
+          bestCost = c;
+        }
+      });
+      if (!best) return;
+      var near = d.querySelector("[data-nf-near]"), link = near.querySelector("a");
+      link.href = best[2];
+      link.textContent = best[1];
+      near.hidden = false;
+    });
+  </script>
+</Base>
