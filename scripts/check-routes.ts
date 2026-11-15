@@ -1,5 +1,6 @@
 /**
- * Route matrix for the generated Caddy config (`dist/caddy/`). Run after `bun run build`.
+ * Route matrix for the generated Caddy config (`dist/caddy/`), or with `--server upstreamer`
+ * for the generated upstreamer fragments (`dist/upstreamer/`). Run after `bun run build`.
  *
  * 1. Config: `caddy fmt` and `caddy validate` on the generated files, plus a production-style
  *    vhost importing the snippet by absolute path.
@@ -17,16 +18,24 @@
  *    and in every tree of both builds a post page exists exactly when its markdown does, in
  *    the same language.
  *
- * Usage: bun scripts/check-routes.ts [--dist <dir>] [--no-epoch-build]
+ * With `--server upstreamer`, step 1 is `upstreamer check` on the fragments and the local
+ * config, step 2 runs `upstreamer run dist/upstreamer/local.json`, and step 3 restarts it
+ * with fragments generated for each gated manifest. The answers expected are the same.
+ *
+ * Usage: bun scripts/check-routes.ts [--dist <dir>] [--no-epoch-build] [--server caddy|upstreamer]
  *   --dist <dir>       checks another build of the same sources, e.g. the Nix `result`
- *                      (Caddy then runs with PORTFOLIO_DIST=<dir>)
+ *                      (Caddy then runs with PORTFOLIO_DIST=<dir>; the upstreamer fragments
+ *                      of that build name their own directory)
  *   --no-epoch-build   reuses an existing dist-routes/
+ *   --server <name>    the web server under test (default caddy); the binaries are `caddy`
+ *                      and `upstreamer`, or $CADDY and $UPSTREAMER
  * Exits non-zero when any check fails.
  */
 import { spawn, spawnSync } from "node:child_process";
 import {
   closeSync,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   openSync,
   readdirSync,
@@ -45,6 +54,11 @@ import { brotliCompressSync, gunzipSync, gzipSync } from "node:zlib";
 import { caddySnippet, localCaddyfile } from "../src/caddy/snippet";
 import { readManifest, writeEtagSidecars } from "../src/caddy/write";
 import { AI_USER_AGENTS, wantsMarkdown } from "../src/lib/agents";
+import {
+  localUpstreamerConfig,
+  renderFragment,
+  upstreamerFragment,
+} from "../src/upstreamer/fragment";
 import type { CaddyManifest } from "../src/caddy/snippet";
 import type { ChildProcess } from "node:child_process";
 
@@ -92,6 +106,18 @@ const SPLIT_POSTS: SplitPost[] = [
 const SPLIT_FIRST = Date.parse("2100-03-01T00:00:00-03:00") / 1000;
 const SPLIT_SECOND = Date.parse("2100-06-01T00:00:00-03:00") / 1000;
 const CADDY = process.env.CADDY ?? "caddy";
+const UPSTREAMER = process.env.UPSTREAMER ?? "upstreamer";
+const SERVER_FLAG = process.argv.indexOf("--server");
+const SERVER = SERVER_FLAG >= 0 ? process.argv[SERVER_FLAG + 1] : "caddy";
+if (SERVER !== "caddy" && SERVER !== "upstreamer") {
+  console.error(`--server must be caddy or upstreamer, not ${SERVER}`);
+  process.exit(2);
+}
+/**
+ * How long after an epoch gate a request is sure to see the new epoch. Caddy reads the clock
+ * per request; upstreamer refreshes its clock once per second.
+ */
+const CLOCK_SLACK_MS = SERVER === "upstreamer" ? 1300 : 300;
 const ADMIN = "127.0.0.1:2098";
 const PORTS: Record<Host, number> = { main: 4801, blog: 4802 };
 const HOST_HEADER: Record<Host, string> = { main: "guswid.com", blog: "blog.guswid.com" };
@@ -1285,20 +1311,61 @@ function portInUse(port: number): Promise<boolean> {
   });
 }
 
-async function waitForAdmin(child: ChildProcess, log: string): Promise<void> {
+/** Caddy is ready when its admin API answers, upstreamer when both host ports accept. */
+async function ready(): Promise<boolean> {
+  if (SERVER === "upstreamer") {
+    return (await portInUse(PORTS.main)) && (await portInUse(PORTS.blog));
+  }
+  try {
+    return (await fetch(`http://${ADMIN}/config/`)).ok;
+  } catch {
+    return false;
+  }
+}
+
+async function waitForServer(child: ChildProcess, log: string): Promise<void> {
   const deadline = Date.now() + 15_000;
   while (Date.now() < deadline) {
     if (child.exitCode !== null)
-      throw new Error(`caddy exited:\n${readFileSync(log, "utf8").slice(-2000)}`);
-    try {
-      const response = await fetch(`http://${ADMIN}/config/`);
-      if (response.ok) return;
-    } catch {
-      // Not listening yet.
-    }
+      throw new Error(`${SERVER} exited:\n${readFileSync(log, "utf8").slice(-2000)}`);
+    if (await ready()) return;
     await sleep(100);
   }
-  throw new Error("caddy did not start within 15 s");
+  throw new Error(`${SERVER} did not start within 15 s`);
+}
+
+/** The running server, its log and its config. */
+interface Running {
+  child: ChildProcess;
+  log: string;
+}
+
+let running: Running | undefined;
+
+/** Starts the server with `config`; `env` is Caddy's environment for the initial config. */
+async function start(config: string, log: string, env?: NodeJS.ProcessEnv): Promise<void> {
+  const logFd = openSync(log, "a");
+  const [command, args] =
+    SERVER === "upstreamer"
+      ? [UPSTREAMER, ["run", "--config", config, "--workers", "2"]]
+      : [CADDY, ["run", "--config", config, "--adapter", "caddyfile"]];
+  const child = spawn(command, args, {
+    cwd: ROOT,
+    env: env ?? process.env,
+    stdio: ["ignore", logFd, logFd],
+  });
+  closeSync(logFd);
+  running = { child, log };
+  await waitForServer(child, log);
+}
+
+async function stop(): Promise<void> {
+  const child = running?.child;
+  running = undefined;
+  if (!child || child.exitCode !== null) return;
+  const exited = new Promise((resolvePromise) => child.once("exit", resolvePromise));
+  child.kill("SIGTERM");
+  await exited;
 }
 
 function caddy(
@@ -1323,8 +1390,22 @@ function caddyEnv(dist?: string): NodeJS.ProcessEnv {
   return env;
 }
 
-/** Writes a snippet and a local Caddyfile (absolute paths) for `manifest` into `dir`. */
+/**
+ * Writes the server's config for `manifest` serving `dist` into `dir` (absolute paths): a
+ * snippet and a local Caddyfile, or two fragments and a local upstreamer config.
+ */
 function writeConfig(dir: string, dist: string, manifest: CaddyManifest, name: string): string {
+  if (SERVER === "upstreamer") {
+    const fragments = join(dir, name);
+    mkdirSync(fragments, { recursive: true });
+    for (const kind of HOSTS) {
+      const fragment = upstreamerFragment(manifest, dist, kind);
+      writeFileSync(join(fragments, `${kind}.json`), renderFragment(fragment));
+    }
+    const config = join(fragments, "local.json");
+    writeFileSync(config, localUpstreamerConfig({ fragments }));
+    return config;
+  }
   const snippet = join(dir, `${name}.caddy`);
   const config = join(dir, `${name}.Caddyfile`);
   writeFileSync(snippet, caddySnippet(manifest));
@@ -1332,11 +1413,37 @@ function writeConfig(dir: string, dist: string, manifest: CaddyManifest, name: s
   return config;
 }
 
-/** Loads a config written by `writeConfig`, whose root must not be overridden. */
-function reload(config: string): void {
+/**
+ * Loads a config written by `writeConfig`, whose root must not be overridden. upstreamer is
+ * restarted, so the next request is answered by the new config.
+ */
+async function reload(config: string): Promise<void> {
+  if (SERVER === "upstreamer") {
+    const log = running?.log;
+    if (!log) throw new Error("upstreamer is not running");
+    await stop();
+    await start(config, log);
+    return;
+  }
   const args = ["reload", "--config", config, "--adapter", "caddyfile", "--address", ADMIN];
   const result = caddy(args, caddyEnv());
   if (!result.ok) throw new Error(`caddy reload failed:\n${result.output}`);
+}
+
+/** `upstreamer check` on the build's fragments and its local config. */
+function upstreamerConfigResults(): Result[] {
+  const checks: [string, string[]][] = [
+    ...HOSTS.map((kind): [string, string[]] => [
+      `upstreamer/${kind}.json`,
+      ["check", "--fragment", join(DIST, "upstreamer", `${kind}.json`)],
+    ]),
+    ["upstreamer/local.json", ["check", "--config", join(DIST, "upstreamer", "local.json")]],
+  ];
+  return checks.map(([name, args]) => {
+    const run = spawnSync(UPSTREAMER, args, { cwd: ROOT, encoding: "utf8" });
+    const output = `${run.stdout}${run.stderr}`.trim();
+    return result("config", `upstreamer check ${name}`, run.status === 0 ? [] : [output]);
+  });
 }
 
 // ---------------------------------------------------------------------------------------
@@ -1450,22 +1557,22 @@ async function epochResults(work: string): Promise<Result[]> {
   const precompressed = writePrecompressed(EPOCH_DIST, fixture.name);
   const results: Result[] = [];
 
-  reload(writeConfig(work, EPOCH_DIST, gated(clock - 3600), "after"));
+  await reload(writeConfig(work, EPOCH_DIST, gated(clock - 3600), "after"));
   const afterGroup = `epoch: gate 1 h ago -> ${fixture.name}`;
   results.push(...(await run(epochCases(after, "after", afterGroup), EPOCH_DIST)));
   results.push(...(await run(precompressedCases(precompressed), EPOCH_DIST)));
 
-  reload(writeConfig(work, EPOCH_DIST, gated(clock + 3600), "before"));
+  await reload(writeConfig(work, EPOCH_DIST, gated(clock + 3600), "before"));
   const beforeGroup = `epoch: gate in 1 h -> ${previous.name}`;
   results.push(...(await run(epochCases(before, "before", beforeGroup), EPOCH_DIST)));
 
-  reload(writeConfig(work, EPOCH_DIST, manifest, "manifest"));
+  await reload(writeConfig(work, EPOCH_DIST, manifest, "manifest"));
   const manifestGroup = `epoch: manifest gate ${fixture.start} -> ${previous.name}`;
   results.push(...(await run(epochCases(before, "before", manifestGroup), EPOCH_DIST)));
 
   // One config with the gate 3 s ahead: the same request flips from 404 to 200 unreloaded.
   const flip = Math.floor(Date.now() / 1000) + 3;
-  reload(writeConfig(work, EPOCH_DIST, gated(flip), "flip"));
+  await reload(writeConfig(work, EPOCH_DIST, gated(flip), "flip"));
   const group = `epoch: gate at ${flip}, one config before and after`;
   const request: Request = { host: "main", path: `/blog/${FIXTURE_SLUG}` };
   const notFound = join(before.tree("main", "en"), "404.html");
@@ -1474,7 +1581,7 @@ async function epochResults(work: string): Promise<Result[]> {
   results.push(
     ...(await run([flipCase({ status: 404, file: notFound }, "before the gate")], EPOCH_DIST)),
   );
-  await sleep(Math.max(0, flip * 1000 - Date.now()) + 300);
+  await sleep(Math.max(0, flip * 1000 - Date.now()) + CLOCK_SLACK_MS);
   results.push(
     ...(await run([flipCase({ status: 200, file: page }, "after the gate")], EPOCH_DIST)),
   );
@@ -1490,7 +1597,7 @@ async function epochResults(work: string): Promise<Result[]> {
       i >= 1 && i <= firstOut ? { ...epoch, start: clock - 3600 } : epoch,
     ),
   };
-  reload(writeConfig(work, EPOCH_DIST, through, "split"));
+  await reload(writeConfig(work, EPOCH_DIST, through, "split"));
   const splitGroup = `release dates per language: requests in ${manifest.epochs[firstOut].name}`;
   const split = trees(EPOCH_DIST, manifest.epochs[firstOut].name);
   results.push(...(await run(splitHttpCases(split, splitGroup), EPOCH_DIST)));
@@ -1511,7 +1618,10 @@ async function epochResults(work: string): Promise<Result[]> {
 }
 
 async function main(): Promise<number> {
-  const local = join(DIST, "caddy", "Caddyfile.local");
+  const local =
+    SERVER === "upstreamer"
+      ? join(DIST, "upstreamer", "local.json")
+      : join(DIST, "caddy", "Caddyfile.local");
   if (!existsSync(local)) {
     console.error(`${local} not found; run \`bun run build\` first`);
     return 1;
@@ -1523,30 +1633,20 @@ async function main(): Promise<number> {
     }
   }
   const work = mkdtempSync(join(tmpdir(), "portfolio-routes-"));
-  const log = join(work, "caddy.log");
+  const log = join(work, `${SERVER}.log`);
   const results: Result[] = [
-    ...configResults(work),
+    ...(SERVER === "upstreamer" ? upstreamerConfigResults() : configResults(work)),
     ...referenceResults(),
     ...agreementResults(DIST),
   ];
 
-  const logFd = openSync(log, "w");
-  const child = spawn(CADDY, ["run", "--config", local, "--adapter", "caddyfile"], {
-    cwd: ROOT,
-    env: caddyEnv(DIST_ARG ? DIST : undefined),
-    stdio: ["ignore", logFd, logFd],
-  });
-  closeSync(logFd);
-  const stop = (): void => {
-    if (child.exitCode === null) child.kill("SIGTERM");
-  };
   process.once("SIGINT", () => {
-    stop();
+    running?.child.kill("SIGTERM");
     process.exit(130);
   });
 
   try {
-    await waitForAdmin(child, log);
+    await start(local, log, caddyEnv(DIST_ARG ? DIST : undefined));
     const current = trees(DIST, currentEpoch(readManifest(DIST), Math.floor(Date.now() / 1000)));
     results.push(...(await run(routeCases(current), DIST)));
     results.push(...(await encodingChecks(current)));
@@ -1554,15 +1654,11 @@ async function main(): Promise<number> {
   } catch (error) {
     results.push({ group: "setup", ok: false, line: "check run", problems: [String(error)] });
   } finally {
-    stop();
-    await new Promise((resolvePromise) => {
-      if (child.exitCode !== null) resolvePromise(undefined);
-      else child.once("exit", resolvePromise);
-    });
+    await stop();
   }
 
   const failed = report(results);
-  if (failed) console.log(`caddy log: ${log}`);
+  if (failed) console.log(`${SERVER} log: ${log}`);
   else rmSync(work, { recursive: true, force: true });
   return failed ? 1 : 0;
 }

@@ -57,6 +57,7 @@ bun run check:dates      # publication date, epoch and per-language release asse
 bun run check:headings   # heading ids of every post vs scripts/fixtures (after a build)
 bun run check:meta       # head tags, json-ld and og images of every page (after a build)
 bun run check:routes     # every route through caddy, incl. both sides of a release gate (after a build)
+bun run check:routes --server upstreamer   # the same matrix through upstreamer ($UPSTREAMER or `upstreamer` on PATH)
 bun run og:preview       # render all og cards into dist-og/ to review src/og/template.ts
 bun run lint
 bun run format
