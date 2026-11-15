@@ -1,5 +1,29 @@
 import { aiUserAgentPattern } from "../lib/agents";
 import { DEFAULT_LANGUAGE, LANG_STORAGE_KEY } from "../lib/config";
+import {
+  acceptLanguagePattern,
+  CACHE_CONTROL,
+  CURL_USER_AGENT,
+  DYNAMIC_ENCODINGS,
+  ETAG_SIDECAR,
+  HOST_PATHS,
+  internalPaths,
+  MARKDOWN_ACCEPT,
+  MARKDOWN_QUERY,
+  MDX_INDEX_PATHS,
+  MDX_LLMS_POST,
+  NOT_FOUND_CONTENT_TYPE,
+  postMarkdownPath,
+  PRECOMPRESSED,
+  REDIRECTS,
+  REMOVED_HEADERS,
+  SECURITY_HEADERS,
+  SIDECAR_PATHS,
+  TEXT_CONTENT_TYPE,
+  treeContentTypes,
+  UNSAFE_PATH,
+  VARY,
+} from "../lib/serving";
 import { epochFiles } from "../lib/urls";
 import type { SiteManifest } from "../integrations/dist-layout";
 
@@ -52,14 +76,16 @@ function token(value: string): string {
  * carry no Last-Modified and validation relies on ETags alone.
  */
 const COMMON_HEADERS: Line[] = [
-  "-Server",
-  "-Last-Modified",
-  "X-Content-Type-Options nosniff",
-  "X-Frame-Options DENY",
-  "Referrer-Policy strict-origin-when-cross-origin",
-  'Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"',
-  "Cross-Origin-Opener-Policy same-origin",
+  ...REMOVED_HEADERS.map((name) => `-${name}`),
+  ...Object.entries(SECURITY_HEADERS).map(([name, value]) => `${name} ${token(value)}`),
 ];
+
+/** `<directive> "<value>"`, quoted whether or not the value needs it. */
+function quoted(head: string, value: string): string {
+  return `${head} "${value}"`;
+}
+
+const ENCODE = `encode ${DYNAMIC_ENCODINGS.join(" ")}`;
 
 /**
  * `file_server` with the precompressed sidecars of `writePrecompressed()`. Browsers accept br
@@ -70,21 +96,10 @@ const COMMON_HEADERS: Line[] = [
  */
 function fileServer(etags: boolean): Line[] {
   return block("file_server", [
-    "precompressed br zstd gzip",
-    ...(etags ? ["etag_file_extensions .etag"] : []),
+    `precompressed ${PRECOMPRESSED.join(" ")}`,
+    ...(etags ? [`etag_file_extensions ${ETAG_SIDECAR}`] : []),
     "disable_canonical_uris",
   ]);
-}
-
-/** Absolute request paths of tree files that must not be fetched directly. */
-function internalPaths(files: CaddyManifest["files"]): string[] {
-  const paths = new Set<string>();
-  for (const file of [files.blogMarkdown, files.postMarkdown, files.curl, files.notFound]) {
-    const [first, ...rest] = file.split("/");
-    paths.add(`/${first}`);
-    if (rest.length > 0) paths.add(`/${first}/*`);
-  }
-  return [...paths];
 }
 
 function epochSection(manifest: CaddyManifest): Line[] {
@@ -110,7 +125,7 @@ function languageSection(manifest: CaddyManifest): Line[] {
     "# joins repeated Accept-Language fields with commas, so the first tag of the whole list counts.",
     `vars lang ${DEFAULT_LANGUAGE}`,
     ...others.flatMap((lang) => [
-      `@lang_accept_${lang} vars_regexp {http.request.header.Accept-Language} (?i)^\\s*${lang}([-_;,\\s]|$)`,
+      `@lang_accept_${lang} vars_regexp {http.request.header.Accept-Language} ${acceptLanguagePattern(lang)}`,
       `vars @lang_accept_${lang} lang ${lang}`,
     ]),
     `@lang_cookie vars {cookie.${LANG_STORAGE_KEY}} ${all}`,
@@ -125,10 +140,11 @@ function negotiationSection(): Line[] {
     "# Markdown negotiation for the blog index and posts (rules in src/lib/agents.ts).",
     "@markdown_wanted expression <<CEL",
     [
-      'query({"format": "markdown"})',
-      '|| query({"raw": "true"})',
-      '|| header_regexp("Accept", "(?i)^text/(markdown|plain)")',
-      '|| (header_regexp("Accept", "(?i)text/(markdown|plain)") && !header_regexp("Accept", "[*]/[*]"))',
+      ...MARKDOWN_QUERY.map(
+        ([key, value], i) => `${i === 0 ? "" : "|| "}query({"${key}": "${value}"})`,
+      ),
+      `|| header_regexp("Accept", "${MARKDOWN_ACCEPT.first}")`,
+      `|| (header_regexp("Accept", "${MARKDOWN_ACCEPT.anywhere}") && !header_regexp("Accept", "${MARKDOWN_ACCEPT.wildcard}"))`,
       `|| header_regexp("User-Agent", "${aiUserAgentPattern()}")`,
       "CEL",
     ],
@@ -143,21 +159,21 @@ function redirectSection(): Line[] {
     '# Browsers read "/\\host" in a Location header as "//host", and they drop TAB, CR and',
     '# LF from URLs, so "/<TAB>/host" reads as "//host" too. No redirect may echo a backslash',
     "# or a control character, so paths containing one are refused.",
-    "@unsafe_path path_regexp [\\\\\\x00-\\x1f\\x7f]",
+    `@unsafe_path path_regexp ${UNSAFE_PATH}`,
     "error @unsafe_path 404",
     "",
     "# Blog host: /blog and /blog/<path> move to / and /<path>, keeping the query.",
     ...block("@blog_prefix", [
       "vars host_kind blog",
-      "path_regexp blog_prefix ^/blog(?:/(.*?))?/?$",
+      `path_regexp blog_prefix ${REDIRECTS.blogPrefix}`,
     ]),
     "redir @blog_prefix /{re.blog_prefix.1}{?query} 301",
     "",
     "# One URL per page: no trailing slash and no index.html. Path matchers see the cleaned",
     "# path, so captures never start with a slash.",
-    "@trailing_slash path_regexp trailing_slash ^/(.+)/$",
+    `@trailing_slash path_regexp trailing_slash ${REDIRECTS.trailingSlash}`,
     "redir @trailing_slash /{re.trailing_slash.1}{?query} 301",
-    "@index_html path_regexp index_html ^/(?:(.*)/)?index\\.html$",
+    `@index_html path_regexp index_html ${REDIRECTS.indexHtml}`,
     "redir @index_html /{re.index_html.1}{?query} 301",
   ];
 }
@@ -167,7 +183,7 @@ function sharedFilesSection(): Line[] {
     "# Hashed build assets, shared by every epoch, host and language.",
     ...block("route /_astro/*", [
       "root * {args[0]}",
-      'header Cache-Control "public, max-age=31536000, immutable"',
+      quoted("header Cache-Control", CACHE_CONTROL.immutable),
       "# Names are content hashes, so the default ETag is stable per name.",
       ...fileServer(false),
     ]),
@@ -175,7 +191,7 @@ function sharedFilesSection(): Line[] {
     "# Open Graph images exist per epoch, so the image of a scheduled post stays private.",
     ...block(`route /${epochFiles.ogDir}/*`, [
       "root * {args[0]}/site/{vars.epoch}",
-      'header Cache-Control "public, max-age=3600"',
+      quoted("header Cache-Control", CACHE_CONTROL.static),
       "# No ETag sidecars: og/ holds exactly the epoch's images.",
       ...fileServer(false),
     ]),
@@ -187,9 +203,9 @@ function sharedFilesSection(): Line[] {
     ]),
     ...block("route @static", [
       "root * {args[0]}/static",
-      'header Cache-Control "public, max-age=3600"',
+      quoted("header Cache-Control", CACHE_CONTROL.static),
       "@static_text path *.txt",
-      'header @static_text >Content-Type "text/plain; charset=utf-8"',
+      quoted("header @static_text >Content-Type", TEXT_CONTENT_TYPE),
       ...fileServer(true),
     ]),
   ];
@@ -197,71 +213,64 @@ function sharedFilesSection(): Line[] {
 
 function treeSection(manifest: CaddyManifest): Line[] {
   const { files } = manifest;
-  const post = (name: string): string =>
-    `/${files.postMarkdown.replace("<slug>", `{re.${name}.1}`)}`;
+  const post = (name: string): string => postMarkdownPath(files, `{re.${name}.1}`);
   const blogMarkdown = `/${files.blogMarkdown}`;
+  const hosts = Object.entries(HOST_PATHS);
   return [
     "# Everything else comes from the selected tree. One URL answers in several languages,",
     "# epochs and formats, and a cache that ignores Vary would mix them: private keeps the",
     "# answers out of shared caches, no-cache makes browsers revalidate by ETag.",
     "root * {vars.tree}",
-    'header Cache-Control "private, no-cache"',
-    'header Vary "Cookie, Accept-Language"',
+    quoted("header Cache-Control", CACHE_CONTROL.tree),
+    quoted("header Vary", VARY.tree),
     "# Pages whose answer also depends on User-Agent and Accept (curl card, markdown).",
-    ...block("@agent_dependent_main", [
-      "vars host_kind main",
-      "path_regexp ^/(index|blog(/[^/.]+)?)?$",
-    ]),
-    ...block("@agent_dependent_blog", ["vars host_kind blog", "path_regexp ^/([^/.]+)?$"]),
-    'header @agent_dependent_main Vary "Cookie, Accept-Language, User-Agent, Accept"',
-    'header @agent_dependent_blog Vary "Cookie, Accept-Language, User-Agent, Accept"',
+    ...hosts.flatMap(([host, paths]) =>
+      block(`@agent_dependent_${host}`, [
+        `vars host_kind ${host}`,
+        `path_regexp ${paths.agentDependent}`,
+      ]),
+    ),
+    ...hosts.map(([host]) => quoted(`header @agent_dependent_${host} Vary`, VARY.agent)),
     "",
     "# Rewrites into the tree; only the first matching rewrite applies.",
-    "@mdx_index path /blog.mdx /llms.mdx/blog",
+    `@mdx_index path ${MDX_INDEX_PATHS.join(" ")}`,
     `rewrite @mdx_index ${blogMarkdown}`,
-    "@mdx_llms_post path_regexp mdx_llms_post ^/llms\\.mdx/blog/([^/]+)$",
+    `@mdx_llms_post path_regexp mdx_llms_post ${MDX_LLMS_POST}`,
     `rewrite @mdx_llms_post ${post("mdx_llms_post")}`,
-    ...block("@mdx_post_main", [
-      "vars host_kind main",
-      "path_regexp mdx_post_main ^/blog/([^/]+)\\.mdx$",
+    ...hosts.flatMap(([host, paths]) => [
+      ...block(`@mdx_post_${host}`, [
+        `vars host_kind ${host}`,
+        `path_regexp mdx_post_${host} ${paths.mdxPost}`,
+      ]),
+      `rewrite @mdx_post_${host} ${post(`mdx_post_${host}`)}`,
     ]),
-    `rewrite @mdx_post_main ${post("mdx_post_main")}`,
-    ...block("@mdx_post_blog", [
-      "vars host_kind blog",
-      "path_regexp mdx_post_blog ^/([^/]+)\\.mdx$",
+    ...hosts.flatMap(([host, paths]) => [
+      ...block(`@markdown_index_${host}`, [
+        `vars markdown_host ${host}`,
+        `path ${paths.blogIndex}`,
+      ]),
+      `rewrite @markdown_index_${host} ${blogMarkdown}`,
+      ...block(`@markdown_post_${host}`, [
+        `vars markdown_host ${host}`,
+        `path_regexp markdown_post_${host} ${paths.post}`,
+      ]),
+      `rewrite @markdown_post_${host} ${post(`markdown_post_${host}`)}`,
     ]),
-    `rewrite @mdx_post_blog ${post("mdx_post_blog")}`,
-    ...block("@markdown_index_main", ["vars markdown_host main", "path /blog"]),
-    `rewrite @markdown_index_main ${blogMarkdown}`,
-    ...block("@markdown_post_main", [
-      "vars markdown_host main",
-      "path_regexp markdown_post_main ^/blog/([^/.]+)$",
+    ...hosts.flatMap(([host, paths]) => [
+      ...block(`@curl_${host}`, [
+        `vars host_kind ${host}`,
+        `path ${paths.curl.join(" ")}`,
+        `header User-Agent ${CURL_USER_AGENT}`,
+      ]),
+      `rewrite @curl_${host} /${files.curl}`,
     ]),
-    `rewrite @markdown_post_main ${post("markdown_post_main")}`,
-    ...block("@markdown_index_blog", ["vars markdown_host blog", "path /"]),
-    `rewrite @markdown_index_blog ${blogMarkdown}`,
-    ...block("@markdown_post_blog", [
-      "vars markdown_host blog",
-      "path_regexp markdown_post_blog ^/([^/.]+)$",
-    ]),
-    `rewrite @markdown_post_blog ${post("markdown_post_blog")}`,
-    ...block("@curl_main", ["vars host_kind main", "path / /index", "header User-Agent curl/*"]),
-    `rewrite @curl_main /${files.curl}`,
-    ...block("@curl_blog", ["vars host_kind blog", "path /", "header User-Agent curl/*"]),
-    `rewrite @curl_blog /${files.curl}`,
     "try_files {path}/index.html {path}",
     "",
     "# Content types by the file that is served (set when the response is written).",
-    "@html path *.html",
-    'header @html >Content-Type "text/html; charset=utf-8"',
-    "@markdown path *.md",
-    'header @markdown >Content-Type "text/markdown; charset=utf-8"',
-    "@text path *.txt",
-    'header @text >Content-Type "text/plain; charset=utf-8"',
-    `@feed path /${files.feedMain} /${files.feedBlog}`,
-    'header @feed >Content-Type "application/rss+xml; charset=utf-8"',
-    `@sitemap path /${files.sitemap}`,
-    'header @sitemap >Content-Type "application/xml; charset=utf-8"',
+    ...treeContentTypes(files).flatMap(({ name, paths, type }) => [
+      `@${name} path ${paths.join(" ")}`,
+      quoted(`header @${name} >Content-Type`, type),
+    ]),
     ...fileServer(true),
   ];
 }
@@ -275,18 +284,18 @@ function errorSection(manifest: CaddyManifest): Line[] {
       `rewrite * /${manifest.files.notFound}`,
       ...block("header", COMMON_HEADERS),
       ...block("header", [
-        'Cache-Control "private, no-cache"',
-        'Vary "Cookie, Accept-Language"',
-        'Content-Type "text/html; charset=utf-8"',
+        quoted("Cache-Control", CACHE_CONTROL.tree),
+        quoted("Vary", VARY.tree),
+        quoted("Content-Type", NOT_FOUND_CONTENT_TYPE),
       ]),
-      "encode zstd gzip",
+      ENCODE,
       "# A custom status bypasses conditional requests, so no ETag sidecars here.",
       ...fileServer(false),
     ]),
     "",
     ...block("handle_errors", [
       ...block("header", COMMON_HEADERS),
-      'header Cache-Control "no-store"',
+      quoted("header Cache-Control", CACHE_CONTROL.error),
       'respond "{err.status_code} {err.status_text}" {err.status_code}',
     ]),
   ];
@@ -308,7 +317,7 @@ export function caddySnippet(manifest: CaddyManifest): string {
       "# Last-Modified and requests are revalidated by ETag only.",
       ...block("header", COMMON_HEADERS),
       "request_header -If-Modified-Since",
-      "encode zstd gzip",
+      ENCODE,
       "",
       ...epochSection(manifest),
       "",
@@ -325,7 +334,7 @@ export function caddySnippet(manifest: CaddyManifest): string {
       "",
       "# Tree files only reachable through the rewrites further down, and the ETag and",
       "# precompressed sidecars that file_server reads in place of a file.",
-      `@internal path ${internalPaths(manifest.files).join(" ")} *.etag *.br *.zst *.gz`,
+      `@internal path ${[...internalPaths(manifest.files), ...SIDECAR_PATHS].join(" ")}`,
       "error @internal 404",
       "",
       ...sharedFilesSection(),
