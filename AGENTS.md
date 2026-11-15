@@ -4,7 +4,7 @@ Guidelines for AI coding agents working in this repository.
 
 ## Project Overview
 
-Personal portfolio and blog of Gustavo Widman, built as a fully static site with Astro 7 and TypeScript and served directly by Caddy (no application process). The home page presents identity, selected work, research, writing, experience, open source and contact; the blog renders the posts in `blog/`. Every page exists in English and Portuguese at the same URL (the web server picks the variant), with light/dark themes and no framework JavaScript.
+Personal portfolio and blog of Gustavo Widman, built as a fully static site with Astro 7 and TypeScript and served directly by Caddy or upstreamer (no application process). The home page presents identity, selected work, research, writing, experience, open source and contact; the blog renders the posts in `blog/`. Every page exists in English and Portuguese at the same URL (the web server picks the variant), with light/dark themes and no framework JavaScript.
 
 ## Toolchain
 
@@ -25,16 +25,18 @@ bun run check:dates   # publication-date assertions, default TZ and TZ=UTC
 bun run check:meta    # head tags, JSON-LD and Open Graph images of every built page (run after build)
 bun run check:routes  # Caddy route matrix on dist/ + epoch gate on dist-routes/ (run after build; needs caddy)
 bun run check:replays # replay model assertions, plus every built replay figure against its data (after build)
+bun run check:routes --server upstreamer  # the same matrix through upstreamer ($UPSTREAMER or upstreamer on PATH)
 bun run og:preview    # render every Open Graph card into dist-og/ (template review, no build)
 bun scripts/replay-from-gungnir.ts <trial dir> --out blog/<slug>/replays/<name>.json --meta … --quote …
                       # session replay of one released gungnir trial (see "Session Replays")
 caddy run --config dist/caddy/Caddyfile.local   # preview: main host :4801, blog host :4802 (from the project root)
+upstreamer run dist/upstreamer/local.json      # the same preview through upstreamer
 bun run lint          # oxlint
 bun run format        # oxfmt
 nix build -L .        # production build via the Nix flake
 ```
 
-`PORTFOLIO_BUILD_TIME` (unix seconds) sets the build reference time; without it the build uses the latest committer time of `jj log -r @-` (every parent of a merge, then `git log -1`). The wall clock is never used. `PORTFOLIO_COMMIT` (a hexadecimal commit id) sets the commit shown in the footer status line; without it the build reads the parent commit from jj, then git, and leaves the commit out when neither exists (`src/lib/build-info.ts`). `PORTFOLIO_EXTRA_POSTS_DIR` adds a directory of extra posts (`<slug>/<lang>.mdx`, no local images; replay files resolve against the post's own directory) for tests.
+`PORTFOLIO_BUILD_TIME` (unix seconds) sets the build reference time; without it the build uses the latest committer time of `jj log -r @-` (every parent of a merge, then `git log -1`). The wall clock is never used. `PORTFOLIO_COMMIT` (a hexadecimal commit id) sets the commit shown in the footer status line; without it the build reads the parent commit from jj, then git, and leaves the commit out when neither exists (`src/lib/build-info.ts`). `PORTFOLIO_EXTRA_POSTS_DIR` adds a directory of extra posts (`<slug>/<lang>.mdx`, no local images; replay files resolve against the post's own directory) for tests. `PORTFOLIO_SERVE_ROOT` (an absolute directory) is where the build will be served from, written into the upstreamer fragments; without it they name the absolute path of `dist/`.
 
 ### Testing
 
@@ -56,6 +58,9 @@ dist/
       _md/blog.md, _md/blog/<slug>.md, blog/rss.xml (main) | rss.xml (blog)
   caddy/portfolio.caddy   generated Caddy snippet (see "Web Server")
   caddy/Caddyfile.local   local preview config importing the snippet
+  upstreamer/main.json, upstreamer/blog.json
+                          generated upstreamer route fragments (see "Web Server")
+  upstreamer/local.json   local preview config including the fragments
   **/<file>.{br,zst,gz}   precompressed sidecars of every html/css/js/json/xml/txt/md/svg file
                           in _astro/, static/ and the trees (Brotli 11, zstd 19, gzip 9)
   **/<file>.etag          content-hash ETag sidecars for site/ and static/, sidecars included (not og/)
@@ -69,15 +74,15 @@ dist/
 ## Deployment
 
 - **Nix Configuration**: `/Users/r3dlust/GitHub/nix/hosts/oracle-2/portfolio.nix`
-- **Server**: Caddy serves `dist/` directly.
-- **NixOS module** (`nixosModules.default`): `services.portfolio = { enable; package; domains; blogDomains; virtualHostConfig; }`. It only adds `services.caddy.virtualHosts` (and enables Caddy by default); each host imports the generated snippet with `import <package>/caddy/portfolio.caddy <package> main|blog`. Per-host directives such as `tls` go in `services.caddy.virtualHosts.<host>.extraConfig`, which NixOS merges with the module. There is no service, port or runtime Bun; setting the removed `port`/`host` options fails evaluation with a migration message.
+- **Server**: Caddy (default) or upstreamer serves `dist/` directly.
+- **NixOS module** (`nixosModules.default`): `services.portfolio = { enable; proxy; package; domains; blogDomains; virtualHostConfig; }`. It only adds virtual hosts and enables their server by default. With `proxy = "caddy"` (the default) it adds `services.caddy.virtualHosts`, each importing the generated snippet with `import <package>/caddy/portfolio.caddy <package> main|blog`; per-host directives such as `tls` go in `services.caddy.virtualHosts.<host>.extraConfig`, which NixOS merges with the module. With `proxy = "upstreamer"` it adds `services.upstreamer.virtualHosts`, each with the single route step `{ include = "<package>/upstreamer/main.json"; }` (or `blog.json`); per-host settings such as `tls.acmeCert` go in the same virtual hosts. The host must import upstreamer's NixOS module (an assertion says so), which runs `upstreamer check` over the config when the system is built; the flake has no upstreamer input, and defines the upstreamer virtual hosts only when `services.upstreamer` is declared, since defining an undeclared option fails evaluation even under a false `mkIf`. `virtualHostConfig` is Caddy configuration and must stay empty with upstreamer. There is no service, port or runtime Bun; setting the removed `port`/`host` options fails evaluation with a migration message.
 - **Production URLs**:
   - Portfolio: `r3dlust.com`, `www.r3dlust.com`, `guswid.com`, `www.guswid.com`
   - Blog only: `blog.r3dlust.com`, `blog.guswid.com`
 
 ## Web Server
 
-`dist/caddy/portfolio.caddy` is generated from `dist/site/manifest.json` by `src/caddy/snippet.ts` (Astro integration `caddyConfig()`, the last one in `astro.config.ts`, which also writes the precompressed and ETag sidecars; `bun scripts/caddy.ts [dist]` regenerates all three in a finished build). A site block imports it with `import <dist>/caddy/portfolio.caddy <dist> main|blog`. It implements, in order:
+`dist/caddy/portfolio.caddy` is generated from `dist/site/manifest.json` by `src/caddy/snippet.ts`, and `dist/upstreamer/{main,blog}.json` by `src/upstreamer/fragment.ts`, from the same rule data in `src/lib/serving.ts` (headers, cache and Vary values, content types, internal paths, redirect and negotiation patterns, the paths that differ per host kind). Both are written by the Astro integration `caddyConfig()`, the last one in `astro.config.ts`, which also writes the precompressed and ETag sidecars; `bun scripts/caddy.ts [dist]` regenerates all of them in a finished build. A rule changes in `src/lib/serving.ts` (or `src/lib/agents.ts`), so both servers follow it. A Caddy site block imports the snippet with `import <dist>/caddy/portfolio.caddy <dist> main|blog`. It implements, in order:
 
 - epoch selection (`expression int({time.now.unix}) >= <start>` per epoch) and language selection (`?lang` > cookie `portfolio_lang` > first `Accept-Language` tag `pt*` > `en`), giving the tree `<dist>/site/<epoch>/<host>/<lang>`;
 - markdown negotiation (rules in `src/lib/agents.ts`) on the blog index and posts, served in place from `_md/`;
@@ -87,7 +92,9 @@ dist/
 - `handle_errors 404` with the tree's `404.html`;
 - `file_server` sends the precompressed sidecars, Brotli first, then zstd, then gzip (browsers weigh br and zstd equally, and Brotli 11 is the smallest of the three for every file of the site); each encoding has its own ETag and answers `If-None-Match` with 304. `encode zstd gzip` only compresses what has no sidecar. Sidecar paths (`*.etag`, `*.br`, `*.zst`, `*.gz`) are 404.
 
-HSTS and TLS are left to the deployment. `bun run check:routes [--dist <dir>]` asserts the whole matrix with real requests, including both sides of an epoch gate and posts whose language versions are released at different times (fixture posts in `scripts/fixtures/scheduled-posts/`, built into `dist-routes/`). It also checks `wantsMarkdown()` against the same negotiation table as Caddy, and that every tree has a post page exactly where it has the post's markdown, in the same language.
+The upstreamer fragments implement the same list as route steps, one fragment per host kind, so the host-kind tests of the snippet are decided when the fragment is generated. Epoch gates are `after` matchers; upstreamer reads its clock once per second, so a release goes live up to a second after its start. upstreamer's `path` matcher is case-sensitive where Caddy's is not, so a path differing only in case from a rewritten path (`/BLOG` with markdown wanted, `/Index` for curl) is not rewritten under upstreamer.
+
+HSTS and TLS are left to the deployment. `bun run check:routes [--dist <dir>] [--server caddy|upstreamer]` asserts the whole matrix with real requests, including both sides of an epoch gate and posts whose language versions are released at different times (fixture posts in `scripts/fixtures/scheduled-posts/`, built into `dist-routes/`). It also checks `wantsMarkdown()` against the same negotiation table as Caddy, and that every tree has a post page exactly where it has the post's markdown, in the same language.
 
 ## Version Control
 
@@ -263,6 +270,7 @@ import type { Language } from "./config";
 │   ├── i18n/                # en/ and pt/ (chrome, home, blog, quirks), index.ts: t(), date formatting
 │   ├── integrations/        # font-subsets, dist-layout (dist/static, 404.html, manifest), og-images, caddy, dev-routes
 │   ├── caddy/               # snippet.ts (Caddy config generator), write.ts (dist/caddy/*, precompressed and ETag sidecars)
+│   ├── upstreamer/          # fragment.ts (upstreamer route fragments, local config), write.ts (dist/upstreamer/*)
 │   ├── og/                  # Open Graph images: template.ts (the look), render.ts (satori + resvg), images.ts
 │   ├── lib/
 │   │   ├── config.ts        # site constants (SITE_URL, SITE_TIMEZONE, languages, hosts)
@@ -270,7 +278,8 @@ import type { Language } from "./config";
 │   │   ├── build-info.ts    # version, commit and date shown on the site
 │   │   ├── markdown/        # render.ts (unified + GFM), code.ts (Shiki), images.ts, image-refs.ts
 │   │   ├── machine/         # llms, feeds (sitemap, RSS), curl card, console data, files.ts (endpoint wiring)
-│   │   └── agents.ts        # AI User-Agent list and markdown negotiation rules
+│   │   ├── agents.ts        # AI User-Agent list and markdown negotiation rules
+│   │   └── serving.ts       # web-server rule data shared by the Caddy and upstreamer generators
 │   ├── layouts/Base.astro
 │   ├── components/          # Head, SiteHeader, SiteFooter, Boot, PostCard, ScheduledCard, Toc,
 │   │                        # pages/, home/, figures/, blog/
@@ -338,7 +347,7 @@ Caption of the figure, any number of lines.
 ## Build Notes
 
 - Nix builds use the patched Bun runtime from `nix/bun.nix` (1.4.4 or newer). The flake exports `packages.<system>.bun` and `overlays.default` for consumers, for `aarch64-darwin`, `aarch64-linux` and `x86_64-linux`.
-- `packages.default` is the static `dist/` (no executables): bun2nix installs the dependencies, `bun --bun run build` runs with `PORTFOLIO_BUILD_TIME = self.lastModified` and `PORTFOLIO_COMMIT` set to the flake's revision (the parent commit for a dirty tree), then `check:headings`, `check:meta`, `check:dates` and `check:replays` run before install. On Linux the build sets `LD_LIBRARY_PATH` to libstdc++/libgcc_s for the prebuilt sharp and resvg modules. `checks.<system>.caddy-config` validates the generated Caddy snippet with `caddy validate`.
+- `packages.default` is the static `dist/` (no executables): bun2nix installs the dependencies, `bun --bun run build` runs with `PORTFOLIO_BUILD_TIME = self.lastModified`, `PORTFOLIO_SERVE_ROOT=$out` and `PORTFOLIO_COMMIT` set to the flake's revision (the parent commit for a dirty tree), then `check:headings`, `check:meta`, `check:dates` and `check:replays` run before install. On Linux the build sets `LD_LIBRARY_PATH` to libstdc++/libgcc_s for the prebuilt sharp and resvg modules. `checks.<system>.caddy-config` validates the generated Caddy snippet with `caddy validate`. `checks.<system>.module-eval` evaluates a NixOS host with each `proxy` (upstreamer's options from a stub) and checks the virtual hosts, the assertions, and that every included fragment exists in the package.
 - The flake source is filtered to `package.json`, `bun.lock`, `astro.config.ts`, `tsconfig.json`, `src/`, `blog/`, `public/` and `scripts/`; files needed by the build must be in one of them (and tracked, for `nix build .`).
 - `astro build` runs under Node or Bun (`bun --bun x astro build`) with the same output, except that Node's ICU puts thin spaces around the en dash of a date range where Bun puts plain spaces, and the gzip sidecars differ byte for byte (different zlib builds). Sharp is needed at build time only. Font subsetting uses `harfbuzzjs` and `wawoff2` (WebAssembly, no native code); precompression uses `node:zlib` (Brotli and zstd are built into Node and Bun).
 - `bun.lock` must stay at `lockfileVersion: 1`: `bun2nix` (postinstall) does not read version 2. Do not delete the lockfile; `bun install` keeps the existing version.
