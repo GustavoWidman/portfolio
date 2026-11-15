@@ -1,5 +1,5 @@
 {
-  description = "Gustavo Widman's portfolio and blog: a static site and the Caddy config that serves it";
+  description = "Gustavo Widman's portfolio and blog: a static site and the Caddy and upstreamer configs that serve it";
 
   inputs = {
     bun2nix = {
@@ -84,9 +84,11 @@
             LD_LIBRARY_PATH = lib.makeLibraryPath [ pkgs.stdenv.cc.cc.lib ];
           };
 
+          # The upstreamer fragments name files by absolute path, so they are generated for
+          # the store path the site is installed to.
           buildPhase = ''
             runHook preBuild
-            bun --bun run build
+            PORTFOLIO_SERVE_ROOT=$out bun --bun run build
             runHook postBuild
           '';
 
@@ -112,7 +114,7 @@
           passthru = { inherit buildTime commit; };
 
           meta = {
-            description = "Gustavo Widman's portfolio and blog (static files and Caddy snippet)";
+            description = "Gustavo Widman's portfolio and blog (static files, Caddy snippet, upstreamer fragments)";
             homepage = "https://guswid.com";
             license = lib.licenses.mit;
             platforms = lib.platforms.unix;
