@@ -387,6 +387,102 @@
    }
   ]
  },
+ "gungnir": {
+  "en": [
+   {
+    "depth": 1,
+    "id": "rust-won-and-the-borrow-checker-wasnt-why",
+    "text": "rust won, and the borrow checker wasn't why"
+   },
+   {
+    "depth": 2,
+    "id": "what-i-ran",
+    "text": "what i ran"
+   },
+   {
+    "depth": 2,
+    "id": "most-models-get-it-right-in-any-language",
+    "text": "most models get it right in any language"
+   },
+   {
+    "depth": 2,
+    "id": "the-borrow-checker-almost-never-came-up",
+    "text": "the borrow checker almost never came up"
+   },
+   {
+    "depth": 2,
+    "id": "zig-is-where-the-agents-needed-the-compiler",
+    "text": "zig is where the agents needed the compiler"
+   },
+   {
+    "depth": 2,
+    "id": "python-failed-on-its-own-defaults",
+    "text": "python failed on its own defaults"
+   },
+   {
+    "depth": 2,
+    "id": "so-why-did-rust-win",
+    "text": "so why did rust win"
+   },
+   {
+    "depth": 2,
+    "id": "what-id-take-from-it",
+    "text": "what i'd take from it"
+   },
+   {
+    "depth": 2,
+    "id": "links",
+    "text": "links"
+   }
+  ],
+  "pt": [
+   {
+    "depth": 1,
+    "id": "rust-ganhou-e-não-foi-por-causa-do-borrow-checker",
+    "text": "rust ganhou, e não foi por causa do borrow checker"
+   },
+   {
+    "depth": 2,
+    "id": "o-que-eu-rodei",
+    "text": "o que eu rodei"
+   },
+   {
+    "depth": 2,
+    "id": "a-maioria-dos-modelos-acerta-em-qualquer-linguagem",
+    "text": "a maioria dos modelos acerta em qualquer linguagem"
+   },
+   {
+    "depth": 2,
+    "id": "o-borrow-checker-quase-nunca-apareceu",
+    "text": "o borrow checker quase nunca apareceu"
+   },
+   {
+    "depth": 2,
+    "id": "zig-é-onde-os-agentes-precisaram-do-compilador",
+    "text": "zig é onde os agentes precisaram do compilador"
+   },
+   {
+    "depth": 2,
+    "id": "python-falhou-nos-próprios-padrões",
+    "text": "python falhou nos próprios padrões"
+   },
+   {
+    "depth": 2,
+    "id": "então-por-que-rust-ganhou",
+    "text": "então por que rust ganhou"
+   },
+   {
+    "depth": 2,
+    "id": "o-que-eu-levo-disso",
+    "text": "o que eu levo disso"
+   },
+   {
+    "depth": 2,
+    "id": "links",
+    "text": "links"
+   }
+  ]
+ },
  "hamming-rust": {
   "en": [
    {

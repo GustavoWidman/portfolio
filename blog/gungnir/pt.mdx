@@ -1,0 +1,156 @@
+---
+title: rust ganhou, e não foi por causa do borrow checker
+date: '2026-11-19T09:00:00-03:00'
+excerpt: nove agentes de programação escreveram 5.888 programas em oito linguagens. rust ficou em primeiro para todos eles, e o borrow checker quase nunca apareceu.
+tags: [ai, agents, rust, programming-languages, benchmarks, gungnir]
+---
+
+# rust ganhou, e não foi por causa do borrow checker
+
+quando eu passo um programa pra um agente de programação, ainda sou eu que escolho a linguagem em que ele escreve. tem duas respostas populares pra essa escolha, e elas discordam.
+
+a primeira resposta é escolher o compilador mais rígido que der. rust rejeita classes inteiras de programas antes de rodarem, então um agente que lê os erros do compilador deveria pegar esses erros antes de entregar o programa.
+
+a segunda resposta é escolher a linguagem que o modelo mais viu. python e javascript dominam o código público, então um modelo deveria escrever essas linguagens melhor.
+
+eu queria números pras duas, então construí um benchmark chamado gungnir e fiz um estudo com ele. o artigo, escrito com a Laíza Ribeiro da Silva, é [does the language matter to a coding agent?](https://doi.org/10.2139/ssrn.7695922). este post é a versão com as transcrições.
+
+## o que eu rodei
+
+o gungnir roda o agente de cada fornecedor, o Codex CLI ou o Claude Code, sem interação, dentro de um sandbox bubblewrap. o agente recebe uma tarefa escrita em texto, alguns exemplos visíveis e o comando de build. ele nunca vê os testes.
+
+- nove modelos de quatro fornecedores: GPT-6 Luna, GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, Claude Haiku 5.5, Claude Sonnet 5.5, Claude Opus 5.5, Nemotron 3.5 Super VL e DeepSeek V4.1 Flash, em todos os níveis de raciocínio que cada um oferece.
+- oito linguagens: python, javascript, typescript, go, rust, zig, c e c++, cada uma no toolchain mais novo, só com a biblioteca padrão.
+- oito tarefas: uma calculadora de inteiros grandes, um resolvedor de cobertura exata, consultas de caminho em JSON, um livro-razão baseado em eventos, um diff de linhas, um pequeno motor de regex, um planejador de rotas com limite de combustível e uma máquina virtual de pilha.
+
+cada programa foi avaliado contra 73 a 120 casos de teste ocultos da sua tarefa. cada programa que passou foi cronometrado contra uma implementação de referência na mesma linguagem, num i9-13900K com quatro núcleos tirados do escalonador e travados em 3,0 GHz. depois eu li cada transcrição atrás dos erros de compilador que o agente viu no caminho.
+
+no total foram 5.888 programas, 8,4 bilhões de tokens e 840 horas de agente. o código está [no GitHub](https://github.com/GustavoWidman/gungnir), e todos os registros por trás do artigo, transcrições incluídas, estão [no Zenodo](https://doi.org/10.5281/zenodo.24120074).
+
+## a maioria dos modelos acerta em qualquer linguagem
+
+sete dos nove modelos passaram em todos os testes ocultos em 94% a 99,5% das tentativas. nesse nível, a linguagem não decide se o programa de um agente capaz está correto.
+
+o GPT-6 Luna e o Nemotron passaram em cerca de metade das tentativas, e eles separaram as linguagens. a diferença seguiu a biblioteca padrão, não o sistema de tipos. python, javascript e go trazem inteiros de tamanho ilimitado, e rust, c e c++ não. na calculadora de inteiros grandes, o Luna passou em 80% das tentativas em go e em 27% das tentativas em rust.
+
+a comparação mais limpa é javascript contra typescript. as duas usam o mesmo runtime e a mesma biblioteca padrão, e a única diferença é o verificador de tipos. em 736 tentativas pareadas, 32 passaram só em javascript e 33 passaram só em typescript. o verificador do typescript reportou 1.059 erros, 540 deles de checagem estrita de null, e os programas não acertaram mais por isso.
+
+o nível de raciocínio fechou boa parte da diferença que sobrou. o Luna passou em 35% das tentativas sem raciocínio e em 87% no nível mais alto.
+
+## o borrow checker quase nunca apareceu
+
+se o compilador do rust pegasse os erros dos agentes, as transcrições estariam cheias dos erros dele. não estão. nas 736 sessões em rust, o compilador reportou 78 erros de ownership ou de borrowing, e 682 sessões não receberam nenhum. 530 sessões nunca tiveram um build com falha.
+
+esta é uma sessão inteira do Claude Opus 5.5 na tarefa da máquina de pilha, sem as 89 linhas de rust:
+
+```text title="claude opus 5.5, rust, máquina de pilha, a sessão inteira"
+$ cat > /work/src/main.rs <<'EOF'
+EOF
+cd /work && cargo build --release --offline --quiet 2>&1|head -30; for f in examples/*.in; do ./target/release/solution<$f|cmp -s - ${f%.in}.out||echo FAIL $f; done; ls examples|wc -l
+6
+```
+
+o build não imprimiu nada e nenhum exemplo imprimiu `FAIL`. o 6 é o número de arquivos de exemplo. o programa passou nos 120 testes ocultos, e a sessão levou 42 segundos.
+
+o que continua errado no rust dos agentes é lógica que o compilador não verifica: um caso de borda que a especificação descreve, ou um algoritmo lento demais para a maior entrada.
+
+## zig é onde os agentes precisaram do compilador
+
+todos os modelos tiveram mais builds com falha em zig do que em qualquer outra linguagem. parte disso são as regras do próprio zig, como uma variável local sem uso ou um `var` que nunca muda ser um erro. a parte que eu achei interessante é que os modelos escrevem um zig mais antigo. a biblioteca padrão mudou bastante nas últimas versões, e dos 4.450 erros de zig que os agentes viram, 679 citavam um membro que não existe. na maioria das vezes era uma declaração como `std.io.getStdOut`, que a 0.17 não tem mais, mesmo com o prompt dizendo a versão.
+
+o caso extremo é o Nemotron sem raciocínio, escrevendo a calculadora de inteiros grandes. esta é a sessão inteira:
+
+```replay ./replays/zig-bigint.json
+o Nemotron 3.5 Super VL escreve a calculadora de inteiros grandes em Zig 0.17, sem raciocínio. a figura repete cada comando da sessão de 70 minutos a partir da transcrição.
+
+20: ele decide que o zig não aceita um slice dentro de uma struct. aceita. o erro era um ponto e vírgula.
+50: ele escreveu o operador not do python em zig.
+112: depois de 62 builds com falha, ele decide que o compilador é uma versão cortada.
+143: o compilador é o zig 0.17 normal. o modelo passa a escrever a saída com std.posix.system.write.
+```
+
+no comando 112 ele escreveu "This is a trimmed/non-standard Zig 0.17." não era. depois ele encontrou `std.posix.system.write`, mandou toda a saída por ali e seguiu em frente. 115 builds com falha e 70 minutos depois do início, o programa passou nos 73 testes ocultos.
+
+zig também foi a linguagem mais cara para todos os modelos. o Opus gastou 1,4 vez os tokens de uma linguagem média nela, e o Nemotron gastou 8,7 vezes.
+
+## python falhou nos próprios padrões
+
+python, a linguagem com mais código público, não se saiu melhor que as outras. as tentativas que ela perdeu vieram do runtime, não da tipagem.
+
+o Haiku, o Sonnet e o Opus passaram, cada um, em 117 dos 118 testes ocultos do motor de regex, e os três falharam no mesmo teste. o padrão dele aninha 450 grupos. um parser recursivo descendente gasta três chamadas em cada grupo, e o python para em 1.000 chamadas. os registros guardam qual caso quebrou, mas não o traceback, então eu rodei o programa do Opus naquele caso de novo:
+
+```text title="claude opus 5.5, python, caso oculto 035-deep-nesting"
+$ python3 main.py < 035-deep-nesting.in
+Traceback (most recent call last):
+  File "/work/main.py", line 256, in <module>
+    main()
+    ~~~~^^
+  File "/work/main.py", line 197, in main
+    ast = parse(pat)
+  File "/work/main.py", line 96, in parse
+    r = alt()
+  File "/work/main.py", line 48, in atom
+    r = alt()
+  File "/work/main.py", line 13, in alt
+    alts = [seq()]
+            ~~~^^
+RecursionError: maximum recursion depth exceeded
+```
+
+eu cortei 2.322 linhas do meio. elas são os mesmos três frames se repetindo: `alt`, `seq` e `atom`.
+
+o segundo limite é quantos dígitos o python converte num int. um dos casos ocultos da calculadora é o número 1, escrito com 5.000 zeros à esquerda. este é o programa em python do Nemotron nesse caso:
+
+```text title="nemotron 3.5 super vl, python, caso oculto 002-leading-zeros"
+ValueError: Exceeds the limit (4300 digits) for integer string conversion: value has 5001 digits; use sys.set_int_max_str_digits() to increase the limit
+```
+
+cada limite se aumenta com uma linha, e o segundo erro até diz o nome da função. os programas em python dos modelos mais fracos quebraram num teste oculto em 14% das tentativas, contra 1% em javascript.
+
+e tem a velocidade. os programas em python que passaram rodaram 5,3 vezes mais devagar que os de uma linguagem média, e é isso que explica boa parte dos 78 do python no índice. sem a nota de tempo de execução, o python fica com 110.
+
+## então por que rust ganhou
+
+o índice do gungnir junta cinco medidas numa nota só: se o programa passou, os tokens e o tempo que a sessão levou, a velocidade do programa e a simplicidade do código. uma linguagem média tira 100.
+
+| linguagem | índice | intervalo de 95% |
+| --- | --: | --: |
+| rust | 133 | 116 a 154 |
+| go | 117 | 108 a 127 |
+| c++ | 109 | 97 a 119 |
+| c | 102 | 89 a 113 |
+| javascript | 100 | 89 a 115 |
+| typescript | 95 | 84 a 110 |
+| zig | 78 | 68 a 87 |
+| python | 78 | 64 a 95 |
+
+rust ficou em primeiro para cada um dos nove modelos, e go ficou em segundo para cada um. rust também ficou em primeiro em 94% de 100.000 pesos aleatórios para as cinco medidas, então o resultado não depende de pesar todas igualmente.
+
+é daqui que vem o 133 do rust:
+
+| medida | rust |
+| --- | --: |
+| passa nos testes ocultos | 99 |
+| menos tokens | 120 |
+| sessões mais curtas | 116 |
+| programas mais rápidos | 184 |
+| código mais simples | 164 |
+
+rust passou nos testes tanto quanto uma linguagem média. ele liderou porque os programas dele foram os mais rápidos e tiveram menos pontos de decisão que os de qualquer outra linguagem, e porque as sessões gastaram menos tokens que a maioria. o borrow checker não deixou os programas mais corretos.
+
+## o que eu levo disso
+
+um agente capaz escreve um programa correto em qualquer uma dessas oito linguagens. a linguagem decide quanto custa um programa correto e o quão rápido ele roda. então eu escolheria a linguagem pelo programa, do mesmo jeito que escolheria sem um agente, e lembraria de duas coisas:
+
+- em zig, espere que uma sessão custe de 1,4 a 8,7 vezes os tokens da mesma tarefa em outra linguagem.
+- em python, aumente o limite de recursão e o limite de dígitos quando a entrada puder ser profunda ou longa, ou peça pro agente fazer isso.
+
+este é um estudo, com oito tarefas, nove modelos e dois agentes. o [artigo](https://doi.org/10.2139/ssrn.7695922) tem as estatísticas, inclusive os pontos em que os intervalos são largos.
+
+## links
+
+[o artigo, com a Laíza Ribeiro da Silva](https://doi.org/10.2139/ssrn.7695922)
+
+[gungnir, o código](https://github.com/GustavoWidman/gungnir)
+
+[todos os registros por trás do artigo, transcrições incluídas](https://doi.org/10.5281/zenodo.24120074)

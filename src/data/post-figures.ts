@@ -24,6 +24,45 @@ export interface PostFigures {
 }
 
 export const POST_FIGURES: Readonly<Record<string, PostFigures>> = {
+  gungnir: {
+    list: {
+      value: { en: "133", pt: "133" },
+      label: {
+        en: "rust on the gungnir index, average 100",
+        pt: "rust no índice do gungnir, média 100",
+      },
+    },
+    key: {
+      rows: [
+        {
+          value: { en: "133", pt: "133" },
+          label: {
+            en: "rust on the gungnir index, first for all nine models",
+            pt: "rust no índice do gungnir, primeiro para os nove modelos",
+          },
+          signal: true,
+        },
+        {
+          value: { en: "78", pt: "78" },
+          label: {
+            en: "borrow errors in 736 rust sessions",
+            pt: "erros de borrow em 736 sessões em rust",
+          },
+        },
+        {
+          value: { en: "5,888", pt: "5.888" },
+          label: {
+            en: "programs graded against hidden tests",
+            pt: "programas avaliados contra testes ocultos",
+          },
+        },
+      ],
+      conditions: {
+        en: "9 models · 4 vendors · 8 languages · 8 tasks · Codex CLI and Claude Code · i9-13900K, isolated cores at 3.0 GHz",
+        pt: "9 modelos · 4 fornecedores · 8 linguagens · 8 tarefas · Codex CLI e Claude Code · i9-13900K, núcleos isolados a 3,0 GHz",
+      },
+    },
+  },
   upstreamer: {
     list: {
       value: { en: "41 → 4.15", pt: "41 → 4,15" },

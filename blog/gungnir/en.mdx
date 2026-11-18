@@ -1,0 +1,156 @@
+---
+title: rust won, and the borrow checker wasn't why
+date: '2026-11-19T09:00:00-03:00'
+excerpt: nine coding agents wrote 5,888 programs in eight languages. rust came first for every one of them, and the borrow checker almost never came up.
+tags: [ai, agents, rust, programming-languages, benchmarks, gungnir]
+---
+
+# rust won, and the borrow checker wasn't why
+
+when i hand a program to a coding agent, i still pick the language it writes in. there are two popular answers to that choice, and they disagree.
+
+the first answer is to pick the strictest compiler you can get. rust rejects whole classes of programs before they run, so an agent that reads compiler errors should catch those mistakes before they ship.
+
+the second answer is to pick the language the model has seen the most. python and javascript dominate public code, so a model should write them best.
+
+i wanted numbers for both, so i built a benchmark called gungnir and ran a study with it. the paper, written with Laíza Ribeiro da Silva, is [does the language matter to a coding agent?](https://doi.org/10.2139/ssrn.7695922). this post is the version with the transcripts left in.
+
+## what i ran
+
+gungnir runs each vendor's own agent, the Codex CLI or Claude Code, non-interactively inside a bubblewrap sandbox. the agent gets a task written in prose, a few visible examples and the build command. it never sees the tests.
+
+- nine models from four vendors: GPT-6 Luna, GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, Claude Haiku 5.5, Claude Sonnet 5.5, Claude Opus 5.5, Nemotron 3.5 Super VL and DeepSeek V4.1 Flash, at every reasoning effort each one offers.
+- eight languages: python, javascript, typescript, go, rust, zig, c and c++, each on its newest toolchain, with the standard library only.
+- eight tasks: a big-integer calculator, an exact-cover solver, JSON path queries, an event-sourced ledger, a line diff, a small regex engine, a route planner with fuel limits and a stack virtual machine.
+
+every program was graded against 73 to 120 hidden test cases for its task. every program that passed was timed against a reference implementation in the same language, on an i9-13900K with four cores taken away from the scheduler and pinned at 3.0 GHz. then i parsed every transcript for the compiler errors the agent saw on the way.
+
+that came to 5,888 programs, 8.4 billion tokens and 840 hours of agent time. the code is [on GitHub](https://github.com/GustavoWidman/gungnir), and every record behind the paper, transcripts included, is [on Zenodo](https://doi.org/10.5281/zenodo.24120074).
+
+## most models get it right in any language
+
+seven of the nine models passed every hidden test in 94% to 99.5% of their trials. at that rate, the language doesn't decide whether a capable agent's program is correct.
+
+GPT-6 Luna and Nemotron passed about half of their trials, and they did separate the languages. the split followed the standard library, not the type system. python, javascript and go ship integers of unbounded size, and rust, c and c++ don't. on the big-integer calculator, Luna passed 80% of its go trials and 27% of its rust trials.
+
+the cleanest comparison is javascript against typescript. they share a runtime and a standard library, and the only difference is the type checker. across 736 matched trials, 32 passed only in javascript and 33 passed only in typescript. the typescript checker reported 1,059 errors, 540 of them strict null checks, and the programs were no more often correct for it.
+
+reasoning effort closed most of the remaining gap. Luna passed 35% of its trials with no reasoning and 87% at its highest setting.
+
+## the borrow checker almost never came up
+
+if the rust compiler caught the agents' mistakes, the transcripts would be full of its errors. they aren't. across all 736 rust sessions, the compiler reported 78 ownership or borrowing errors, and 682 sessions never got a single one. 530 sessions never had a failing build at all.
+
+this is a whole Claude Opus 5.5 session on the stack machine task, with the 89 lines of rust taken out:
+
+```text title="claude opus 5.5, rust, stack machine, the whole session"
+$ cat > /work/src/main.rs <<'EOF'
+EOF
+cd /work && cargo build --release --offline --quiet 2>&1|head -30; for f in examples/*.in; do ./target/release/solution<$f|cmp -s - ${f%.in}.out||echo FAIL $f; done; ls examples|wc -l
+6
+```
+
+the build printed nothing and no example printed `FAIL`. the 6 is the number of example files. the program passed all 120 hidden tests, and the session took 42 seconds.
+
+what stays wrong in the agents' rust is logic the compiler can't check: an edge case the spec spells out, or an algorithm too slow for the largest input.
+
+## zig is where the agents needed the compiler
+
+every model hit more failing builds in zig than in any other language. part of that is zig's own rules, like an unused local or a `var` that's never mutated being an error. the part i found interesting is that the models write an older zig. its standard library changed a lot in the last few releases, and of the 4,450 zig errors the agents saw, 679 named a member that doesn't exist. most often it was a declaration like `std.io.getStdOut` that 0.17 no longer has, even though the prompt names the version.
+
+the extreme case is Nemotron with no reasoning, writing the big-integer calculator. this is the whole session:
+
+```replay ./replays/zig-bigint.json
+Nemotron 3.5 Super VL writes the big-integer calculator in Zig 0.17, with no reasoning. the figure replays every command of the 70-minute session from its transcript.
+
+20: it decides zig can't put a slice in a struct. zig can. the error was a semicolon.
+50: it wrote the python operator not in zig.
+112: 62 failed builds in, it decides the compiler is a trimmed build.
+143: the compiler is the standard zig 0.17. the model writes its output with std.posix.system.write instead.
+```
+
+at command 112 it wrote "This is a trimmed/non-standard Zig 0.17." it wasn't. it then found `std.posix.system.write`, sent all its output through it, and kept going. 115 failed builds and 70 minutes after it started, its program passed all 73 hidden tests.
+
+zig was also the most expensive language for every model. Opus spent 1.4 times the tokens of an average language on it, and Nemotron spent 8.7 times.
+
+## python failed on its own defaults
+
+python, the language with the most public code, did no better than the others. the trials it lost came from its runtime, not its typing.
+
+Haiku, Sonnet and Opus each passed 117 of the 118 hidden tests for the regex engine, and all three failed the same test. its pattern nests 450 groups. a recursive-descent parser spends three calls on each group, and python stops at 1,000 calls. the records keep which case crashed but not the traceback, so i ran Opus's program on that case again:
+
+```text title="claude opus 5.5, python, hidden case 035-deep-nesting"
+$ python3 main.py < 035-deep-nesting.in
+Traceback (most recent call last):
+  File "/work/main.py", line 256, in <module>
+    main()
+    ~~~~^^
+  File "/work/main.py", line 197, in main
+    ast = parse(pat)
+  File "/work/main.py", line 96, in parse
+    r = alt()
+  File "/work/main.py", line 48, in atom
+    r = alt()
+  File "/work/main.py", line 13, in alt
+    alts = [seq()]
+            ~~~^^
+RecursionError: maximum recursion depth exceeded
+```
+
+i cut 2,322 lines out of the middle of it. they are the same three frames repeating: `alt`, `seq` and `atom`.
+
+the second limit is how many digits python turns into an int. one hidden case for the calculator is the number 1, written with 5,000 leading zeros. this is Nemotron's python program on it:
+
+```text title="nemotron 3.5 super vl, python, hidden case 002-leading-zeros"
+ValueError: Exceeds the limit (4300 digits) for integer string conversion: value has 5001 digits; use sys.set_int_max_str_digits() to increase the limit
+```
+
+each limit takes one line to raise, and the second error names the function. the weaker models' python programs crashed on a hidden test in 14% of their trials, against 1% in javascript.
+
+then there's speed. python's passing programs ran 5.3 times slower than an average language's, which is most of why python scored 78 on the index. without the runtime score, python scores 110.
+
+## so why did rust win
+
+the gungnir index folds five measurements into one score: whether the program passed, the tokens and the time the session took, how fast the program ran, and how simple its code was. an average language scores 100.
+
+| language | index | 95% interval |
+| --- | --: | --: |
+| rust | 133 | 116 to 154 |
+| go | 117 | 108 to 127 |
+| c++ | 109 | 97 to 119 |
+| c | 102 | 89 to 113 |
+| javascript | 100 | 89 to 115 |
+| typescript | 95 | 84 to 110 |
+| zig | 78 | 68 to 87 |
+| python | 78 | 64 to 95 |
+
+rust came first for every one of the nine models, and go came second for every one. rust also came first in 94% of 100,000 random weightings of the five measurements, so the result doesn't depend on weighting them equally.
+
+this is where rust's 133 comes from:
+
+| measurement | rust |
+| --- | --: |
+| passes the hidden tests | 99 |
+| fewer tokens | 120 |
+| shorter sessions | 116 |
+| faster programs | 184 |
+| simpler code | 164 |
+
+rust passed as often as an average language. it led because its programs ran the fastest and had the fewest decision points of any language, and because its sessions cost fewer tokens than most. the borrow checker didn't make its programs more correct.
+
+## what i'd take from it
+
+a capable agent will write a correct program in any of these eight languages. the language decides what a correct program costs and how fast it runs. so i'd pick the language for the program, the same way i would without an agent, and keep two things in mind:
+
+- in zig, expect a session to cost 1.4 to 8.7 times the tokens of the same task in another language.
+- in python, raise the recursion limit and the digit limit when the input can be deep or long, or tell the agent to.
+
+this is one study, with eight tasks, nine models and two agents. the [paper](https://doi.org/10.2139/ssrn.7695922) has the statistics, including the places where the intervals are wide.
+
+## links
+
+[the paper, with Laíza Ribeiro da Silva](https://doi.org/10.2139/ssrn.7695922)
+
+[gungnir, the code](https://github.com/GustavoWidman/gungnir)
+
+[every record behind the paper, transcripts included](https://doi.org/10.5281/zenodo.24120074)
