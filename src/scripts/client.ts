@@ -10,6 +10,7 @@ import { init as consoleTrigger } from "./features/console-trigger";
 import { init as countdown } from "./features/countdown";
 import { init as language } from "./features/language";
 import { init as led } from "./features/led";
+import { init as replay } from "./features/replay";
 import { init as reveal } from "./features/reveal";
 import { init as theme } from "./features/theme";
 
@@ -22,6 +23,7 @@ const FEATURES: readonly (readonly [selector: string, init: () => void])[] = [
   ["[data-copy-code]", code],
   ["[data-countdown]", countdown],
   ["[data-console-open]", consoleTrigger],
+  ["figure[data-replay]", replay],
 ];
 
 for (const [selector, init] of FEATURES) {

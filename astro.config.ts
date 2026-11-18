@@ -16,9 +16,10 @@ const root = fileURLToPath(new URL(".", import.meta.url));
 
 /**
  * Vite wraps every dynamic `import()` in a helper (about 1.7 KB minified) that preloads the
- * imported chunk's CSS and JS dependencies. The only dynamic import here is the console chunk,
- * whose CSS is inlined and whose one dependency is the client module that imports it, so the
- * helper is replaced by a plain call.
+ * imported chunk's CSS and JS dependencies. The dynamic imports here are the console and the
+ * replay player chunks: neither has CSS to preload (the console inlines its stylesheet, the
+ * player's rules are in the page's) and their one dependency is the client module that imports
+ * them, so the helper is replaced by a plain call.
  */
 function plainDynamicImports(): PluginOption {
   const id = "\0vite/preload-helper.js";
