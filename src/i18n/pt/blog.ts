@@ -32,6 +32,18 @@ export const blog: Widen<typeof en> = {
     backToBlog: "Todos os textos",
     copyCode: "Copiar",
     copiedCode: "Copiado",
+    replay: {
+      play: "Reproduzir",
+      pause: "Pausar",
+      again: "Repetir",
+      position: "comando {n} de {total}",
+      seek: "Comando da sessão",
+      failed: "builds com falha",
+      commands: "comandos",
+      minutes: "minutos",
+      passed: "testes ocultos aprovados",
+      notes: "Momentos da sessão",
+    },
     markdown: "Fonte em Markdown",
   },
   scheduled: {

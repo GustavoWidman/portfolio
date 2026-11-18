@@ -27,7 +27,8 @@ const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
 /**
  * Directories scanned for posts. `blog/` is always first; `PORTFOLIO_EXTRA_POSTS_DIR`
  * adds another directory with the same `<slug>/<lang>.mdx` layout (used by tests to
- * inject posts without touching `blog/`). Extra posts cannot reference local images.
+ * inject posts without touching `blog/`). Extra posts cannot reference local images; their
+ * replay files resolve against their own directory.
  */
 export function postDirectories(root: string = process.cwd()): string[] {
   const dirs = [resolve(root, "blog")];

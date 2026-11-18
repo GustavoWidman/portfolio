@@ -9,6 +9,7 @@ import type { Element, ElementContent, Root, RootContent } from "hast";
 
 import { READING_WPM } from "../config";
 import { parseCodeMeta, renderCodeBlock } from "./code";
+import { parseReplayBlock, REPLAY_LANG, replaySource } from "./replay-refs";
 
 /** One heading of the table of contents. `html` keeps inline code as `<code>`. */
 export interface TocEntry {
@@ -35,6 +36,8 @@ export interface RenderedMarkdown {
   /** Every heading id (h1–h6), in document order. */
   headingIds: { depth: number; id: string; text: string }[];
   images: PostImageRef[];
+  /** Project-relative paths of the replay files, resolved later by `replays.ts`. */
+  replays: string[];
   /** Words of prose (fenced code excluded). */
   words: number;
   readingMinutes: number;
@@ -171,7 +174,8 @@ function countWords(text: string): number {
  *   drawn by CSS and named by `aria-label` (generated content is not a dependable name), so
  *   the heading's text stays exactly the post's. h4–h6 wrap their content in
  *   `<a class="heading-anchor" href="#id">`.
- * - Fenced code becomes a Shiki `figure.code-block` (see `code.ts`).
+ * - Fenced code becomes a Shiki `figure.code-block` (see `code.ts`), except a ` ```replay `
+ *   block, which becomes a placeholder for a session replay (see `replays.ts`).
  * - An image on a line of its own becomes `figure.post-image` (splitting its paragraph)
  *   with a caption from the image title, else its alt text; no caption when alt is empty.
  * - External links (`^\w+:` or `//`) open in a new tab.
@@ -187,6 +191,7 @@ export async function renderMarkdown(
   const toc: TocEntry[] = [];
   const headingIds: RenderedMarkdown["headingIds"] = [];
   const images: PostImageRef[] = [];
+  const replays: string[] = [];
   const section = [0, 0];
   let proseText = "";
 
@@ -226,6 +231,21 @@ export async function renderMarkdown(
         const meta = (code.data as { meta?: string } | undefined)?.meta;
         // mdast-util-to-hast appends a newline to every fenced block; the block has none.
         const value = toString(code).replace(/\n$/, "");
+        if (lang === REPLAY_LANG) {
+          const source = replaySource(meta);
+          if (!source) throw new Error(`${options.postDir}: a replay block names no ./ file`);
+          const block = parseReplayBlock(`${options.postDir}/${source.slice(2)}`, value);
+          proseText += ` ${block.caption} ${block.notes.map((note) => note.text).join(" ")}`;
+          replays.push(block.path);
+          next.push({
+            type: "element",
+            tagName: "figure",
+            properties: { dataReplaySrc: block.path },
+            children: [],
+            data: { replay: block } as Element["data"],
+          });
+          continue;
+        }
         next.push(
           await renderCodeBlock({
             code: value,
@@ -344,6 +364,7 @@ export async function renderMarkdown(
     toc,
     headingIds,
     images,
+    replays,
     words,
     readingMinutes: Math.max(1, Math.ceil(words / READING_WPM)),
   };

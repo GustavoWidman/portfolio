@@ -10,6 +10,7 @@ import { fontSubsets } from "./src/integrations/font-subsets";
 import { openGraphImages } from "./src/integrations/og-images";
 import { SITE_URL } from "./src/lib/config";
 import { postImagesPlugin } from "./src/lib/markdown/image-refs";
+import { postReplaysPlugin } from "./src/lib/markdown/replay-refs";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 
@@ -51,7 +52,7 @@ export default defineConfig({
   // `caddyConfig` hashes every file in dist/, so it comes after both.
   integrations: [fontSubsets(), distLayout(), openGraphImages(), caddyConfig(), devRoutes()],
   vite: {
-    plugins: [postImagesPlugin(root), plainDynamicImports()],
+    plugins: [postImagesPlugin(root), postReplaysPlugin(root), plainDynamicImports()],
     build: {
       // Never inline scripts or assets: the client module stays one shared, cacheable file.
       assetsInlineLimit: 0,

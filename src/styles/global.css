@@ -156,6 +156,16 @@
   --t-num: #7b3daa;
   --t-com: #5c6169;
   --t-attr: #a33a3a;
+
+  /* The screen of a session replay (blog.css) is dark in both themes; print gives it paper. */
+  --screen: #15171b;
+  --screen-rule: #2a2d33;
+  --screen-fg: #ecedef;
+  --screen-2: #b2b7be;
+  --screen-3: #8d939c;
+  --screen-fault: #f97066;
+  --screen-signal: #ffb224;
+  --screen-wash: rgb(255 178 36 / 0.16);
 }
 
 :root[data-theme="light"] {

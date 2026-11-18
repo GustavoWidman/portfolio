@@ -8,6 +8,12 @@ declare module "virtual:post-images" {
   export default images;
 }
 
+declare module "virtual:post-replays" {
+  /** Every replay file referenced by a post, keyed by project-relative path. */
+  const replays: Record<string, import("./lib/markdown/replay-refs").ReplayAsset>;
+  export default replays;
+}
+
 declare module "wawoff2" {
   /** WOFF2 to OpenType. */
   export function decompress(woff2: Uint8Array): Promise<Uint8Array>;

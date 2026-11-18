@@ -1,6 +1,9 @@
+import { dirname } from "node:path";
+
 import { t } from "../i18n";
 import { resolveLocalImages } from "./markdown/images";
 import { bodyHtml, renderMarkdown } from "./markdown/render";
+import { resolveReplays } from "./markdown/replays";
 import type { HostKind } from "./config";
 import type { TocEntry } from "./markdown/render";
 import type { Post } from "./posts";
@@ -17,11 +20,13 @@ const cache = new Map<string, Promise<PreparedPost>>();
 async function prepare(post: Post): Promise<PreparedPost> {
   const labels = t(post.lang).post;
   const rendered = await renderMarkdown(post.body, {
-    postDir: `blog/${post.slug}`,
+    // The directory of the source file: `blog/<slug>`, or the extra posts directory in tests.
+    postDir: dirname(post.filePath),
     labels: { copyCode: labels.copyCode, copiedCode: labels.copiedCode },
     warn: (message) => console.warn(`[${post.id}] ${message}`),
   });
   await resolveLocalImages(rendered.tree);
+  resolveReplays(rendered.tree, labels.replay);
   return {
     toc: rendered.toc,
     readingMinutes: rendered.readingMinutes,

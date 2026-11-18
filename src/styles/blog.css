@@ -747,6 +747,374 @@ html:not(.js) .code-block-copy {
   }
 }
 
+/* ------------------------------------------------------------ session replays */
+/*
+ * A coding agent's session, replayed from its transcript (`src/lib/markdown/replays.ts`
+ * builds it, `src/scripts/replay.ts` plays it). Without the player it shows the end of the
+ * session; `data-ready` brings the controls, `data-active` a session in progress.
+ */
+.replay {
+  min-width: 0;
+  margin: 2em 0;
+  border: 1px solid var(--rule-2);
+  background: var(--bg-sheet);
+}
+
+.replay__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 38px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg);
+  font: 400 var(--fs-meta) / 1.35 var(--mono);
+  color: var(--fg-3);
+}
+
+.replay__meta {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--fg-2);
+}
+
+.replay__pos {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.replay__screen {
+  position: relative;
+  background: var(--screen);
+  color: var(--screen-fg);
+}
+
+.replay__term {
+  --rows: 18;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: calc(var(--rows) * 1.6em + 30px);
+  padding: 14px 18px 16px;
+  overflow: hidden;
+  font: 400 var(--fs-meta) / 1.6 var(--mono);
+  font-variant-ligatures: none;
+}
+
+.rl {
+  flex: none;
+  overflow: hidden;
+  white-space: pre;
+  text-overflow: ellipsis;
+}
+
+.rl__p {
+  color: var(--screen-3);
+}
+
+.rl--err {
+  color: var(--screen-fault);
+}
+
+.rl--say {
+  padding: 6px 0 4px;
+  white-space: pre-wrap;
+  font-size: var(--fs-ui);
+  line-height: 1.5;
+}
+
+.rl--say::before {
+  content: "› ";
+  color: var(--screen-signal);
+}
+
+.rl--say mark {
+  background: var(--screen-wash);
+  color: var(--screen-signal);
+}
+
+/* The author's note on the moment playing, over the top of the screen. */
+.replay__note {
+  position: absolute;
+  inset: 0 0 auto;
+  margin: 0;
+  padding: 16px 18px 28px;
+  background: linear-gradient(var(--screen) 72%, transparent);
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--screen-fg);
+  text-wrap: balance;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+
+.replay__note[data-on] {
+  opacity: 1;
+}
+
+.replay__end {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 18px 14px;
+  border-top: 1px solid var(--screen-rule);
+  transition:
+    opacity var(--dur-3) var(--ease-out),
+    transform var(--dur-3) var(--ease-out);
+}
+
+.replay[data-active] .replay__end:not([data-on]) {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.replay__end-v {
+  font-size: var(--fs-sec);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  color: var(--screen-signal);
+}
+
+.replay__end-v small {
+  font-size: 0.5em;
+  letter-spacing: 0;
+  color: var(--screen-3);
+}
+
+.replay__end-l {
+  font: 500 var(--fs-label) / 1.3 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--screen-2);
+}
+
+/* Barcode: a short tick per command, a red one per failed build, the notes in the accent. */
+/* Clipped: the playhead at rest sits at the end of the track, past the figure's edge. */
+.replay__track {
+  position: relative;
+  padding: 10px 14px;
+  overflow: hidden;
+  border-top: 1px solid var(--rule);
+}
+
+.replay__bars {
+  display: block;
+  width: 100%;
+  height: 22px;
+  overflow: visible;
+}
+
+.replay__bars path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.replay__ok {
+  stroke: var(--rule-2);
+  stroke-width: 1;
+}
+
+.replay__fail {
+  stroke: var(--fault);
+  stroke-width: 1.5;
+}
+
+.replay__marks-t {
+  stroke: var(--signal);
+  stroke-width: 3;
+}
+
+/* What is still to play is dimmed; the playhead marks where the replay stands. */
+.replay__rest,
+.replay__ph {
+  position: absolute;
+  inset: 6px 14px;
+  pointer-events: none;
+}
+
+.replay__rest {
+  background: var(--bg-sheet);
+  opacity: 0.75;
+  transform: scaleX(0);
+  transform-origin: right;
+}
+
+.replay__ph {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.replay__ph::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px;
+  width: 2px;
+  background: var(--fg);
+}
+
+.replay[data-active] .replay__ph {
+  opacity: 1;
+}
+
+.replay__seek {
+  position: absolute;
+  inset: 0 8px;
+  width: calc(100% - 16px);
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.replay__track:has(.replay__seek:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.replay__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--rule);
+}
+
+.replay__play {
+  min-width: 84px;
+  padding: 7px 12px;
+  border: 1px solid var(--rule-2);
+  background: var(--bg-sheet);
+  font: 500 var(--fs-label) / 1 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+  cursor: pointer;
+  transition:
+    color var(--dur-1),
+    border-color var(--dur-1);
+}
+
+.replay__play:hover {
+  border-color: var(--fg-3);
+  color: var(--fg);
+}
+
+.replay:not([data-ready]) :is(.replay__play, .replay__seek) {
+  display: none;
+}
+
+.replay__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  margin: 0 0 0 auto;
+  font: 400 var(--fs-meta) / 1.3 var(--mono);
+}
+
+.replay__stats div {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.replay__stats dt {
+  color: var(--fg-3);
+}
+
+.replay__stats dd {
+  margin: 0;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.replay__stats [data-replay-fails] {
+  color: var(--fault);
+}
+
+.prose .replay__notes {
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+
+.prose .replay__notes li {
+  margin: 0;
+  padding: 0;
+}
+
+.replay__notes button {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  width: 100%;
+  padding: 7px 14px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--fs-ui);
+  line-height: 1.5;
+  text-align: left;
+  color: var(--fg-2);
+  transition:
+    color var(--dur-1),
+    background-color var(--dur-1);
+}
+
+.replay__notes button:not(:disabled) {
+  cursor: pointer;
+}
+
+.replay__notes button:not(:disabled):hover,
+.replay__notes button[aria-current] {
+  background: var(--hover);
+  color: var(--fg);
+}
+
+.replay__at {
+  flex: none;
+  min-width: 4ch;
+  font: 500 var(--fs-meta) / 1.5 var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--fg-3);
+}
+
+.replay__notes button[aria-current] .replay__at {
+  color: var(--signal-ink);
+}
+
+.replay figcaption {
+  counter-increment: figure;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--rule);
+  font-size: var(--fs-ui);
+  line-height: 1.5;
+  color: var(--fg-3);
+}
+
+.replay figcaption::before {
+  content: "Fig. " counter(figure);
+  margin-right: 10px;
+  font: 500 var(--fs-label) / 1.4 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
 /* ------------------------------------------------------------ end of post */
 .post-end {
   margin-top: 64px;
@@ -1019,6 +1387,64 @@ html:not(.js) .code-block-copy {
     margin-inline: calc(-1 * var(--gx));
   }
 
+  .replay {
+    margin-inline: calc(-1 * var(--gx));
+    border-inline: 0;
+  }
+
+  .replay__head {
+    padding-inline: var(--gx);
+  }
+
+  .replay__pos {
+    display: none;
+  }
+
+  .replay__term {
+    --rows: 13;
+    padding-inline: var(--gx);
+    font-size: var(--fs-label);
+  }
+
+  .rl--say {
+    font-size: var(--fs-meta);
+  }
+
+  .replay__note {
+    padding-inline: var(--gx);
+    font-size: var(--fs-lead);
+  }
+
+  .replay__end {
+    padding-inline: var(--gx);
+  }
+
+  .replay__track {
+    padding: 14px var(--gx);
+  }
+
+  .replay__rest,
+  .replay__ph {
+    inset: 10px var(--gx);
+  }
+
+  .replay__bar,
+  .replay figcaption {
+    padding-inline: var(--gx);
+  }
+
+  .replay__play {
+    min-height: 40px;
+  }
+
+  .replay__stats {
+    margin-left: 0;
+  }
+
+  .replay__notes button {
+    padding: 9px var(--gx);
+  }
+
   .post-image figcaption {
     padding-inline: var(--gx);
   }
@@ -1069,7 +1495,32 @@ html:not(.js) .code-block-copy {
 
   .code-block,
   .post-image,
+  .replay,
   .table-wrap {
     break-inside: avoid;
+  }
+
+  /* The replay prints at rest, dark on paper. */
+  .replay {
+    --screen: transparent;
+    --screen-rule: var(--rule);
+    --screen-fg: var(--fg);
+    --screen-2: var(--fg-2);
+    --screen-3: var(--fg-3);
+    --screen-fault: var(--fault);
+    --screen-signal: var(--signal-ink);
+    --screen-wash: transparent;
+  }
+
+  .replay__screen {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .replay__note,
+  .replay__play,
+  .replay__seek,
+  .replay__ph,
+  .replay__rest {
+    display: none;
   }
 }

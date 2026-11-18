@@ -30,6 +30,18 @@ export const blog = {
     backToBlog: "All writing",
     copyCode: "Copy",
     copiedCode: "Copied",
+    replay: {
+      play: "Play",
+      pause: "Pause",
+      again: "Replay",
+      position: "command {n} of {total}",
+      seek: "Command of the session",
+      failed: "failed builds",
+      commands: "commands",
+      minutes: "minutes",
+      passed: "hidden tests passed",
+      notes: "Moments of the session",
+    },
     markdown: "Markdown source",
   },
   scheduled: {
