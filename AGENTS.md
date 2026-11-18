@@ -24,14 +24,17 @@ bun run check:headings  # built heading ids vs scripts/fixtures/heading-ids.json
 bun run check:dates   # publication-date assertions, default TZ and TZ=UTC
 bun run check:meta    # head tags, JSON-LD and Open Graph images of every built page (run after build)
 bun run check:routes  # Caddy route matrix on dist/ + epoch gate on dist-routes/ (run after build; needs caddy)
+bun run check:replays # replay model assertions, plus every built replay figure against its data (after build)
 bun run og:preview    # render every Open Graph card into dist-og/ (template review, no build)
+bun scripts/replay-from-gungnir.ts <trial dir> --out blog/<slug>/replays/<name>.json --meta … --quote …
+                      # session replay of one released gungnir trial (see "Session Replays")
 caddy run --config dist/caddy/Caddyfile.local   # preview: main host :4801, blog host :4802 (from the project root)
 bun run lint          # oxlint
 bun run format        # oxfmt
 nix build -L .        # production build via the Nix flake
 ```
 
-`PORTFOLIO_BUILD_TIME` (unix seconds) sets the build reference time; without it the build uses the latest committer time of `jj log -r @-` (every parent of a merge, then `git log -1`). The wall clock is never used. `PORTFOLIO_COMMIT` (a hexadecimal commit id) sets the commit shown in the footer status line; without it the build reads the parent commit from jj, then git, and leaves the commit out when neither exists (`src/lib/build-info.ts`). `PORTFOLIO_EXTRA_POSTS_DIR` adds a directory of extra posts (`<slug>/<lang>.mdx`, no local images) for tests.
+`PORTFOLIO_BUILD_TIME` (unix seconds) sets the build reference time; without it the build uses the latest committer time of `jj log -r @-` (every parent of a merge, then `git log -1`). The wall clock is never used. `PORTFOLIO_COMMIT` (a hexadecimal commit id) sets the commit shown in the footer status line; without it the build reads the parent commit from jj, then git, and leaves the commit out when neither exists (`src/lib/build-info.ts`). `PORTFOLIO_EXTRA_POSTS_DIR` adds a directory of extra posts (`<slug>/<lang>.mdx`, no local images; replay files resolve against the post's own directory) for tests.
 
 ### Testing
 
@@ -41,7 +44,8 @@ No test framework is configured; checks are standalone scripts in `scripts/`. Wh
 
 ```
 dist/
-  _astro/                 the client module and its chunks, the subset fonts, optimized images (immutable)
+  _astro/                 the client module and its chunks, the subset fonts, optimized images,
+                          replay data (`<name>.<hash>.json`) (immutable)
   static/                 files from public/ (favicon, résumé PDFs, robots.txt)
   site/manifest.json      epochs (name, start), hosts, languages, machine file names, og images
   site/<epoch>/og/        Open Graph images released in that epoch (served at /og/<file>)
@@ -190,7 +194,7 @@ import type { Language } from "./config";
   - `home.css`: home page. `blog.css`: blog index and posts (with the post's print rules). `post-list.css`: post cards, on the home page and the blog index. `quirks.css`: boot screen and 404 page, on every page.
   - `console.css`: the console panel, imported with `?inline` by `src/scripts/console.ts`, so it arrives with the console chunk.
 - `Base.astro` inlines the stylesheets of a page kind into one `<style>` in the head (`?inline` imports, `PAGE_STYLES`), so the first paint needs no request after the page itself. Every page is rendered by one route module, so a stylesheet imported from a component would be merged into one file served to all pages. A new stylesheet is added to `PAGE_STYLES`, never imported from a component.
-- Colors are tokens on `:root`, redefined for `[data-theme="dark"]` and for `prefers-color-scheme: dark` without an explicit `data-theme="light"`, on screens only: a page prints dark on white in either theme. One accent (`--signal`, `--signal-ink` for text) marks the subject of a figure, one key value and focus.
+- Colors are tokens on `:root`, redefined for `[data-theme="dark"]` and for `prefers-color-scheme: dark` without an explicit `data-theme="light"`, on screens only: a page prints dark on white in either theme. One accent (`--signal`, `--signal-ink` for text) marks the subject of a figure, one key value and focus. The `--screen-*` tokens (the screen of a session replay) are dark in both themes and become paper in print.
 - Every font size is a `--fs-*` token. Layout uses `--maxw`, `--gx` (frame gutter), `--rail`, `--gap` and `--gut` (gap at the midline).
 - Fonts are Geist and Geist Mono, self-hosted variable `woff2` files from `@fontsource-variable/*`, declared in `global.css` and preloaded in `Head.astro`. No page requests another origin. The Open Graph renderer reads the package files (`OG_FONTS` in `src/og/template.ts`).
 - `fontSubsets()` (`src/integrations/font-subsets.ts`) subsets both files before Vite runs (harfbuzz and woff2 in WebAssembly, every layout feature kept) to printable ASCII, every character of the text files in `src/` and `blog/`, and what Intl writes for dates in both languages; an alias makes the stylesheet and the preloads use the subsets. After the build it fails if any page, stylesheet or script uses a character the full fonts have and the subsets lack.
@@ -213,13 +217,13 @@ import type { Language } from "./config";
 
 - `src/scripts/client.ts` is the only deferred module: a registry of `[selector, init]` pairs. A feature's `init` runs only when the page has an element matching its selector.
 - Each feature is a module in `src/scripts/features/` exporting `init`. Features own their elements and reach each other only through exported functions. Shared helpers are in `src/scripts/util.ts`.
-- Features and selectors: `theme` (`[data-theme-toggle]`), `language` (`a[data-lang-switch]`), `led` (`[data-led]`), `reveal` (`[data-reveal]`), `boot` (`[data-boot]`), `code` (`[data-copy-code]`), `countdown` (`[data-countdown]`), `console-trigger` (`[data-console-open]`).
+- Features and selectors: `theme` (`[data-theme-toggle]`), `language` (`a[data-lang-switch]`), `led` (`[data-led]`), `reveal` (`[data-reveal]`), `boot` (`[data-boot]`), `code` (`[data-copy-code]`), `countdown` (`[data-countdown]`), `console-trigger` (`[data-console-open]`), `replay` (`figure[data-replay]`).
 - Component scripts: the hero scope's cursor (`features/scope-cursor.ts`, imported by `ScopeFigure.astro`) and the readouts' count-up (`features/readouts-count.ts`, imported by `Readouts.astro`) are separate modules that only the home page loads.
 - Theme state is one value, `light | dark | system`: `data-theme` on `<html>` holds an explicit choice (mirrored in localStorage `theme`), its absence means `system`. The button follows an OS change under `system`.
 - A page restored from the back/forward cache (`pageshow` with `persisted`) re-applies the stored theme and reloads when the language cookie no longer matches it.
 - With cookies refused, the language switch navigates to `?lang=` so the choice still holds for that page.
 - Same-origin page links are prefetched by Speculation Rules with `moderate` eagerness (`Head.astro`; pointer rest or touch start). Documents are only fetched, never prerendered: a prerender would run the head script and the client module early (boot cookie, LED blink, language reload, theme). Links with an extension and the language links are excluded.
-- The module stays under 6 KB minified with every feature. The console is a separate chunk loaded on first use; `astro.config.ts` replaces Vite's dynamic-import preload helper with a plain call, because the chunk has no CSS of its own and its one dependency is the module that imports it.
+- The module stays under 6 KB minified with every feature. The console and the replay player are separate chunks: the console loads on first use, the player when a replay figure comes within a screen of the viewport. `astro.config.ts` replaces Vite's dynamic-import preload helper with a plain call, because neither chunk has CSS to preload and their one dependency is the module that imports them.
 
 ### Quirks
 
@@ -249,9 +253,9 @@ import type { Language } from "./config";
 ```
 /
 ├── astro.config.ts          # static build, asset naming, integrations
-├── blog/<slug>/             # posts: en.mdx, pt.mdx, imgs/ (never modified by tooling)
+├── blog/<slug>/             # posts: en.mdx, pt.mdx, imgs/, replays/ (never modified by tooling)
 ├── public/                  # copied to dist/static/
-├── scripts/                 # standalone checks (+ fixtures/), og-preview.ts, compile-resumes.sh
+├── scripts/                 # standalone checks (+ fixtures/), og-preview.ts, replay-from-gungnir.ts, compile-resumes.sh
 ├── src/
 │   ├── content.config.ts    # `blog` collection (custom loader + zod schema)
 │   ├── content/             # loader.ts, schema.ts, source.ts (file reading, frontmatter)
@@ -271,7 +275,8 @@ import type { Language } from "./config";
 │   ├── components/          # Head, SiteHeader, SiteFooter, Boot, PostCard, ScheduledCard, Toc,
 │   │                        # pages/, home/, figures/, blog/
 │   ├── pages/site/[epoch]/[host]/[lang]/
-│   ├── scripts/             # head.ts (inline), client.ts (shared module), util.ts, features/, console.ts (chunk)
+│   ├── scripts/             # head.ts (inline), client.ts (shared module), util.ts, features/, console.ts and
+│   │                        # replay.ts (chunks), replay-model.ts (replay format, shared with the renderer)
 │   └── styles/              # global.css, quirks.css, home.css, post-list.css, blog.css, console.css
 ├── typst/                   # résumé sources
 └── nix/bun.nix              # patched Bun for Nix builds
@@ -286,6 +291,26 @@ import type { Language } from "./config";
 - Local images (`./imgs/<file>`) are resolved through `virtual:post-images` (only referenced files are imported) and optimized to AVIF/WebP `srcset`s; SVG files are served as-is via `<img>`. A GIF stays the `<img>` inside a `<picture>` whose `<source type="image/webp">` is its lossless animated WebP (same frames, delays and loop; made with sharp by `postImagesPlugin` and cached under Vite's cache directory), unless the WebP would not be smaller.
 - Every post image is `loading="lazy"`: a post opens with its title, excerpt and text, so the first image is below the first viewport and no image is the largest paint.
 - An image on a line of its own becomes `<figure>` with its title, else alt text, as caption.
+- A fenced block with the language `replay` is a session replay, not a listing (see "Session Replays").
+
+## Session Replays
+
+A replay plays a coding agent's session in a post: every shell command, the compiler errors and the agent's own words scroll through a screen, with a barcode of the session (a tick per command, red for a failed build), counters and the author's notes.
+
+````markdown
+```replay ./replays/zig-bigint.json
+Caption of the figure, any number of lines.
+
+20: A note, shown from command 20 on while the replay plays.
+112: Another note.
+```
+````
+
+- The block stays readable in the markdown served to agents: the info string names the file, `<n>: <text>` lines are notes, every other line is the caption. Notes are per language; the data is shared.
+- Data lives in `blog/<slug>/replays/<name>.json`, format version 1 (`src/scripts/replay-model.ts`): `meta` (strings shown in the head), `minutes`, `result` (`passed`/`total` hidden tests), `events` (`c` command on one line, `e` first compiler error, `f: 1` for a failed build) and `quotes` (`at`, verbatim `text`, optional `mark`). `bun scripts/replay-from-gungnir.ts` writes one from a trial of the released gungnir records, counting failed builds as the paper does.
+- `virtual:post-replays` (`src/lib/markdown/replay-refs.ts`) validates every referenced file and emits it minified as `_astro/<name>.<hash>.json`; `src/lib/markdown/replays.ts` builds the figure at rest (the end of the session, the result, every note), which is all a page without the player shows.
+- The player (`src/scripts/replay.ts`, loaded by `features/replay.ts`) starts by itself when the screen is mostly in view, never under reduced motion; it pauses out of view and resumes on return. Play/pause, the barcode (a range input over it, arrows step a command) and the notes (each seeks to its command) take over. Controls appear only with `data-ready`, a session in progress has `data-active`.
+- A session plays in about half a minute whatever its length (`schedule()`), slow for the first commands and holding on every command with a note or a quote.
 
 ## Internationalization
 
@@ -313,7 +338,7 @@ import type { Language } from "./config";
 ## Build Notes
 
 - Nix builds use the patched Bun runtime from `nix/bun.nix` (1.4.4 or newer). The flake exports `packages.<system>.bun` and `overlays.default` for consumers, for `aarch64-darwin`, `aarch64-linux` and `x86_64-linux`.
-- `packages.default` is the static `dist/` (no executables): bun2nix installs the dependencies, `bun --bun run build` runs with `PORTFOLIO_BUILD_TIME = self.lastModified` and `PORTFOLIO_COMMIT` set to the flake's revision (the parent commit for a dirty tree), then `check:headings`, `check:meta` and `check:dates` run before install. On Linux the build sets `LD_LIBRARY_PATH` to libstdc++/libgcc_s for the prebuilt sharp and resvg modules. `checks.<system>.caddy-config` validates the generated Caddy snippet with `caddy validate`.
+- `packages.default` is the static `dist/` (no executables): bun2nix installs the dependencies, `bun --bun run build` runs with `PORTFOLIO_BUILD_TIME = self.lastModified` and `PORTFOLIO_COMMIT` set to the flake's revision (the parent commit for a dirty tree), then `check:headings`, `check:meta`, `check:dates` and `check:replays` run before install. On Linux the build sets `LD_LIBRARY_PATH` to libstdc++/libgcc_s for the prebuilt sharp and resvg modules. `checks.<system>.caddy-config` validates the generated Caddy snippet with `caddy validate`.
 - The flake source is filtered to `package.json`, `bun.lock`, `astro.config.ts`, `tsconfig.json`, `src/`, `blog/`, `public/` and `scripts/`; files needed by the build must be in one of them (and tracked, for `nix build .`).
 - `astro build` runs under Node or Bun (`bun --bun x astro build`) with the same output, except that Node's ICU puts thin spaces around the en dash of a date range where Bun puts plain spaces, and the gzip sidecars differ byte for byte (different zlib builds). Sharp is needed at build time only. Font subsetting uses `harfbuzzjs` and `wawoff2` (WebAssembly, no native code); precompression uses `node:zlib` (Brotli and zstd are built into Node and Bun).
 - `bun.lock` must stay at `lockfileVersion: 1`: `bun2nix` (postinstall) does not read version 2. Do not delete the lockfile; `bun install` keeps the existing version.
