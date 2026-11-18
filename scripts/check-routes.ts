@@ -1436,15 +1436,18 @@ async function epochResults(work: string): Promise<Result[]> {
   );
   if (index < 1) throw new Error(`${FIXTURE_SLUG} must be released after the first epoch`);
   const fixture = manifest.epochs[index];
-  const previous = manifest.epochs[index - 1];
   const gated = (start: number): CaddyManifest => ({
     ...manifest,
     epochs: manifest.epochs.map((epoch, i) => (i === index ? { ...epoch, start } : epoch)),
   });
+  const clock = Math.floor(Date.now() / 1000);
+  // Before the fixture's gate the server answers from the newest epoch already started. That
+  // is the epoch before the fixture's only when no post of blog/ is still scheduled.
+  const previousName = currentEpoch(gated(clock + 3600), clock);
+  const previous = manifest.epochs.find((epoch) => epoch.name === previousName)!;
   const after = trees(EPOCH_DIST, fixture.name);
   const before = trees(EPOCH_DIST, previous.name);
   const precompressed = writePrecompressed(EPOCH_DIST, fixture.name);
-  const clock = Math.floor(Date.now() / 1000);
   const results: Result[] = [];
 
   reload(writeConfig(work, EPOCH_DIST, gated(clock - 3600), "after"));
