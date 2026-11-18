@@ -102,15 +102,20 @@ export const PAPERS: Paper[] = [
     id: "gungnir",
     name: "gungnir",
     title: both(
-      "Does the language matter to a coding agent?",
-      "A linguagem importa para um agente de programação?",
+      "Does the language matter to a coding agent? Correctness, cost and speed in eight languages",
+      "A linguagem importa para um agente de programação? Correção, custo e velocidade em oito linguagens",
     ),
-    status: "progress",
-    statusNote: both("paper forthcoming", "artigo em preparação"),
+    status: "preprint",
+    statusNote: both("SSRN, Nov 2026", "SSRN, nov. 2026"),
+    authors: "Gustavo Widman, Laíza Ribeiro da Silva",
+    cite: "Widman, Ribeiro da Silva",
     summary: both(
-      "A benchmark of coding agents across ~8 programming languages, model families and reasoning-effort levels.",
-      "Um benchmark de agentes de programação em ~8 linguagens, famílias de modelos e níveis de esforço de raciocínio.",
+      "Nine models from four vendors wrote 5,888 programs for eight tasks in eight languages. Seven of them passed nearly every hidden test in every language. The language decided what a correct program cost and how fast it ran, and Rust led the gungnir index for every model.",
+      "Nove modelos de quatro fornecedores escreveram 5.888 programas para oito tarefas em oito linguagens. Sete deles passaram em quase todos os testes ocultos em todas as linguagens. A linguagem decidiu quanto custou um programa correto e o quão rápido ele rodou, e Rust liderou o índice do gungnir para todos os modelos.",
     ),
+    doi: "10.2139/ssrn.7695922",
+    code: "https://github.com/GustavoWidman/gungnir",
+    post: "gungnir",
   },
 ];
 
