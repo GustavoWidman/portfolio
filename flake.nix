@@ -96,6 +96,7 @@
             bun run check:headings
             bun run check:meta
             bun run check:dates
+            bun run check:replays
             runHook postCheck
           '';
 

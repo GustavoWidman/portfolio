@@ -11,6 +11,7 @@
     "check:dates": "bun scripts/check-publication-dates.ts && TZ=UTC bun scripts/check-publication-dates.ts",
     "check:meta": "bun scripts/check-metadata.ts",
     "check:routes": "bun scripts/check-routes.ts",
+    "check:replays": "bun scripts/check-replays.ts",
     "og:preview": "bun scripts/og-preview.ts",
     "lint": "oxlint",
     "format": "oxfmt",
